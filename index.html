@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Arcade Guardian Arena</title>
+    <title>Co-op Space Invaders</title>
     <style>
         :root {
-            --bg: #090d16;
-            --surface: #121824;
+            --bg: #060913;
+            --surface: #0f1526;
             --accent: #38bdf8;
             --success: #10b981;
             --danger: #ef4444;
             --gold: #eab308;
-            --border: #29354f;
+            --border: #1e294b;
         }
 
         body {
@@ -27,11 +27,11 @@
             user-select: none;
         }
 
-        h2 { margin: 0; color: var(--accent); font-size: 28px; }
+        h2 { margin: 0; color: var(--accent); font-size: 28px; letter-spacing: 1px; }
         
         .dashboard {
             display: flex;
-            gap: 15px;
+            gap: 20px;
             margin: 15px 0;
             align-items: center;
         }
@@ -40,174 +40,245 @@
             background: var(--surface);
             padding: 10px 20px;
             border-radius: 10px;
-            display: flex;
-            gap: 12px;
-            align-items: center;
             border: 1px solid var(--border);
             font-weight: 600;
             font-size: 15px;
         }
 
         .score-card { border-color: var(--gold); color: var(--gold); }
-        .boss-card { border-color: var(--danger); color: var(--danger); }
+        .alert-card { border-color: var(--danger); color: var(--danger); display: none; }
 
         #game-canvas {
-            background-color: #0f172a;
+            background-color: #0b0f19;
             border: 3px solid var(--border);
             border-radius: 16px;
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.6);
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.7);
         }
 
-        .status-footer { font-size: 13px; color: #64748b; margin-top: 8px; font-family: monospace; }
+        .controls-footer {
+            display: flex;
+            gap: 40px;
+            margin-top: 12px;
+            font-size: 13px;
+            color: #64748b;
+            background: var(--surface);
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+        .p1-keys { color: var(--accent); }
+        .p2-keys { color: var(--success); }
     </style>
 </head>
 <body>
 
-    <h2>ARCADE GUARDIAN ARENA</h2>
+    <h2>GALACTIC CO-OP INVADERS</h2>
     
     <div class="dashboard">
-        <div class="panel-card score-card">Score Coins: <span id="score-val">0</span></div>
-        <div class="panel-card boss-card">Boss HP: <span id="boss-hp">100</span>%</div>
+        <div class="panel-card score-card">Team Score: <span id="score-val">0</span></div>
+        <div id="game-over-card" class="panel-card alert-card">INVADERS BREACHED! GAME OVER</div>
     </div>
 
-    <canvas id="game-canvas" width="800" height="450"></canvas>
+    <canvas id="game-canvas" width="900" height="500"></canvas>
     
-    <div class="status-footer">
-        Controls: [W,A,S,D / Arrows] Move | [Spacebar] Fire Blaster Projectile
+    <div class="controls-footer">
+        <div class="p1-keys"><strong>Player 1 (Left):</strong> [A / D] Move | [W] Fire Laser</div>
+        <div class="p2-keys"><strong>Player 2 (Right):</strong> [◀ / ▶ Arrows] Move | [▲ Arrow] Fire Laser</div>
     </div>
 
 <script>
     const canvas = document.getElementById('game-canvas');
     const ctx = canvas.getContext('2d');
 
-    // Player state parameters
-    let player = { x: 400, y: 300, radius: 15, speed: 5, color: '#38bdf8' };
+    // Game Control Parameters
     let score = 0;
+    let gameOver = false;
     let keysPressed = {};
 
-    // Projectile tracking array
+    // Co-op Player Configuration
+    let p1 = { x: 300, y: 460, radius: 16, color: '#38bdf8', active: true };
+    let p2 = { x: 600, y: 460, radius: 16, color: '#10b981', active: true };
+    let playerSpeed = 6;
+
+    // Laser Tracker Array
     let lasers = [];
 
-    // Boss parameters
-    let boss = { x: 400, y: 100, radius: 30, speed: 2, hp: 100, maxHp: 100 };
+    // Enemy Invader Grid Parameters
+    let invaders = [];
+    let invaderRows = 4;
+    let invaderCols = 9;
+    let invaderSpeed = 1;
+    let invaderDirection = 1; // 1 = right, -1 = left
+    let invaderDropAmount = 15;
 
-    // Coin collectible
-    let coin = { x: 200, y: 220, radius: 8 };
-
-    window.addEventListener('keydown', (e) => { 
-        keysPressed[e.key.toLowerCase()] = true; 
-        
-        // Shoot blaster bullet on spacebar down
-        if (e.key === ' ' || e.code === 'Space') {
-            e.preventDefault();
-            fireLaser();
+    // Initialize the starting alien matrix grid
+    function spawnInvaderGrid() {
+        invaders = [];
+        for (let row = 0; row < invaderRows; row++) {
+            for (let col = 0; col < invaderCols; col++) {
+                invaders.push({
+                    x: col * 75 + 100,
+                    y: row * 45 + 60,
+                    radius: 14,
+                    color: row % 2 === 0 ? '#ef4444' : '#a855f7'
+                });
+            }
         }
-    });
-    window.addEventListener('keyup', (e) => { keysPressed[e.key.toLowerCase()] = false; });
-
-    function fireLaser() {
-        lasers.push({
-            x: player.x,
-            y: player.y - 15,
-            speed: 8,
-            radius: 4
-        });
     }
 
-    function gameLoop() {
-        // --- 1. Movement Calculations ---
-        if (keysPressed['w'] || keysPressed['arrowup']) player.y -= player.speed;
-        if (keysPressed['s'] || keysPressed['arrowdown']) player.y += player.speed;
-        if (keysPressed['a'] || keysPressed['arrowleft']) player.x -= player.speed;
-        if (keysPressed['d'] || keysPressed['arrowright']) player.x += player.speed;
+    window.addEventListener('keydown', (e) => {
+        keysPressed[e.key.toLowerCase()] = true;
+        keysPressed[e.code] = true; // Backup layout mapping safety anchor
 
-        // Wall barriers mapping
-        player.x = Math.max(player.radius, Math.min(canvas.width - player.radius, player.x));
-        player.y = Math.max(player.radius, Math.min(canvas.height - player.radius, player.y));
+        if (gameOver) return;
 
-        // --- 2. Boss Track Mechanics ---
-        let angle = Math.atan2(player.y - boss.y, player.x - boss.x);
-        boss.x += Math.cos(angle) * boss.speed;
-        boss.y += Math.sin(angle) * boss.speed;
-
-        // Player-to-Boss Collision
-        if (Math.hypot(player.x - boss.x, player.y - boss.y) < player.radius + boss.radius) {
-            score = 0; // Wipe points
-            document.getElementById('score-val').textContent = score;
-            boss.x = 400; boss.y = 100; // Reset boss position
+        // Player 1 Shooting Mechanism [W Key]
+        if (e.key.toLowerCase() === 'w') {
+            lasers.push({ x: p1.x, y: p1.y - 18, speed: -7, color: p1.color });
         }
-
-        // --- 3. Collectible Coin Detection ---
-        if (Math.hypot(player.x - coin.x, player.y - coin.y) < player.radius + coin.radius) {
-            score += 10;
-            document.getElementById('score-val').textContent = score;
-            coin.x = Math.floor(Math.random() * (canvas.width - 60)) + 30;
-            coin.y = Math.floor(Math.random() * (canvas.height - 60)) + 30;
+        // Player 2 Shooting Mechanism [ArrowUp Key]
+        if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            lasers.push({ x: p2.x, y: p2.y - 18, speed: -7, color: p2.color });
         }
+        
+        // Prevent browser view space scrolling adjustments on Arrow Key actions
+        if(['ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) e.preventDefault();
+    });
 
-        // --- 4. Laser Routing & Collision ---
+    window.addEventListener('keyup', (e) => {
+        keysPressed[e.key.toLowerCase()] = false;
+        keysPressed[e.code] = false;
+    });
+
+    function updateGameLogic() {
+        if (gameOver) return;
+
+        // --- 1. Player 1 Movement Parsing [A / D] ---
+        if (keysPressed['a']) p1.x -= playerSpeed;
+        if (keysPressed['d']) p1.x += playerSpeed;
+        p1.x = Math.max(p1.radius, Math.min(canvas.width/2 - 10, p1.x)); // Confine to left half boundary zone
+
+        // --- 2. Player 2 Movement Parsing [Left / Right Arrows] ---
+        if (keysPressed['arrowleft']) p2.x -= playerSpeed;
+        if (keysPressed['arrowright']) p2.x += playerSpeed;
+        p2.x = Math.max(canvas.width/2 + 10, Math.min(canvas.width - p2.radius, p2.x)); // Confine to right half boundary zone
+
+        // --- 3. Lasers Tracking Pipeline ---
         for (let i = lasers.length - 1; i >= 0; i--) {
-            lasers[i].y -= lasers[i].speed; // Fly straight up
-
-            // Check hit on boss
-            if (Math.hypot(lasers[i].x - boss.x, lasers[i].y - boss.y) < lasers[i].radius + boss.radius) {
-                boss.hp -= 5;
-                if (boss.hp <= 0) {
-                    boss.hp = 100; // Respawn boss loop
-                    boss.speed += 0.5; // Escalate difficulty speed
-                }
-                document.getElementById('boss-hp').textContent = boss.hp;
-                lasers.splice(i, 1);
-                continue;
-            }
+            lasers[i].y += lasers[i].speed;
 
             // Remove out of bound lasers
             if (lasers[i].y < 0) {
                 lasers.splice(i, 1);
+                continue;
+            }
+
+            // Laser Collision detection against Invader targets
+            for (let j = invaders.length - 1; j >= 0; j--) {
+                let dist = Math.hypot(lasers[i].x - invaders[j].x, lasers[i].y - invaders[j].y);
+                if (dist < lasers[i].radius? 4 : 4 + invaders[j].radius) {
+                    invaders.splice(j, 1);
+                    lasers.splice(i, 1);
+                    score += 20;
+                    document.getElementById('score-val').textContent = score;
+                    break;
+                }
             }
         }
 
-        // --- 5. Graphic Render Passing ---
+        // --- 4. Alien Invader Grid Orchestrator Matrix ---
+        let shiftDownRequired = false;
+        
+        invaders.forEach(inv => {
+            inv.x += invaderSpeed * invaderDirection;
+            
+            // Check wall bounding flips
+            if (inv.x > canvas.width - inv.radius || inv.x < inv.radius) {
+                shiftDownRequired = true;
+            }
+
+            // Lose condition calculation: Alien drops reach defense zone perimeter lines
+            if (inv.y > 430) {
+                gameOver = true;
+                document.getElementById('game-over-card').style.display = 'block';
+            }
+        });
+
+        if (shiftDownRequired) {
+            invaderDirection *= -1; // Reverse horizontal direction vectors
+            invaders.forEach(inv => { inv.y += invaderDropAmount; });
+        }
+
+        // Win Condition check: Wave wiped clean out of vectors
+        if (invaders.length === 0) {
+            score += 500; // Wave clear completion milestone points
+            document.getElementById('score-val').textContent = score;
+            invaderSpeed += 0.4; // Escalate base wave tempo velocity configurations
+            spawnInvaderGrid();
+        }
+    }
+
+    function drawScreen() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+        updateGameLogic();
 
-        // Render Coin
+        // 1. Draw Middle Screen Grid Segment Divider Anchor
+        ctx.strokeStyle = '#1e294b';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([6, 6]);
         ctx.beginPath();
-        ctx.arc(coin.x, coin.y, coin.radius, 0, Math.PI * 2);
-        ctx.fillStyle = 'var(--gold)';
-        ctx.fill();
-        ctx.closePath();
+        ctx.moveTo(canvas.width / 2, 0);
+        ctx.lineTo(canvas.width / 2, canvas.height);
+        ctx.stroke();
+        ctx.setLineDash([]); // Reset line pattern constraints
 
-        // Render Lasers
-        ctx.fillStyle = 'var(--success)';
+        // 2. Draw Lasers projectiles pipeline
         lasers.forEach(l => {
             ctx.beginPath();
-            ctx.arc(l.x, l.y, l.radius, 0, Math.PI * 2);
+            ctx.arc(l.x, l.y, 4, 0, Math.PI * 2);
+            ctx.fillStyle = l.color;
             ctx.fill();
             ctx.closePath();
         });
 
-        // Render Boss
+        // 3. Draw Alien Invader Clusters
+        invaders.forEach(inv => {
+            ctx.beginPath();
+            ctx.arc(inv.x, inv.y, inv.radius, 0, Math.PI * 2);
+            ctx.fillStyle = inv.color;
+            ctx.fill();
+            // Draw tiny alien tracking core center point details
+            ctx.fillStyle = '#060913';
+            ctx.fillRect(inv.x - 4, inv.y - 3, 2, 2);
+            ctx.fillRect(inv.x + 2, inv.y - 3, 2, 2);
+            ctx.closePath();
+        });
+
+        // 4. Draw Player 1 Starfighter
         ctx.beginPath();
-        ctx.arc(boss.x, boss.y, boss.radius, 0, Math.PI * 2);
-        ctx.fillStyle = 'var(--danger)';
+        ctx.moveTo(p1.x, p1.y - p1.radius);
+        ctx.lineTo(p1.x - p1.radius, p1.y + p1.radius);
+        ctx.lineTo(p1.x + p1.radius, p1.y + p1.radius);
+        ctx.fillStyle = p1.color;
         ctx.fill();
         ctx.closePath();
 
-        // Render Player
+        // 5. Draw Player 2 Starfighter
         ctx.beginPath();
-        ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
-        ctx.fillStyle = player.color;
+        ctx.moveTo(p2.x, p2.y - p2.radius);
+        ctx.lineTo(p2.x - p2.radius, p2.y + p2.radius);
+        ctx.lineTo(p2.x + p2.radius, p2.y + p2.radius);
+        ctx.fillStyle = p2.color;
         ctx.fill();
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 2;
-        ctx.stroke();
         ctx.closePath();
 
-        requestAnimationFrame(gameLoop);
+        requestAnimationFrame(drawScreen);
     }
 
-    gameLoop();
+    // Launch execution pipeline sequences initialization loops
+    spawnInvaderGrid();
+    drawScreen();
 </script>
 </body>
 </html>
-
