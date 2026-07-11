@@ -3,9 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Survival Arena: Multiplayer Chaos</title>
-    <!-- We use GunDB for instant, unblockable multiplayer sync on GitHub Pages -->
-    <script src="https://jsdelivr.net"></script>
+    <title>Arcade Guardian Arena</title>
     <style>
         :root {
             --bg: #090d16;
@@ -29,15 +27,13 @@
             user-select: none;
         }
 
-        h2 { margin: 0; color: var(--accent); font-size: 28px; text-shadow: 0 0 10px rgba(56,189,248,0.2); }
+        h2 { margin: 0; color: var(--accent); font-size: 28px; }
         
         .dashboard {
             display: flex;
             gap: 15px;
             margin: 15px 0;
             align-items: center;
-            flex-wrap: wrap;
-            justify-content: center;
         }
 
         .panel-card {
@@ -50,14 +46,10 @@
             border: 1px solid var(--border);
             font-weight: 600;
             font-size: 15px;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2);
         }
 
-        .score-card {
-            border-color: var(--gold);
-            color: var(--gold);
-            font-size: 18px;
-        }
+        .score-card { border-color: var(--gold); color: var(--gold); }
+        .boss-card { border-color: var(--danger); color: var(--danger); }
 
         #game-canvas {
             background-color: #0f172a;
@@ -71,213 +63,151 @@
 </head>
 <body>
 
-    <h2>SURVIVAL ARENA: MULTIPLAYER</h2>
+    <h2>ARCADE GUARDIAN ARENA</h2>
     
     <div class="dashboard">
-        <div class="panel-card"><span id="match-status-label">Lobby Status: Active Sandbox</span></div>
-        <div class="panel-card score-card">Coins: <span id="score-val">0</span></div>
-        <div class="panel-card" style="color: var(--success); border-color: var(--success);">⚡ Dash: <span id="boost-status">READY</span></div>
+        <div class="panel-card score-card">Score Coins: <span id="score-val">0</span></div>
+        <div class="panel-card boss-card">Boss HP: <span id="boss-hp">100</span>%</div>
     </div>
 
-    <canvas id="game-canvas" width="850" height="480"></canvas>
+    <canvas id="game-canvas" width="800" height="450"></canvas>
     
     <div class="status-footer">
-        Controls: [W,A,S,D / Arrows] Move | [Spacebar] Dash Burst | Room: <span id="connection-status">Connecting to sync relay...</span>
+        Controls: [W,A,S,D / Arrows] Move | [Spacebar] Fire Blaster Projectile
     </div>
 
 <script>
     const canvas = document.getElementById('game-canvas');
     const ctx = canvas.getContext('2d');
 
-    // Generate a unique ID for this player window
-    const myId = 'player_' + Math.random().toString(36).substring(2, 9);
-    
-    // Connect to a public GunDB network node relay
-    const gun = Gun(['https://herokuapp.com']);
-    const gameRoom = gun.get('nexus_global_multiplayer_arena_v4');
-
-    // Local player properties
-    let me = {
-        id: myId,
-        x: Math.floor(Math.random() * 500) + 150,
-        y: Math.floor(Math.random() * 250) + 100,
-        color: `hsl(${Math.random() * 360}, 85%, 60%)`,
-        score: 0
-    };
-
-    let players = {};
+    // Player state parameters
+    let player = { x: 400, y: 300, radius: 15, speed: 5, color: '#38bdf8' };
+    let score = 0;
     let keysPressed = {};
-    let speed = 5;
-    let dashCooldown = 0;
 
-    // Game Entities
-    let coin = { x: 425, y: 240, radius: 9 };
-    let aiBot = { x: 100, y: 100, radius: 15, speed: 2.2 };
+    // Projectile tracking array
+    let lasers = [];
 
-    // --- NETWORK SYNC: Send our position to the cloud database ---
-    function sendMyData() {
-        gameRoom.get(myId).put({
-            id: me.id,
-            x: me.x,
-            y: me.y,
-            color: me.color,
-            score: me.score,
-            lastSeen: Date.now()
-        });
-    }
+    // Boss parameters
+    let boss = { x: 400, y: 100, radius: 30, speed: 2, hp: 100, maxHp: 100 };
 
-    // --- NETWORK SYNC: Listen for all other players joining ---
-    gameRoom.map().on((playerData, id) => {
-        if (!playerData) return;
-        
-        // If player has been offline for more than 7 seconds, remove them
-        if (Date.now() - playerData.lastSeen > 7000) {
-            delete players[id];
-            return;
-        }
+    // Coin collectible
+    let coin = { x: 200, y: 220, radius: 8 };
 
-        if (id !== myId) {
-            players[id] = playerData;
-        }
-    });
-
-    // Sync global coin coordinates through the database
-    gameRoom.get('shared_coin_target').on((coinData) => {
-        if (coinData) {
-            coin.x = coinData.x;
-            coin.y = coinData.y;
-        }
-    });
-
-    document.getElementById('connection-status').textContent = "Connected to global peer chain!";
-
-    // Input handlers
     window.addEventListener('keydown', (e) => { 
         keysPressed[e.key.toLowerCase()] = true; 
         
-        // Spacebar Dash mechanics
+        // Shoot blaster bullet on spacebar down
         if (e.key === ' ' || e.code === 'Space') {
             e.preventDefault();
-            if (dashCooldown <= 0) {
-                executeBurstDash();
-            }
+            fireLaser();
         }
     });
     window.addEventListener('keyup', (e) => { keysPressed[e.key.toLowerCase()] = false; });
 
-    function executeBurstDash() {
-        let dx = 0; let dy = 0;
-        if (keysPressed['w'] || keysPressed['arrowup']) dy = -1;
-        if (keysPressed['s'] || keysPressed['arrowdown']) dy = 1;
-        if (keysPressed['a'] || keysPressed['arrowleft']) dx = -1;
-        if (keysPressed['d'] || keysPressed['arrowright']) dx = 1;
-
-        if (dx !== 0 || dy !== 0) {
-            let length = Math.hypot(dx, dy);
-            me.x += (dx / length) * 50;
-            me.y += (dy / length) * 50;
-            dashCooldown = 60; // 1 second cooldown
-            document.getElementById('boost-status').textContent = 'CHARGING';
-            document.getElementById('boost-status').parentElement.style.borderColor = 'var(--danger)';
-            document.getElementById('boost-status').parentElement.style.color = 'var(--danger)';
-        }
+    function fireLaser() {
+        lasers.push({
+            x: player.x,
+            y: player.y - 15,
+            speed: 8,
+            radius: 4
+        });
     }
 
-    function processGameLogic() {
-        let moved = false;
+    function gameLoop() {
+        // --- 1. Movement Calculations ---
+        if (keysPressed['w'] || keysPressed['arrowup']) player.y -= player.speed;
+        if (keysPressed['s'] || keysPressed['arrowdown']) player.y += player.speed;
+        if (keysPressed['a'] || keysPressed['arrowleft']) player.x -= player.speed;
+        if (keysPressed['d'] || keysPressed['arrowright']) player.x += player.speed;
 
-        if (dashCooldown > 0) {
-            dashCooldown--;
-            if (dashCooldown === 0) {
-                document.getElementById('boost-status').textContent = 'READY';
-                document.getElementById('boost-status').parentElement.style.borderColor = 'var(--success)';
-                document.getElementById('boost-status').parentElement.style.color = 'var(--success)';
+        // Wall barriers mapping
+        player.x = Math.max(player.radius, Math.min(canvas.width - player.radius, player.x));
+        player.y = Math.max(player.radius, Math.min(canvas.height - player.radius, player.y));
+
+        // --- 2. Boss Track Mechanics ---
+        let angle = Math.atan2(player.y - boss.y, player.x - boss.x);
+        boss.x += Math.cos(angle) * boss.speed;
+        boss.y += Math.sin(angle) * boss.speed;
+
+        // Player-to-Boss Collision
+        if (Math.hypot(player.x - boss.x, player.y - boss.y) < player.radius + boss.radius) {
+            score = 0; // Wipe points
+            document.getElementById('score-val').textContent = score;
+            boss.x = 400; boss.y = 100; // Reset boss position
+        }
+
+        // --- 3. Collectible Coin Detection ---
+        if (Math.hypot(player.x - coin.x, player.y - coin.y) < player.radius + coin.radius) {
+            score += 10;
+            document.getElementById('score-val').textContent = score;
+            coin.x = Math.floor(Math.random() * (canvas.width - 60)) + 30;
+            coin.y = Math.floor(Math.random() * (canvas.height - 60)) + 30;
+        }
+
+        // --- 4. Laser Routing & Collision ---
+        for (let i = lasers.length - 1; i >= 0; i--) {
+            lasers[i].y -= lasers[i].speed; // Fly straight up
+
+            // Check hit on boss
+            if (Math.hypot(lasers[i].x - boss.x, lasers[i].y - boss.y) < lasers[i].radius + boss.radius) {
+                boss.hp -= 5;
+                if (boss.hp <= 0) {
+                    boss.hp = 100; // Respawn boss loop
+                    boss.speed += 0.5; // Escalate difficulty speed
+                }
+                document.getElementById('boss-hp').textContent = boss.hp;
+                lasers.splice(i, 1);
+                continue;
+            }
+
+            // Remove out of bound lasers
+            if (lasers[i].y < 0) {
+                lasers.splice(i, 1);
             }
         }
 
-        if (keysPressed['w'] || keysPressed['arrowup']) { me.y -= speed; moved = true; }
-        if (keysPressed['s'] || keysPressed['arrowdown']) { me.y += speed; moved = true; }
-        if (keysPressed['a'] || keysPressed['arrowleft']) { me.x -= speed; moved = true; }
-        if (keysPressed['d'] || keysPressed['arrowright']) { me.x += speed; moved = true; }
-
-        me.x = Math.max(16, Math.min(canvas.width - 16, me.x));
-        me.y = Math.max(16, Math.min(canvas.height - 16, me.y));
-
-        // Periodically announce presence and movement vectors
-        if (moved || Math.random() < 0.05) {
-            sendMyData();
-        }
-
-        // Count active network players
-        let activeOpponents = Object.keys(players).length;
-        const statusLabel = document.getElementById('match-status-label');
-        
-        if (activeOpponents > 0) {
-            statusLabel.innerHTML = `Multiplayer Active: ${activeOpponents + 1} Players in Lobby ⚔️`;
-        } else {
-            statusLabel.innerHTML = 'Practice Mode: Waiting for human players...';
-        }
-
-        // --- Coin Gathering Mechanic ---
-        if (Math.hypot(me.x - coin.x, me.y - coin.y) < 16 + coin.radius) {
-            me.score++;
-            document.getElementById('score-val').textContent = me.score;
-            
-            // Randomize and upload new shared coin coordinates to the database
-            gameRoom.get('shared_coin_target').put({
-                x: Math.floor(Math.random() * (canvas.width - 60)) + 30,
-                y: Math.floor(Math.random() * (canvas.height - 60)) + 30
-            });
-            sendMyData();
-        }
-
-        // --- AI Chaser Drone (Only moves if you are alone) ---
-        if (activeOpponents === 0) {
-            let angle = Math.atan2(me.y - aiBot.y, me.x - aiBot.x);
-            aiBot.x += Math.cos(angle) * (aiBot.speed + (me.score * 0.1));
-            aiBot.y += Math.sin(angle) * (aiBot.speed + (me.score * 0.1));
-
-            if (Math.hypot(me.x - aiBot.x, me.y - aiBot.y) < 16 + aiBot.radius) {
-                me.score = 0;
-                document.getElementById('score-val').textContent = me.score;
-                aiBot.x = aiBot.x > canvas.width / 2 ? 40 : canvas.width - 40;
-                aiBot.y = aiBot.y > canvas.height / 2 ? 40 : canvas.height - 40;
-                sendMyData();
-            }
-        }
-    }
-
-    function renderLoop() {
+        // --- 5. Graphic Render Passing ---
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        processGameLogic();
 
-        // 1. Render Golden Coins
+        // Render Coin
         ctx.beginPath();
         ctx.arc(coin.x, coin.y, coin.radius, 0, Math.PI * 2);
         ctx.fillStyle = 'var(--gold)';
-        ctx.shadowBlur = 15; ctx.shadowColor = 'var(--gold)';
         ctx.fill();
         ctx.closePath();
-        ctx.shadowBlur = 0;
 
-        // 2. Render Drone if singleplayer
-        if (Object.keys(players).length === 0) {
+        // Render Lasers
+        ctx.fillStyle = 'var(--success)';
+        lasers.forEach(l => {
             ctx.beginPath();
-            ctx.arc(aiBot.x, aiBot.y, aiBot.radius, 0, Math.PI * 2);
-            ctx.fillStyle = 'var(--danger)';
-            ctx.shadowBlur = 10; ctx.shadowColor = 'var(--danger)';
+            ctx.arc(l.x, l.y, l.radius, 0, Math.PI * 2);
             ctx.fill();
             ctx.closePath();
-            ctx.shadowBlur = 0;
-        }
+        });
 
-        // 3. Render Opponent Players
-        for (let id in players) {
-            let p = players[id];
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, 16, 0, Math.PI * 2);
-            ctx.fillStyle = p.color;
-            ctx.fill();
-            ctx.closePath();
+        // Render Boss
+        ctx.beginPath();
+        ctx.arc(boss.x, boss.y, boss.radius, 0, Math.PI * 2);
+        ctx.fillStyle = 'var(--danger)';
+        ctx.fill();
+        ctx.closePath();
 
-            // Label tag rendering
+        // Render Player
+        ctx.beginPath();
+        ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
+        ctx.fillStyle = player.color;
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.closePath();
+
+        requestAnimationFrame(gameLoop);
+    }
+
+    gameLoop();
+</script>
+</body>
+</html>
+
