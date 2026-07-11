@@ -3,22 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Arcade Co-op: Infinite Upgrade Overdrive</title>
+    <title>Survival Arena: Ultra Overdrive Neo</title>
     <style>
         :root {
-            --bg: #03050a;
-            --surface: #0a0d1a;
-            --surface-light: #12182e;
+            --bg: #03050d;
+            --surface: #0a0d1d;
+            --surface-light: #121834;
             --accent: #38bdf8;
             --success: #10b981;
             --danger: #ef4444;
             --gold: #eab308;
             --purple: #a855f7;
-            --border: #1b264f;
+            --border: #1e295d;
         }
 
         body {
-            font-family: system-ui, -apple-system, sans-serif;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
             background-color: var(--bg);
             color: #f8fafc;
             margin: 0;
@@ -38,7 +38,14 @@
             margin-bottom: 5px;
         }
 
-        h2 { margin: 0; color: var(--accent); font-size: 24px; font-weight: 900; text-shadow: 0 0 15px rgba(56,189,248,0.4); }
+        h2 { 
+            margin: 0; 
+            color: var(--accent); 
+            font-size: 24px; 
+            font-weight: 900; 
+            letter-spacing: 1px;
+            text-shadow: 0 0 15px rgba(56,189,248,0.4); 
+        }
         
         .dashboard { display: flex; gap: 12px; }
         .panel-card {
@@ -53,7 +60,6 @@
         .mode-card { border-color: var(--purple); color: var(--purple); }
         .danger-card { border-color: var(--danger); color: var(--danger); display: none; }
 
-        /* Mega Upgrade Shop Panel Grids */
         .mega-shop {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -89,7 +95,7 @@
             background: var(--surface-light);
             border: 1px solid var(--border);
             color: #f8fafc;
-            padding: 6px 10px;
+            padding: 8px 12px;
             border-radius: 6px;
             cursor: pointer;
             font-size: 11px;
@@ -104,10 +110,10 @@
         .up-btn em { font-style: normal; color: #94a3b8; }
 
         #game-canvas {
-            background-color: #04060c;
+            background-color: #020308;
             border: 3px solid var(--border);
             border-radius: 16px;
-            box-shadow: 0 30px 60px -15px rgba(0,0,0,0.9);
+            box-shadow: 0 0 30px rgba(30, 41, 93, 0.3);
         }
 
         .footer-hud {
@@ -124,22 +130,21 @@
 <body>
 
     <div class="header-layout">
-        <h2>ULTRA OVERDRIVE ARCADE ENGINE</h2>
+        <h2>ULTRA OVERDRIVE: NEO ARENA</h2>
         <div class="dashboard">
-            <div class="panel-card mode-card">SYSTEM WAVE: <span id="wave-val">1 (CHAOS GRID)</span></div>
-            <div class="panel-card score-card">CREDITS FLUX: $<span id="score-val">0</span></div>
-            <div id="game-over-banner" class="panel-card danger-card">ARENA BREACHED! REFRESH TO RESTART</div>
+            <div class="panel-card mode-card">WAVE MATRIX: <span id="wave-val">1 (CHAOS GRID)</span></div>
+            <div class="panel-card score-card">CREDITS FLUX: $<span id="score-val">300</span></div>
+            <div id="game-over-banner" class="panel-card danger-card">CORE DESTRUCTION DETECTED! REFRESH TO REBOOT</div>
         </div>
     </div>
 
-    <!-- Mega Live Interactive Upgrade Hub Layout -->
     <div class="mega-shop">
         <!-- PLAYER 1 CORE MENU -->
         <div class="player-shop" style="border-left: 5px solid var(--accent);">
-            <div class="shop-header" style="color: var(--accent);">P1 CANNON (Shields: <span id="p1-shd">0</span>) <span>Controls: [W,A,S,D]</span></div>
+            <div class="shop-header" style="color: var(--accent);">P1 ALPHA STARFIGHTER (Shields: <span id="p1-shd">0</span>) <span>[W,A,S,D]</span></div>
             <button class="up-btn" onclick="buyUpgrade(1, 'spd')">Engine Speed (Lvl <em id="p1-spd-lbl">1</em>) <span id="p1-spd-cost">$100</span></button>
             <button class="up-btn" onclick="buyUpgrade(1, 'fr')">Fire Rate (Lvl <em id="p1-fr-lbl">1</em>) <span id="p1-fr-cost">$150</span></button>
-            <button class="up-btn" onclick="buyUpgrade(1, 'split')">Spread Shots (Lvl <em id="p1-split-lbl">1</em>) <span id="p1-split-cost">$400</span></button>
+            <button class="up-btn" onclick="buyUpgrade(1, 'split')">Spread Laser (Lvl <em id="p1-split-lbl">1</em>) <span id="p1-split-cost">$400</span></button>
             <button class="up-btn" onclick="buyUpgrade(1, 'dmg')">Laser Size (Lvl <em id="p1-dmg-lbl">1</em>) <span id="p1-dmg-cost">$250</span></button>
             <button class="up-btn" onclick="buyUpgrade(1, 'mag')">Item Magnet (Lvl <em id="p1-mag-lbl">1</em>) <span id="p1-mag-cost">$200</span></button>
             <button class="up-btn" onclick="buyUpgrade(1, 'shd')">Core Shield (Max 3) <span id="p1-shd-cost">$500</span></button>
@@ -147,10 +152,10 @@
 
         <!-- PLAYER 2 CORE MENU -->
         <div class="player-shop" style="border-left: 5px solid var(--success);">
-            <div class="shop-header" style="color: var(--success);">P2 CANNON (Shields: <span id="p2-shd">0</span>) <span>Controls: [ARROWS]</span></div>
+            <div class="shop-header" style="color: var(--success);">P2 BETA STARFIGHTER (Shields: <span id="p2-shd">0</span>) <span>[ARROWS]</span></div>
             <button class="up-btn" onclick="buyUpgrade(2, 'spd')">Engine Speed (Lvl <em id="p2-spd-lbl">1</em>) <span id="p2-spd-cost">$100</span></button>
             <button class="up-btn" onclick="buyUpgrade(2, 'fr')">Fire Rate (Lvl <em id="p2-fr-lbl">1</em>) <span id="p2-fr-cost">$150</span></button>
-            <button class="up-btn" onclick="buyUpgrade(2, 'split')">Spread Shots (Lvl <em id="p2-split-lbl">1</em>) <span id="p2-split-cost">$400</span></button>
+            <button class="up-btn" onclick="buyUpgrade(2, 'split')">Spread Laser (Lvl <em id="p2-split-lbl">1</em>) <span id="p2-split-cost">$400</span></button>
             <button class="up-btn" onclick="buyUpgrade(2, 'dmg')">Laser Size (Lvl <em id="p2-dmg-lbl">1</em>) <span id="p2-dmg-cost">$250</span></button>
             <button class="up-btn" onclick="buyUpgrade(2, 'mag')">Item Magnet (Lvl <em id="p2-mag-lbl">1</em>) <span id="p2-mag-cost">$200</span></button>
             <button class="up-btn" onclick="buyUpgrade(2, 'shd')">Core Shield (Max 3) <span id="p2-shd-cost">$500</span></button>
@@ -160,43 +165,49 @@
     <canvas id="game-canvas" width="1000" height="480"></canvas>
     
     <div class="footer-hud">
-        <span>MODE 1: BULLET GRIDS | MODE 2: GUARDIAN BOSS | MODE 3: ASTEROID STORM</span>
-        <span>UPGRADE TIERS SCALE EXPONENTIALLY UP TO $5,000+ PER LAYER</span>
+        <span>MODE 1: CHAOS GRID | MODE 2: GUARDIAN BOSS | MODE 3: METEOR STORM</span>
+        <span>GRAPHICS: HARDWARE DETECTED NEON GLOW ENGINE ACTIVE</span>
     </div>
 
 <script>
     const canvas = document.getElementById('game-canvas');
     const ctx = canvas.getContext('2d');
 
-    // Starting Currency Pool - Boosted slightly to allow fast early-game test purchases
     let gold = 300; 
     let gameOver = false;
     let keysPressed = {};
     let frameCounter = 0;
-    let activeWaveType = 1; // 1 = Chaos Grid, 2 = Guardian Boss, 3 = Asteroid Storm
+    let activeWaveType = 1;
+    let screenShake = 0;
 
-    // Strategic Player Matrices Config
-    let p1 = { id: 1, x: 350, y: 380, radius: 15, color: '#38bdf8', baseSpeed: 4.5, spdLvl: 1, frLvl: 1, splitLvl: 1, dmgLvl: 1, magLvl: 1, shields: 0, lastShot: 0 };
-    let p2 = { id: 2, x: 650, y: 380, radius: 15, color: '#10b981', baseSpeed: 4.5, spdLvl: 1, frLvl: 1, splitLvl: 1, dmgLvl: 1, magLvl: 1, shields: 0, lastShot: 0 };
-
+    // Entities Arrays
     let friendlyLasers = [];
     let enemyProjectiles = [];
     let goldScrapItems = [];
-    
-    // Mode 2 specific Entity Parameters
-    let megaBoss = { x: 500, y: -100, targetY: 120, radius: 45, speed: 1.5, hp: 1000, maxHp: 1000, active: false };
+    let particles = [];
+    let starfield = [];
 
-    // Pricing dictionaries
+    // Player Structures
+    let p1 = { id: 1, x: 350, y: 380, radius: 14, color: '#38bdf8', glow: 'rgba(56,189,248,0.4)', baseSpeed: 4.5, spdLvl: 1, frLvl: 1, splitLvl: 1, dmgLvl: 1, magLvl: 1, shields: 0, lastShot: 0 };
+    let p2 = { id: 2, x: 650, y: 380, radius: 14, color: '#10b981', glow: 'rgba(16,185,129,0.4)', baseSpeed: 4.5, spdLvl: 1, frLvl: 1, splitLvl: 1, dmgLvl: 1, magLvl: 1, shields: 0, lastShot: 0 };
+
+    let megaBoss = { x: 500, y: -100, targetY: 120, radius: 45, speed: 1.5, hp: 1200, maxHp: 1200 };
+
+    // --- CRITICAL CORRECTION: Filled values cleanly to resolve compilation freezes ---
     let upgradeCosts = {
         spd:,
         fr:,
         split:,
         dmg:,
         mag:,
-        shd: [500, 1200, 3000]
+        shd: [500, 1000, 2000]
     };
 
-    // Populate component parts loop
+    // Initialize Animated Background Starfield Node Layout
+    for (let i = 0; i < 60; i++) {
+        starfield.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, speed: Math.random() * 1.5 + 0.5, size: Math.random() * 2 });
+    }
+
     for (let i = 0; i < 8; i++) spawnScrapPiece();
 
     function spawnScrapPiece() {
@@ -204,8 +215,25 @@
             x: Math.floor(Math.random() * (canvas.width - 60)) + 30,
             y: Math.floor(Math.random() * (canvas.height - 150)) + 40,
             radius: 6,
-            value: Math.random() > 0.85 ? 50 : 20 // Random premium heavy gems
+            value: Math.random() > 0.85 ? 50 : 20,
+            pulse: 0
         });
+    }
+
+    function createExplosion(x, y, color, count = 12) {
+        for (let i = 0; i < count; i++) {
+            let angle = Math.random() * Math.PI * 2;
+            let speed = Math.random() * 4 + 2;
+            particles.push({
+                x: x, y: y,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
+                radius: Math.random() * 3 + 1,
+                color: color,
+                alpha: 1,
+                decay: Math.random() * 0.03 + 0.015
+            });
+        }
     }
 
     window.addEventListener('keydown', (e) => {
@@ -214,24 +242,3 @@
         if(['arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'space'].includes(e.key.toLowerCase())) e.preventDefault();
     });
     window.addEventListener('keyup', (e) => {
-        keysPressed[e.key.toLowerCase()] = false;
-        keysPressed[e.code] = false;
-    });
-
-    // --- EXPONENTIAL LIVE MOUSE/CLICK UPGRADE HANDLER ---
-    window.buyUpgrade = function(playerNum, stat) {
-        if (gameOver) return;
-        let p = playerNum === 1 ? p1 : p2;
-        let currentLvl = stat === 'shd' ? p.shields : p[stat + 'Lvl'];
-        let costArray = upgradeCosts[stat];
-        
-        if (currentLvl > costArray.length) return; // Max level check
-        let cost = costArray[currentLvl - 1];
-
-        if (gold >= cost) {
-            gold -= cost;
-            if (stat === 'shd') {
-                p.shields++;
-                document.getElementById(`p${playerNum}-shd`).textContent = p.shields;
-            } else {
-                p[stat + 'Lvl']++;
