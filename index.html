@@ -3,318 +3,227 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Focus Flow Studio</title>
+    <title>DevTool Nexus Dashboard</title>
     <style>
         :root {
-            --bg-dark: #0f172a;
-            --surface: #1e293b;
+            --bg: #0b0f19;
+            --surface: #131a2c;
+            --surface-light: #1e2942;
             --accent: #38bdf8;
-            --accent-hover: #0ea5e9;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --border-color: #334155;
+            --success: #34d399;
+            --danger: #f87171;
+            --text: #f8fafc;
+            --text-muted: #64748b;
+            --border: #22314d;
         }
-
         body {
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-            background-color: var(--bg-dark);
-            color: var(--text-main);
+            font-family: system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
             margin: 0;
             padding: 24px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            box-sizing: border-box;
         }
-
-        .studio-layout {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 24px;
-            width: 100%;
-            max-width: 800px;
-        }
-
-        .panel {
-            background-color: var(--surface);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 24px;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
-        }
-
-        h2 {
-            margin: 0 0 16px 0;
-            font-size: 18px;
-            font-weight: 600;
-            color: var(--accent);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .timer-display {
-            font-size: 64px;
-            font-weight: 700;
-            text-align: center;
-            font-variant-numeric: tabular-nums;
-            margin: 20px 0;
-        }
-
-        .controls-row {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 16px;
-        }
-
-        button {
-            background-color: var(--border-color);
-            color: var(--text-main);
-            border: none;
-            padding: 12px 16px;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            flex: 1;
-        }
-
-        button.primary {
-            background-color: var(--accent);
-            color: var(--bg-dark);
-        }
-
-        button.primary:hover {
-            background-color: var(--accent-hover);
-        }
-
-        button:hover {
-            opacity: 0.9;
-            transform: translateY(-1px);
-        }
-
-        .input-group {
+        header { text-align: center; margin-bottom: 32px; }
+        header h1 { margin: 0 0 8px 0; font-size: 28px; color: var(--accent); }
+        
+        /* Navigation Tabs Layout */
+        .tabs {
             display: flex;
             gap: 8px;
-            margin-bottom: 12px;
+            justify-content: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
         }
-
-        input[type="text"], textarea {
-            background-color: var(--bg-dark);
-            border: 1px solid var(--border-color);
-            color: var(--text-main);
-            padding: 10px 14px;
+        .tab-btn {
+            background: var(--surface);
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+            padding: 10px 18px;
             border-radius: 8px;
-            font-size: 14px;
-            outline: none;
-            width: 100%;
-            box-sizing: border-box;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
         }
-
-        input:focus, textarea:focus {
+        .tab-btn.active, .tab-btn:hover {
+            background: var(--accent);
+            color: var(--bg);
             border-color: var(--accent);
         }
 
-        .task-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            overflow-y: auto;
-            max-height: 180px;
-        }
-
-        .task-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background-color: var(--bg-dark);
-            padding: 10px 14px;
-            border-radius: 8px;
-            margin-bottom: 8px;
-            border-left: 3px solid var(--accent);
-        }
-
-        .task-item.done {
-            opacity: 0.5;
-            text-decoration: line-through;
-            border-left-color: var(--border-color);
-        }
-
-        .delete-icon {
-            color: #ef4444;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        textarea {
-            resize: none;
-            flex-grow: 1;
-            font-family: inherit;
-            line-height: 1.5;
-            min-height: 120px;
-        }
-
-        .sound-toggle {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: var(--bg-dark);
+        /* Modular Panels */
+        .tool-panel { display: none; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; max-width: 900px; margin: 0 auto; box-shadow: 0 10px 25px rgba(0,0,0,0.4); }
+        .tool-panel.active { display: block; }
+        
+        .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+        .flex-row { display: flex; gap: 8px; margin-bottom: 12px; }
+        
+        label { display: block; margin-bottom: 6px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent); font-weight: 600; }
+        textarea, input, select {
+            width: 100%;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            color: var(--text);
             padding: 12px;
             border-radius: 8px;
+            box-sizing: border-box;
+            font-family: monospace;
+            font-size: 14px;
+            outline: none;
         }
+        textarea { resize: vertical; min-height: 140px; }
+        textarea:focus, input:focus { border-color: var(--accent); }
+        
+        button.action {
+            background: var(--surface-light);
+            color: var(--text);
+            border: 1px solid var(--border);
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            flex: 1;
+        }
+        button.action:hover { background: var(--accent); color: var(--bg); }
+        
+        /* Status Elements */
+        .status-box { padding: 12px; border-radius: 8px; margin-top: 12px; font-size: 14px; font-weight: 500; display: none; }
+        .status-box.success { display: block; background: rgba(52,211,153,0.1); border: 1px solid var(--success); color: var(--success); }
+        .status-box.error { display: block; background: rgba(248,113,113,0.1); border: 1px solid var(--danger); color: var(--danger); }
+        
+        /* Output Visualizers */
+        .preview-output { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 16px; overflow-y: auto; height: 140px; font-size: 14px; line-height: 1.5; }
+        .contrast-sample { font-size: 20px; font-weight: bold; text-align: center; padding: 24px; border-radius: 8px; border: 1px solid var(--border); }
     </style>
 </head>
 <body>
 
-<div class="studio-layout">
-    <div class="panel">
-        <h2>Timer Workspace</h2>
-        <div class="timer-display" id="time-view">25:00</div>
-        
-        <div class="controls-row">
-            <button class="primary" id="start-stop-btn">Start</button>
-            <button id="reset-btn">Reset</button>
-        </div>
-        
-        <div class="controls-row">
-            <button id="mode-work" style="font-size: 12px;">Focus (25m)</button>
-            <button id="mode-break" style="font-size: 12px;">Break (5m)</button>
-        </div>
+<header>
+    <h1>DevTool Nexus</h1>
+    <p style="color: var(--text-muted); margin: 0;">Multi-Utility Offline Workstation</p>
+</header>
 
-        <h2 style="margin-top: 20px; font-size: 14px;">White Noise Generator</h2>
-        <div class="sound-toggle">
-            <span style="font-size: 14px; color: var(--text-muted)">Synthetic Brown Noise</span>
-            <button id="audio-btn" style="flex: 0; padding: 6px 12px; font-size: 12px;">Play</button>
+<div class="tabs">
+    <button class="tab-btn active" onclick="switchTool('json-panel')">JSON Formatter</button>
+    <button class="tab-btn" onclick="switchTool('codec-panel')">Base64/URL</button>
+    <button class="tab-btn" onclick="switchTool('markdown-panel')">Markdown Live</button>
+    <button class="tab-btn" onclick="switchTool('regex-panel')">Regex Tester</button>
+    <button class="tab-btn" onclick="switchTool('contrast-panel')">Contrast Ratio</button>
+</div>
+
+<!-- 1. JSON FORMATTER PANEL -->
+<div id="json-panel" class="tool-panel active">
+    <label for="json-input">JSON String Entry</label>
+    <textarea id="json-input" placeholder='Paste raw or minified JSON here: {"id":1,"status":"active"}'></textarea>
+    <div class="flex-row" style="margin-top: 12px;">
+        <button class="action" onclick="processJSON(2)">Format (2 Spaces)</button>
+        <button class="action" onclick="processJSON(4)">Format (4 Spaces)</button>
+        <button class="action" onclick="minifyJSON()">Minify String</button>
+    </div>
+    <div id="json-status" class="status-box"></div>
+</div>
+
+<!-- 2. CODEC ENCODER/DECODER PANEL -->
+<div id="codec-panel" class="tool-panel">
+    <div class="grid-2">
+        <div>
+            <label for="codec-input">Input Raw/Processed Text</label>
+            <textarea id="codec-input" placeholder="Type or paste payload targets here..."></textarea>
+        </div>
+        <div>
+            <label for="codec-output">Computed Conversion Output</label>
+            <textarea id="codec-output" readonly placeholder="Result parameters appear here..."></textarea>
         </div>
     </div>
+    <div class="flex-row" style="margin-top: 12px;">
+        <button class="action" onclick="runCodec('b64enc')">Base64 Encode</button>
+        <button class="action" onclick="runCodec('b64dec')">Base64 Decode</button>
+        <button class="action" onclick="runCodec('urlenc')">URL Encode</button>
+        <button class="action" onclick="runCodec('urldec')">URL Decode</button>
+    </div>
+</div>
 
-    <div class="panel" style="gap: 12px;">
-        <h2>Session Targets</h2>
-        <div class="input-group">
-            <input type="text" id="task-input" placeholder="What are you working on right now?">
-            <button id="add-task-btn" style="flex: 0;">Add</button>
+<!-- 3. MARKDOWN LIVE PREVIEW PANEL -->
+<div id="markdown-panel" class="tool-panel">
+    <div class="grid-2">
+        <div>
+            <label for="md-input">Markdown Input Matrix</label>
+            <textarea id="md-input" oninput="liveMarkdown()" placeholder="# Heading 1&#10;## Heading 2&#10;- Bullet point item&#10;**Bold emphasis text**"></textarea>
         </div>
-        <ul class="task-list" id="task-container"></ul>
+        <div>
+            <label>Real-Time HTML Render Preview</label>
+            <div id="md-output" class="preview-output" style="height: calc(100% - 24px);"></div>
+        </div>
+    </div>
+</div>
 
-        <h2 style="margin-top: 10px;">Quick Scratchpad</h2>
-        <textarea id="notes-area" placeholder="Jot down loose thoughts, URLs, or code strings to look at later..."></textarea>
+<!-- 4. REGEX TESTER PANEL -->
+<div id="regex-panel" class="tool-panel">
+    <div class="flex-row">
+        <div style="flex: 2;">
+            <label for="regex-pattern">Regex Formula Pattern (No enclosing slashes)</label>
+            <input type="text" id="regex-pattern" oninput="testRegex()" placeholder="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}">
+        </div>
+        <div style="flex: 1;">
+            <label for="regex-flags">Pattern Flags</label>
+            <input type="text" id="regex-flags" oninput="testRegex()" value="g" placeholder="g, i, m">
+        </div>
+    </div>
+    <label for="regex-text" style="margin-top: 12px;">Target Body Evaluation Text</label>
+    <textarea id="regex-text" oninput="testRegex()" placeholder="Enter string contents here to locate pattern matching conditions..."></textarea>
+    <label style="margin-top: 12px;">Identified Matrix Matches Output</label>
+    <div id="regex-output" class="preview-output"></div>
+</div>
+
+<!-- 5. WCAG CONTRAST CHECKER PANEL -->
+<div id="contrast-panel" class="tool-panel">
+    <div class="grid-2">
+        <div>
+            <label for="color-bg">Background Hex Target</label>
+            <input type="text" id="color-bg" oninput="checkContrast()" value="#1e2942">
+            <label for="color-text" style="margin-top: 12px;">Foreground Text Hex Target</label>
+            <input type="text" id="color-text" oninput="checkContrast()" value="#38bdf8">
+        </div>
+        <div>
+            <label>Visual Presentation Sample Block</label>
+            <div id="contrast-preview" class="contrast-sample">Readability Sample Matrix</div>
+            <div id="contrast-result" style="margin-top: 12px; font-weight: bold; text-align: center;"></div>
+        </div>
     </div>
 </div>
 
 <script>
-    let countdown;
-    let secondsLeft = 1500; 
-    let isRunning = false;
-    let audioContext;
-    let noiseNode;
-
-    let tasks = JSON.parse(localStorage.getItem('studio_tasks')) || [];
-    
-    // Check elements safely before population
-    window.addEventListener('DOMContentLoaded', () => {
-        document.getElementById('notes-area').value = localStorage.getItem('studio_notes') || '';
-        updateTimerUI();
-        renderTasks();
-    });
-
-    const timeView = document.getElementById('time-view');
-    const startStopBtn = document.getElementById('start-stop-btn');
-    const notesArea = document.getElementById('notes-area');
-    const taskInput = document.getElementById('task-input');
-    const taskContainer = document.getElementById('task-container');
-
-    function updateTimerUI() {
-        const minutes = Math.floor(secondsLeft / 60);
-        const remainderSeconds = secondsLeft % 60;
-        timeView.textContent = `${minutes}:${remainderSeconds < 10 ? '0' : ''}${remainderSeconds}`;
+    // Tab Switching Engine Router
+    function switchTool(panelId) {
+        document.querySelectorAll('.tool-panel').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(panelId).classList.add('active');
+        event.currentTarget.classList.add('active');
     }
 
-    function toggleTimer() {
-        if (isRunning) {
-            clearInterval(countdown);
-            startStopBtn.textContent = 'Start';
-            startStopBtn.style.backgroundColor = 'var(--accent)';
-        } else {
-            startStopBtn.textContent = 'Pause';
-            startStopBtn.style.backgroundColor = '#f59e0b';
-            countdown = setInterval(() => {
-                if (secondsLeft <= 0) {
-                    clearInterval(countdown);
-                    alert("Time's up! Take a break.");
-                    resetTimer(1500);
-                    return;
-                }
-                secondsLeft--;
-                updateTimerUI();
-            }, 1000);
+    // 1. JSON Processing Implementations
+    function processJSON(spaces) {
+        const input = document.getElementById('json-input');
+        const status = document.getElementById('json-status');
+        try {
+            if (!input.value.trim()) return;
+            const parsed = JSON.parse(input.value);
+            input.value = JSON.stringify(parsed, null, spaces);
+            status.className = "status-box success";
+            status.textContent = "Valid structure arrangement completed.";
+        } catch (e) {
+            status.className = "status-box error";
+            status.textContent = `Parser breakdown anomaly: ${e.message}`;
         }
-        isRunning = !isRunning;
     }
 
-    function resetTimer(seconds = 1500) {
-        clearInterval(countdown);
-        isRunning = false;
-        secondsLeft = seconds;
-        startStopBtn.textContent = 'Start';
-        startStopBtn.style.backgroundColor = 'var(--accent)';
-        updateTimerUI();
+    function minifyJSON() {
+        const input = document.getElementById('json-input');
+        try {
+            if (!input.value.trim()) return;
+            input.value = JSON.stringify(JSON.parse(input.value));
+        } catch (e) { alert("Minification failure: Verify JSON structure string integrity first."); }
     }
 
-    function renderTasks() {
-        taskContainer.innerHTML = '';
-        tasks.forEach((task, idx) => {
-            const li = document.createElement('li');
-            li.className = `task-item ${task.done ? 'done' : ''}`;
-            li.innerHTML = `
-                <span onclick="toggleTask(${idx})" style="cursor:pointer; flex: 1;">${task.text}</span>
-                <span class="delete-icon" onclick="deleteTask(${idx})">✕</span>
-            `;
-            taskContainer.appendChild(li);
-        });
-        localStorage.setItem('studio_tasks', JSON.stringify(tasks));
-    }
-
-    function addTask() {
-        const val = taskInput.value.trim();
-        if (!val) return;
-        tasks.push({ text: val, done: false });
-        taskInput.value = '';
-        renderTasks();
-    }
-
-    window.toggleTask = (idx) => { tasks[idx].done = !tasks[idx].done; renderTasks(); };
-    window.deleteTask = (idx) => { tasks.splice(idx, 1); renderTasks(); };
-
-    function toggleNoise() {
-        const audioBtn = document.getElementById('audio-btn');
-        if (audioContext && noiseNode) {
-            noiseNode.stop();
-            noiseNode = null;
-            audioBtn.textContent = 'Play';
-            return;
-        }
-
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        const bufferSize = 2 * audioContext.sampleRate;
-        const noiseBuffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
-        const output = noiseBuffer.getChannelData(0);
-
-        let lastOut = 0.0;
-        for (let i = 0; i < bufferSize; i++) {
-            const white = Math.random() * 2 - 1;
-            output[i] = (lastOut + (0.02 * white)) / 1.02;
-            lastOut = output[i];
-            output[i] *= 3.5; 
-        }
-
-        noiseNode = audioContext.createBufferSource();
-        noiseNode.buffer = noiseBuffer;
-        noiseNode.loop = true;
-        noiseNode.connect(audioContext.destination);
-        noiseNode.start();
-        audioBtn.textContent = 'Mute';
-    }
-
-    // Connect all interaction nodes completely
+    // 2. Base64 & URL Processing Engine
+    function runCodec(mode) {
+        const src = document.getElementById('codec-input').value;
