@@ -1,169 +1,61 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Local Utility Toolkit</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
-    body { background-color: #0f172a; color: #f8fafc; display: flex; min-height: 100vh; }
-    
-    /* Sidebar Navigation */
-    .sidebar { width: 260px; background-color: #1e293b; border-right: 1px solid #334155; padding: 20px; display: flex; flex-direction: column; gap: 8px; }
-    .sidebar h2 { font-size: 1.1rem; text-transform: uppercase; color: #94a3b8; letter-spacing: 1px; margin-bottom: 15px; padding-left: 8px; }
-    .nav-btn { background: none; border: none; color: #cbd5e1; text-align: left; padding: 12px 16px; border-radius: 8px; cursor: pointer; font-size: 0.95rem; font-weight: 500; transition: all 0.2s; }
-    .nav-btn:hover { background-color: #334155; color: #fff; }
-    .nav-btn.active { background-color: #2563eb; color: #fff; }
+import os
+import shutil
 
-    /* Main Content Area */
-    .main-content { flex: 1; padding: 40px; overflow-y: auto; background-color: #0f172a; }
-    .tool-panel { display: none; max-width: 1000px; margin: 0 auto; animation: fadeIn 0.3s ease-in-out; }
-    .tool-panel.active { display: block; }
-    
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-
-    /* UI Layout Utilities */
-    h1 { font-size: 1.8rem; margin-bottom: 8px; color: #fff; }
-    p.desc { color: #94a3b8; margin-bottom: 25px; font-size: 0.95rem; }
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
-    .form-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; }
-    label { font-size: 0.85rem; text-transform: uppercase; color: #94a3b8; font-weight: 600; letter-spacing: 0.5px; }
-    
-    textarea, input[type="text"], input[type="number"], select { 
-      background-color: #1e293b; border: 1px solid #334155; border-radius: 6px; color: #f8fafc; padding: 12px; font-size: 0.95rem; width: 100%; transition: border 0.2s;
+def organize_folder(target_folder):
+    # Define categories and their corresponding file extensions
+    FILE_CATEGORIES = {
+        "Documents": [".pdf", ".docx", ".doc", ".txt", ".xlsx", ".pptx", ".csv"],
+        "Images": [".jpg", ".jpeg", ".png", ".gif", ".bmp", ".svg", ".webp"],
+        "Videos": [".mp4", ".mkv", ".avi", ".mov", ".flv", ".wmv"],
+        "Audio": [".mp3", ".wav", ".aac", ".flac", ".ogg", ".m4a"],
+        "Archives": [".zip", ".rar", ".7z", ".tar", ".gz"],
+        "Installers": [".exe", ".msi", ".dmg", ".pkg"]
     }
-    textarea:focus, input:focus, select:focus { outline: none; border-color: #2563eb; }
-    textarea { resize: vertical; min-height: 200px; font-family: monospace; }
-    
-    .btn { background-color: #2563eb; color: #fff; border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer; font-weight: 600; transition: background 0.2s; display: inline-block; text-align: center; }
-    .btn:hover { background-color: #1d4ed8; }
-    .btn-secondary { background-color: #475569; }
-    .btn-secondary:hover { background-color: #334155; }
-    
-    .output-box { background-color: #1e293b; border: 1px solid #334155; border-radius: 6px; padding: 15px; min-height: 60px; font-family: monospace; word-break: break-all; white-space: pre-wrap; color: #38bdf8; font-size: 0.95rem; position: relative; }
-    .preview-box { background-color: #1e293b; border: 1px solid #334155; border-radius: 6px; padding: 20px; min-height: 200px; color: #f8fafc; overflow-y: auto; }
-    
-    /* Inline checkboxes styling */
-    .checkbox-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; }
-    .checkbox-label { display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 0.95rem; color: #cbd5e1; text-transform: none; font-weight: normal; }
-    .checkbox-label input { width: 18px; height: 18px; cursor: pointer; }
-    
-    .status-msg { margin-top: 10px; font-size: 0.9rem; font-weight: 500; }
-    .status-success { color: #4ade80; }
-    .status-error { color: #f87171; }
-  </style>
-</head>
-<body>
 
-  <!-- App Sidebar -->
-  <div class="sidebar">
-    <h2>Utility Hub</h2>
-    <button class="nav-btn active" onclick="switchTab('tab-markdown')">Markdown Live</button>
-    <button class="nav-btn" onclick="switchTab('tab-json')">JSON Formatter</button>
-    <button class="nav-btn" onclick="switchTab('tab-crypto')">Password Gen</button>
-    <button class="nav-btn" onclick="switchTab('tab-converter')">Smart Converter</button>
-    <button class="nav-btn" onclick="switchTab('tab-base64')">Image to Base64</button>
-  </div>
+    # Verify if the provided folder path exists
+    if not os.path.exists(target_folder):
+        print(f"Error: The path '{target_folder}' does not exist.")
+        return
 
-  <!-- Main Dashboard Views -->
-  <div class="main-content">
+    print(f"Organizing files in: {target_folder}...")
+    moved_count = 0
 
-    <!-- TAB 1: Markdown Live Previewer -->
-    <div id="tab-markdown" class="tool-panel active">
-      <h1>Markdown Live Previewer</h1>
-      <p class="desc">Write raw Markdown syntax on the left to see instantly parsed rich structural output rendered natively on the right.</p>
-      <div class="grid-2">
-        <div class="form-group">
-          <label>Markdown Input</label>
-          <textarea id="md-input" placeholder="# Hello World&#10;Type markdown text here..." oninput="parseMarkdown()"></textarea>
-        </div>
-        <div class="form-group">
-          <label>Rich Text Live Preview</label>
-          <div id="md-preview" class="preview-box"></div>
-        </div>
-      </div>
-    </div>
+    # Iterate through all items in the target directory
+    for item in os.listdir(target_folder):
+        item_path = os.path.join(target_folder, item)
 
-    <!-- TAB 2: JSON Formatter & Validator -->
-    <div id="tab-json" class="tool-panel">
-      <h1>JSON Formatter & Validator</h1>
-      <p class="desc">Paste mini or unorganized JSON objects to structural format, clean, or validate nested error locations client-side safely.</p>
-      <div class="form-group">
-        <label>Input Raw JSON String</label>
-        <textarea id="json-input" placeholder='{"name":"john","age":30,"city":"new york"}'></textarea>
-      </div>
-      <div style="margin-bottom: 20px; display: flex; gap: 10px;">
-        <button class="btn" onclick="processJSON(2)">Beautify (2 Spaces)</button>
-        <button class="btn" onclick="processJSON(4)">Beautify (4 Spaces)</button>
-        <button class="btn btn-secondary" onclick="minifyJSON()">Minify String</button>
-      </div>
-      <div class="form-group">
-        <label>Status / Output Results</label>
-        <div id="json-status" class="status-msg"></div>
-        <div id="json-output" class="output-box">Formatted output data box...</div>
-      </div>
-    </div>
+        # Skip directories to only process files
+        if os.path.isdir(item_path):
+            continue
 
-    <!-- TAB 3: Secure Crypto Password Generator -->
-    <div id="tab-crypto" class="tool-panel">
-      <h1>Secure Crypto Password Generator</h1>
-      <p class="desc">Generate localized cryptographically secure passwords without risking server-side tracking leak pipelines.</p>
-      <div class="grid-2">
-        <div>
-          <div class="form-group">
-            <label>Character Target Length (<span id="len-val">16</span>)</label>
-            <input type="range" id="pw-length" min="6" max="64" value="16" style="width:100%; margin: 10px 0;" oninput="document.getElementById('len-val').innerText=this.value">
-          </div>
-          <div class="checkbox-group">
-            <label class="checkbox-label"><input type="checkbox" id="pw-upper" checked> Include Uppercase Characters (A-Z)</label>
-            <label class="checkbox-label"><input type="checkbox" id="pw-lower" checked> Include Lowercase Characters (a-z)</label>
-            <label class="checkbox-label"><input type="checkbox" id="pw-numbers" checked> Include Numerical Digits (0-9)</label>
-            <label class="checkbox-label"><input type="checkbox" id="pw-symbols" checked> Include Complex Symbols (!@#$%^&*)</label>
-          </div>
-          <button class="btn" onclick="generateSecurePassword()">Generate Token</button>
-        </div>
-        <div class="form-group">
-          <label>Generated Secure String Output</label>
-          <div id="pw-output" class="output-box" style="font-size: 1.1rem; color: #a7f3d0; text-align: center; padding: 30px 10px;">Click generate to initialize...</div>
-          <button class="btn btn-secondary" style="margin-top: 10px;" onclick="copyToClipboard('pw-output')">Copy to Clipboard</button>
-        </div>
-      </div>
-    </div>
+        # Extract file extension in lowercase
+        _, file_extension = os.path.splitext(item)
+        file_extension = file_extension.lower()
 
-    <!-- TAB 4: Smart Converter Hub -->
-    <div id="tab-converter" class="tool-panel">
-      <h1>Smart Converter Engine</h1>
-      <p class="desc">Instantly convert abstract Unix Epoch timestamp data blocks into real readable date strings, and vice versa.</p>
-      <div class="grid-2">
-        <div style="background: #1e293b; padding: 20px; border-radius: 8px; border: 1px solid #334155;">
-          <h3 style="margin-bottom: 15px; font-size: 1rem; color: #38bdf8;">Unix Timestamp to Human Date</h3>
-          <div class="form-group">
-            <label>Epoch Timestamp (seconds)</label>
-            <input type="number" id="conv-epoch" placeholder="e.g. 1717977600">
-          </div>
-          <button class="btn" onclick="convertEpochToDate()" style="margin-bottom: 15px;">Convert Epoch</button>
-          <div id="epoch-result" class="output-box">Readable Date format...</div>
-        </div>
-        <div style="background: #1e293b; padding: 20px; border-radius: 8px; border: 1px solid #334155;">
-          <h3 style="margin-bottom: 15px; font-size: 1rem; color: #38bdf8;">Human Date to Unix Timestamp</h3>
-          <div class="form-group">
-            <label>ISO / Local Date String Entry</label>
-            <input type="text" id="conv-date" placeholder="e.g. 2026-06-10 12:00:00">
-          </div>
-          <button class="btn" onclick="convertDateToEpoch()" style="margin-bottom: 15px;">Convert Date</button>
-          <div id="date-result" class="output-box">Epoch numeric format...</div>
-        </div>
-      </div>
-    </div>
+        # Identify the correct folder category for the file
+        target_category = "Others"
+        for category, extensions in FILE_CATEGORIES.items():
+            if file_extension in extensions:
+                target_category = category
+                break
 
-    <!-- TAB 5: Image to Base64 Encoder -->
-    <div id="tab-base64" class="tool-panel">
-      <h1>Local Image-to-Base64 Encoder</h1>
-      <p class="desc">Upload static local image files and translate them instantly into standalone Base64 Data URLs for inline CSS or code compilation injection templates.</p>
-      <div class="form-group">
-        <label>Select Local Image File Asset</label>
-        <input type="file" id="base64-file" accept="image/*" onchange="encodeImageToBase64()" style="background: none; border: none; padding: 10px 0;">
-      </div>
-      <div class="grid-2">
-        <div class="form-group">
+        # Construct the destination folder path
+        category_folder_path = os.path.join(target_folder, target_category)
 
+        # Create the subfolder if it does not already exist
+        if not os.path.exists(category_folder_path):
+            os.makedirs(category_folder_path)
+
+        # Move the file to its designated category folder
+        try:
+            shutil.move(item_path, os.path.join(category_folder_path, item))
+            moved_count += 1
+        except Exception as e:
+            print(f"Could not move {item}: {e}")
+
+    print(f"Success! {moved_count} files successfully organized.")
+
+# Example Usage: Replace with your actual directory path
+# Use a double backslash '\\' or a forward slash '/' for paths on Windows
+folder_to_clean = "./my_cluttered_folder" 
+organize_folder(folder_to_clean)
