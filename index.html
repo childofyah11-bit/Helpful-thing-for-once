@@ -153,6 +153,7 @@
             flex-grow: 1;
             font-family: inherit;
             line-height: 1.5;
+            min-height: 120px;
         }
 
         .sound-toggle {
@@ -210,7 +211,13 @@
     let noiseNode;
 
     let tasks = JSON.parse(localStorage.getItem('studio_tasks')) || [];
-    document.getElementById('notes-area').value = localStorage.getItem('studio_notes') || '';
+    
+    // Check elements safely before population
+    window.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('notes-area').value = localStorage.getItem('studio_notes') || '';
+        updateTimerUI();
+        renderTasks();
+    });
 
     const timeView = document.getElementById('time-view');
     const startStopBtn = document.getElementById('start-stop-btn');
@@ -235,7 +242,7 @@
             countdown = setInterval(() => {
                 if (secondsLeft <= 0) {
                     clearInterval(countdown);
-                    alert("Time's up! Take a well-deserved breathing gap.");
+                    alert("Time's up! Take a break.");
                     resetTimer(1500);
                     return;
                 }
@@ -310,6 +317,4 @@
         audioBtn.textContent = 'Mute';
     }
 
-    startStopBtn.addEventListener('click', toggleTimer);
-    document.getElementById('reset-btn').addEventListener('click', () => resetTimer(1500));
-    document.getElementById('mode-work').addEventListener('click', () => resetTimer(1500));
+    // Connect all interaction nodes completely
