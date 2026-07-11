@@ -3,99 +3,123 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hybrid P2P Matchmaking Arena</title>
+    <title>Survival Arena: Chaos Edition</title>
     <!-- PeerJS Framework Module -->
     <script src="https://unpkg.com"></script>
     <style>
+        :root {
+            --bg: #090d16;
+            --surface: #121824;
+            --accent: #38bdf8;
+            --success: #10b981;
+            --danger: #ef4444;
+            --gold: #eab308;
+            --border: #29354f;
+        }
+
         body {
             font-family: system-ui, -apple-system, sans-serif;
-            background-color: #0f172a;
+            background-color: var(--bg);
             color: #f8fafc;
             margin: 0;
             padding: 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
+            user-select: none;
         }
-        h2 { margin: 0; color: #38bdf8; }
+
+        h2 { margin: 0; color: var(--accent); font-size: 28px; text-shadow: 0 0 10px rgba(56,189,248,0.2); }
+        
         .dashboard {
             display: flex;
-            gap: 20px;
+            gap: 15px;
             margin: 15px 0;
             align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
         }
-        .setup-box {
-            background: #1e293b;
+
+        .panel-card {
+            background: var(--surface);
             padding: 10px 20px;
-            border-radius: 8px;
+            border-radius: 10px;
             display: flex;
-            gap: 15px;
+            gap: 12px;
             align-items: center;
-            border: 1px solid #334155;
-            font-weight: 500;
+            border: 1px solid var(--border);
+            font-weight: 600;
+            font-size: 15px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2);
         }
-        .score-box {
-            background: #0f172a;
-            border: 1px solid #38bdf8;
-            padding: 10px 20px;
-            border-radius: 8px;
+
+        .score-card {
+            border-color: var(--gold);
+            color: var(--gold);
             font-size: 18px;
-            font-weight: bold;
-            color: #38bdf8;
         }
+
         #game-canvas {
-            background-color: #1e293b;
-            border: 2px solid #334155;
-            border-radius: 12px;
-            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3);
+            background-color: #0f172a;
+            border: 3px solid var(--border);
+            border-radius: 16px;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.6);
         }
-        .status { font-size: 14px; color: #94a3b8; margin-top: 5px; }
+
+        .status-footer { font-size: 13px; color: #64748b; margin-top: 8px; font-family: monospace; }
+        
         .pulse {
-            width: 8px; height: 8px; background: #eab308; border-radius: 50%;
+            width: 10px; height: 10px; background: #ea580c; border-radius: 50%;
             display: inline-block; animation: blink 1.5s infinite;
         }
-        @keyframes blink { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+        @keyframes blink { 0%, 100% { opacity: 0.4; transform: scale(0.9); } 50% { opacity: 1; transform: scale(1.1); } }
     </style>
 </head>
 <body>
 
-    <h2>Survival Coin Arena</h2>
-    <p class="status">Collect 🟡 coins while dodging the 🔴 AI Drone. Real players replace the bot automatically!</p>
-
+    <h2>SURVIVAL ARENA: CHAOS MODE</h2>
+    
     <div class="dashboard">
-        <!-- Automated Status Panel Layout -->
-        <div class="setup-box">
+        <div class="panel-card">
             <div id="lobby-pulse" class="pulse"></div>
-            <span id="match-status-label">Initializing matchmaking matrix...</span>
+            <span id="match-status-label">Initializing internal network matrices...</span>
         </div>
-        <!-- Live Score Counter Tracker -->
-        <div class="score-box">Coins Collected: <span id="score-val">0</span></div>
+        <div class="panel-card score-card">Coins: <span id="score-val">0</span></div>
+        <div class="panel-card" style="color: var(--success); border-color: var(--success);">⚡ Boost: <span id="boost-status">READY</span></div>
     </div>
 
-    <canvas id="game-canvas" width="800" height="450"></canvas>
-    <p id="connection-status" class="status">Connecting to matchmaking services...</p>
+    <canvas id="game-canvas" width="850" height="480"></canvas>
+    
+    <div class="status-footer">
+        Controls: [W,A,S,D / Arrows] Move | [Spacebar] Instant Burst Dash | System: <span id="connection-status">Booting cores...</span>
+    </div>
 
 <script>
     const canvas = document.getElementById('game-canvas');
     const ctx = canvas.getContext('2d');
 
-    // Network & Game state configurations
+    // Network Engine Parameters
     let peer;
     let connections = [];
     let myId = null;
     let players = {};
-    let speed = 5;
+    let baseSpeed = 5;
+    let currentSpeed = 5;
     let keysPressed = {};
     let score = 0;
 
-    // Single-Room Matchmaker Anchors
-    const LOBBY_HOST_ID = 'nexus_public_matchmaker_lobby_v2';
+    // Matchmaking Room Configuration Strings
+    const LOBBY_HOST_ID = 'nexus_public_matchmaker_lobby_v3';
     let isHost = false;
     let hasRealOpponent = false;
 
-    // Game Object Entities
-    let coin = { x: 400, y: 225, radius: 8 };
-    let aiBot = { x: 100, y: 100, radius: 14, speed: 2 };
+    // Advanced Game Mechanics & Entity States
+    let coin = { x: 425, y: 240, radius: 9 };
+    let speedBoost = { x: 200, y: 150, radius: 10, active: true, respawnTimer: 0 };
+    let aiBot = { x: 100, y: 100, radius: 15, baseSpeed: 2.2, currentSpeed: 2.2 };
+    
+    let boostDuration = 0;
+    let dashCooldown = 0;
 
     function createSelfPlayer(id) {
         myId = id;
@@ -103,13 +127,14 @@
             id: myId,
             x: Math.floor(Math.random() * 500) + 150,
             y: Math.floor(Math.random() * 250) + 100,
-            color: `hsl(${Math.random() * 360}, 80%, 60%)`
+            color: `hsl(${Math.random() * 360}, 85%, 60%)`,
+            label: id.startsWith('client_') ? 'Guest' : 'Host'
         };
     }
 
     function startMatchmaking() {
         const statusLabel = document.getElementById('match-status-label');
-        statusLabel.innerHTML = 'Searching for an online match... (Solo Mode Active)';
+        statusLabel.innerHTML = 'Searching match clusters... [Solo Sandbox Running]';
 
         const clientRandomId = 'client_' + Math.random().toString(36).substring(2, 9);
         peer = new Peer(clientRandomId, {
@@ -129,9 +154,7 @@
         });
 
         peer.on('error', (err) => {
-            if (err.type === 'unavailable-id') {
-                switchToHostMode();
-            }
+            if (err.type === 'unavailable-id') switchToHostMode();
         });
     }
 
@@ -143,8 +166,8 @@
         const statusLabel = document.getElementById('match-status-label');
         const pulse = document.getElementById('lobby-pulse');
         
-        statusLabel.innerHTML = 'Solo Survival Mode (Waiting for an opponent...)';
-        pulse.style.backgroundColor = '#eab308'; // Amber searching pulse
+        statusLabel.innerHTML = 'Solo Chaos Mode (Waiting for human connections...)';
+        pulse.style.backgroundColor = '#ea580c'; // Search mode pulse
 
         peer = new Peer(LOBBY_HOST_ID, {
             config: { 'iceServers': [{ url: 'stun:://google.com' }, { url: 'stun:://google.com' }] }
@@ -152,7 +175,7 @@
 
         peer.on('open', (id) => {
             createSelfPlayer(id);
-            document.getElementById('connection-status').textContent = "Lobby open. Solitary parameters initialized.";
+            document.getElementById('connection-status').textContent = "P2P Lobby active.";
         });
 
         peer.on('connection', (conn) => {
@@ -164,23 +187,19 @@
         conn.on('open', () => {
             connections.push(conn);
             hasRealOpponent = true;
-            document.getElementById('match-status-label').innerHTML = 'Match Linked! Real Opponent Active. 🔥';
-            document.getElementById('lobby-pulse').style.backgroundColor = '#10b981'; // Green active match
-            document.getElementById('connection-status').textContent = "P2P node bridge operational.";
+            document.getElementById('match-status-label').innerHTML = 'Multiplayer Connected! Bot disabled. ⚔️';
+            document.getElementById('lobby-pulse').style.backgroundColor = 'var(--success)';
+            document.getElementById('connection-status').textContent = "Mesh pipeline stable.";
             
-            // Sync player data along with current coin positions
-            conn.send({ type: 'handshake', player: players[myId], coin: coin });
+            conn.send({ type: 'handshake', player: players[myId], coin: coin, boost: speedBoost });
         });
 
         conn.on('data', (data) => {
-            if (data.type === 'handshake') {
+            if (data.type === 'handshake' || data.type === 'sync') {
                 players[data.player.id] = data.player;
                 if (data.coin) coin = data.coin;
-                conn.send({ type: 'sync', player: players[myId], coin: coin });
-            } 
-            else if (data.type === 'sync') {
-                players[data.player.id] = data.player;
-                if (data.coin) coin = data.coin;
+                if (data.boost) speedBoost = data.boost;
+                if (data.type === 'handshake') conn.send({ type: 'sync', player: players[myId], coin: coin, boost: speedBoost });
             } 
             else if (data.type === 'move') {
                 if (players[data.id]) {
@@ -190,15 +209,15 @@
             }
             else if (data.type === 'coinGathered') {
                 coin = data.nextCoin;
-                if (players[data.byPlayerId] && data.byPlayerId !== myId) {
-                    // Update remote visual cues if needed
-                }
+            }
+            else if (data.type === 'boostGathered') {
+                speedBoost = data.nextBoost;
             }
         });
 
         conn.on('close', () => {
-            document.getElementById('match-status-label').innerHTML = 'Opponent left. Defaulting to Solo Practice...';
-            document.getElementById('lobby-pulse').style.backgroundColor = '#eab308';
+            document.getElementById('match-status-label').innerHTML = 'Opponent left. Returning to Solo Mode...';
+            document.getElementById('lobby-pulse').style.backgroundColor = '#ea580c';
             connections = connections.filter(c => c !== conn);
             hasRealOpponent = false;
             
@@ -209,13 +228,40 @@
         });
     }
 
-    window.addEventListener('keydown', (e) => { keysPressed[e.key.toLowerCase()] = true; });
+    window.addEventListener('keydown', (e) => { 
+        keysPressed[e.key.toLowerCase()] = true; 
+        
+        // --- DASH EXECUTION UTILITY (Spacebar Trigger) ---
+        if (e.key === ' ' || e.code === 'Space') {
+            e.preventDefault();
+            if (dashCooldown <= 0 && (myId && players[myId])) {
+                executeBurstDash(players[myId]);
+            }
+        }
+    });
     window.addEventListener('keyup', (e) => { keysPressed[e.key.toLowerCase()] = false; });
 
-    function syncObjectNetworkState(type, dataMap) {
-        connections.forEach(conn => {
-            if (conn.open) conn.send({ type: type, ...dataMap });
-        });
+    function broadcastState(type, dataMap) {
+        connections.forEach(conn => { if (conn.open) conn.send({ type: type, ...dataMap }); });
+    }
+
+    function executeBurstDash(me) {
+        let dx = 0; let dy = 0;
+        if (keysPressed['w'] || keysPressed['arrowup']) dy = -1;
+        if (keysPressed['s'] || keysPressed['arrowdown']) dy = 1;
+        if (keysPressed['a'] || keysPressed['arrowleft']) dx = -1;
+        if (keysPressed['d'] || keysPressed['arrowright']) dx = 1;
+
+        if (dx !== 0 || dy !== 0) {
+            // Normalize velocity vector
+            let length = Math.hypot(dx, dy);
+            me.x += (dx / length) * 45;
+            me.y += (dy / length) * 45;
+            dashCooldown = 90; // Frame counter delay restriction
+            document.getElementById('boost-status').textContent = 'CHARGING';
+            document.getElementById('boost-status').parentElement.style.borderColor = 'var(--danger)';
+            document.getElementById('boost-status').parentElement.style.color = 'var(--danger)';
+        }
     }
 
     function processMovementLogic() {
@@ -224,44 +270,7 @@
         let me = players[myId];
         let moved = false;
 
-        if (keysPressed['w'] || keysPressed['arrowup']) { me.y -= speed; moved = true; }
-        if (keysPressed['s'] || keysPressed['arrowdown']) { me.y += speed; moved = true; }
-        if (keysPressed['a'] || keysPressed['arrowleft']) { me.x -= speed; moved = true; }
-        if (keysPressed['d'] || keysPressed['arrowright']) { me.x += speed; moved = true; }
-
-        me.x = Math.max(16, Math.min(canvas.width - 16, me.x));
-        me.y = Math.max(16, Math.min(canvas.height - 16, me.y));
-
-        if (moved) {
-            syncObjectNetworkState('move', { id: myId, x: me.x, y: me.y });
-        }
-
-        // --- Coin Detection Math Collision check ---
-        let distToCoin = Math.hypot(me.x - coin.x, me.y - coin.y);
-        if (distToCoin < 16 + coin.radius) {
-            score++;
-            document.getElementById('score-val').textContent = score;
-            
-            // Relocate coin to fresh coordinates
-            coin.x = Math.floor(Math.random() * (canvas.width - 40)) + 20;
-            coin.y = Math.floor(Math.random() * (canvas.height - 40)) + 20;
-
-            // Share new coin coordinates over network if multiplayer is active
-            if (hasRealOpponent) {
-                syncObjectNetworkState('coinGathered', { byPlayerId: myId, nextCoin: coin });
-            }
-        }
-
-        // --- AI Drone Management (Only runs when solo) ---
-        if (!hasRealOpponent) {
-            let angle = Math.atan2(me.y - aiBot.y, me.x - aiBot.x);
-            aiBot.x += Math.cos(angle) * aiBot.speed;
-            aiBot.y += Math.sin(angle) * aiBot.speed;
-
-            // Check if AI catches you
-            let distToAi = Math.hypot(me.x - aiBot.x, me.y - aiBot.y);
-            if (distToAi < 16 + aiBot.radius) {
-                score = 0; // Penalty trigger
-                document.getElementById('score-val').textContent = score;
-                // Respawn Drone safely away
-                aiBot.x = aiBot.x > canvas.width / 2 ? 50 : canvas.width - 50;
+        // Manage Timers
+        if (dashCooldown > 0) {
+            dashCooldown--;
+            if(dashCooldown === 0) {
