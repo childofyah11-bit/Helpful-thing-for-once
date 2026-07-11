@@ -1,61 +1,218 @@
-import os
-import shutil
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Budget Tracker</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --success: #16a34a;
+            --danger: #dc2626;
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --text: #0f172a;
+        }
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: var(--surface);
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+        h2 { margin-top: 0; text-align: center; }
+        .budget-box {
+            background: #f1f5f9;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .progress-container {
+            background: #e2e8f0;
+            border-radius: 9999px;
+            height: 12px;
+            width: 100%;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        .progress-bar {
+            background: var(--success);
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease, background-color 0.3s;
+        }
+        .progress-bar.warning { background: var(--danger); }
+        .form-group {
+            margin-bottom: 12px;
+            display: flex;
+            flex-direction: column;
+        }
+        label { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+        input, select {
+            padding: 8px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+        button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 8px;
+        }
+        button:hover { opacity: 0.9; }
+        .expense-list {
+            margin-top: 20px;
+            list-style: none;
+            padding: 0;
+        }
+        .expense-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .delete-btn {
+            background: none;
+            color: var(--danger);
+            border: none;
+            cursor: pointer;
+            width: auto;
+            margin: 0;
+            padding: 0 4px;
+        }
+    </style>
+</head>
+<body>
 
-def organize_folder(target_folder):
-    # Define categories and their corresponding file extensions
-    FILE_CATEGORIES = {
-        "Documents": [".pdf", ".docx", ".doc", ".txt", ".xlsx", ".pptx", ".csv"],
-        "Images": [".jpg", ".jpeg", ".png", ".gif", ".bmp", ".svg", ".webp"],
-        "Videos": [".mp4", ".mkv", ".avi", ".mov", ".flv", ".wmv"],
-        "Audio": [".mp3", ".wav", ".aac", ".flac", ".ogg", ".m4a"],
-        "Archives": [".zip", ".rar", ".7z", ".tar", ".gz"],
-        "Installers": [".exe", ".msi", ".dmg", ".pkg"]
+<div class="container">
+    <h2>Smart Budget Tracker</h2>
+    
+    <div class="budget-box">
+        <div>Remaining Budget: <strong>$<span id="remaining">0.00</span></strong></div>
+        <small>Spent: $<span id="total-spent">0.00</span> of $<span id="budget-val">0.00</span></small>
+        <div class="progress-container">
+            <div id="progress" class="progress-bar"></div>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="monthly-budget">Set Monthly Budget ($)</label>
+        <input type="number" id="monthly-budget" value="1000" min="0">
+    </div>
+
+    <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 20px 0;">
+
+    <h3>Add New Expense</h3>
+    <div class="form-group">
+        <label for="exp-title">Description</label>
+        <input type="text" id="exp-title" placeholder="Groceries, Rent, Gas...">
+    </div>
+    <div class="form-group">
+        <label for="exp-amount">Amount ($)</label>
+        <input type="number" id="exp-amount" placeholder="0.00" min="0">
+    </div>
+    <button id="add-btn">Add Expense</button>
+
+    <ul id="expense-list" class="expense-list"></ul>
+</div>
+
+<script>
+    // Load data from localStorage or set defaults
+    let budget = parseFloat(localStorage.getItem('budget')) || 1000;
+    let expenses = JSON.parse(localStorage.getItem('expenses')) || [];
+
+    // DOM Elements
+    const budgetInput = document.getElementById('monthly-budget');
+    const expTitle = document.getElementById('exp-title');
+    const expAmount = document.getElementById('exp-amount');
+    const addBtn = document.getElementById('add-btn');
+    const expenseList = document.getElementById('expense-list');
+    
+    budgetInput.value = budget;
+
+    function updateUI() {
+        const totalSpent = expenses.reduce((sum, exp) => sum + exp.amount, 0);
+        const remaining = budget - totalSpent;
+        
+        // Update text indicators
+        document.getElementById('budget-val').textContent = budget.toFixed(2);
+        document.getElementById('total-spent').textContent = totalSpent.toFixed(2);
+        document.getElementById('remaining').textContent = remaining.toFixed(2);
+
+        // Update Progress Bar
+        const percent = Math.min((totalSpent / budget) * 100, 100) || 0;
+        const progressBar = document.getElementById('progress');
+        progressBar.style.width = percent + '%';
+        
+        if (totalSpent > budget) {
+            progressBar.classList.add('warning');
+        } else {
+            progressBar.classList.remove('warning');
+        }
+
+        // Render List
+        expenseList.innerHTML = '';
+        expenses.forEach((exp, index) => {
+            const li = document.createElement('li');
+            li.className = 'expense-item';
+            li.innerHTML = `
+                <span>${exp.title} - <strong>$${exp.amount.toFixed(2)}</strong></span>
+                <button class="delete-btn" onclick="deleteExpense(${index})">✕</button>
+            `;
+            expenseList.appendChild(li);
+        });
+
+        // Save states
+        localStorage.setItem('budget', budget);
+        localStorage.setItem('expenses', JSON.stringify(expenses));
     }
 
-    # Verify if the provided folder path exists
-    if not os.path.exists(target_folder):
-        print(f"Error: The path '{target_folder}' does not exist.")
-        return
+    // Event Listeners
+    budgetInput.addEventListener('input', (e) => {
+        budget = parseFloat(e.target.value) || 0;
+        updateUI();
+    });
 
-    print(f"Organizing files in: {target_folder}...")
-    moved_count = 0
+    addBtn.addEventListener('click', () => {
+        const title = expTitle.value.trim();
+        const amount = parseFloat(expAmount.value);
 
-    # Iterate through all items in the target directory
-    for item in os.listdir(target_folder):
-        item_path = os.path.join(target_folder, item)
+        if (!title || isNaN(amount) || amount <= 0) {
+            alert('Please enter a valid description and amount.');
+            return;
+        }
 
-        # Skip directories to only process files
-        if os.path.isdir(item_path):
-            continue
+        expenses.push({ title, amount });
+        expTitle.value = '';
+        expAmount.value = '';
+        updateUI();
+    });
 
-        # Extract file extension in lowercase
-        _, file_extension = os.path.splitext(item)
-        file_extension = file_extension.lower()
+    window.deleteExpense = function(index) {
+        expenses.splice(index, 1);
+        updateUI();
+    };
 
-        # Identify the correct folder category for the file
-        target_category = "Others"
-        for category, extensions in FILE_CATEGORIES.items():
-            if file_extension in extensions:
-                target_category = category
-                break
-
-        # Construct the destination folder path
-        category_folder_path = os.path.join(target_folder, target_category)
-
-        # Create the subfolder if it does not already exist
-        if not os.path.exists(category_folder_path):
-            os.makedirs(category_folder_path)
-
-        # Move the file to its designated category folder
-        try:
-            shutil.move(item_path, os.path.join(category_folder_path, item))
-            moved_count += 1
-        except Exception as e:
-            print(f"Could not move {item}: {e}")
-
-    print(f"Success! {moved_count} files successfully organized.")
-
-# Example Usage: Replace with your actual directory path
-# Use a double backslash '\\' or a forward slash '/' for paths on Windows
-folder_to_clean = "./my_cluttered_folder" 
-organize_folder(folder_to_clean)
+    // Initial render
+    updateUI();
+</script>
+</body>
+</html>
