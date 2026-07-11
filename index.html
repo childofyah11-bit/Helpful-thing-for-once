@@ -3,15 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Budget Tracker</title>
+    <title>Advanced Financial Dashboard</title>
     <style>
         :root {
             --primary: #4f46e5;
             --success: #16a34a;
             --danger: #dc2626;
+            --warning: #ea580c;
             --bg: #f8fafc;
             --surface: #ffffff;
             --text: #0f172a;
+            --border: #e2e8f0;
         }
         body {
             font-family: system-ui, -apple-system, sans-serif;
@@ -24,195 +26,253 @@
         }
         .container {
             width: 100%;
-            max-width: 500px;
+            max-width: 750px;
             background: var(--surface);
             padding: 24px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            border-radius: 16px;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);
         }
-        h2 { margin-top: 0; text-align: center; }
-        .budget-box {
+        h2, h3 { margin-top: 0; }
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .card {
             background: #f1f5f9;
             padding: 16px;
-            border-radius: 8px;
-            margin-bottom: 20px;
+            border-radius: 12px;
             text-align: center;
+            border: 1px solid var(--border);
         }
+        .card h4 { margin: 0 0 8px 0; color: #64748b; font-size: 14px; text-transform: uppercase; }
+        .card div { font-size: 22px; font-weight: bold; }
+        
         .progress-container {
             background: #e2e8f0;
             border-radius: 9999px;
-            height: 12px;
+            height: 10px;
             width: 100%;
             overflow: hidden;
-            margin-top: 10px;
+            margin-top: 15px;
         }
         .progress-bar {
             background: var(--success);
             height: 100%;
             width: 0%;
-            transition: width 0.3s ease, background-color 0.3s;
+            transition: width 0.3s, background-color 0.3s;
         }
-        .progress-bar.warning { background: var(--danger); }
-        .form-group {
+        .progress-bar.danger { background: var(--danger); }
+        .progress-bar.warning { background: var(--warning); }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 12px;
             margin-bottom: 12px;
-            display: flex;
-            flex-direction: column;
         }
-        label { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+        .form-group { display: flex; flex-direction: column; }
+        label { font-size: 13px; font-weight: 600; margin-bottom: 4px; color: #475569; }
         input, select {
-            padding: 8px;
+            padding: 10px;
             border: 1px solid #cbd5e1;
-            border-radius: 6px;
-            font-size: 16px;
+            border-radius: 8px;
+            font-size: 15px;
+            outline: none;
         }
+        input:focus, select:focus { border-color: var(--primary); }
+        
+        .btn-group { display: flex; gap: 10px; margin-top: 12px; }
         button {
             background: var(--primary);
             color: white;
             border: none;
-            padding: 10px;
-            border-radius: 6px;
+            padding: 12px;
+            border-radius: 8px;
             font-weight: 600;
             cursor: pointer;
-            width: 100%;
-            margin-top: 8px;
+            flex: 1;
         }
         button:hover { opacity: 0.9; }
-        .expense-list {
-            margin-top: 20px;
-            list-style: none;
-            padding: 0;
-        }
-        .expense-item {
+        button.secondary { background: #64748b; }
+        button.danger-btn { background: #ef4444; }
+
+        .controls {
             display: flex;
-            justify-content: space-between;
+            gap: 12px;
+            margin: 24px 0 12px 0;
             align-items: center;
-            padding: 10px;
-            border-bottom: 1px solid #e2e8f0;
         }
-        .delete-btn {
-            background: none;
-            color: var(--danger);
-            border: none;
-            cursor: pointer;
-            width: auto;
-            margin: 0;
-            padding: 0 4px;
+        .search-bar { flex: 2; }
+        .filter-select { flex: 1; }
+
+        .table-container { overflow-x: auto; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            margin-top: 8px;
+            font-size: 15px;
         }
+        th, td { padding: 12px; border-bottom: 1px solid var(--border); }
+        th { background: #f8fafc; color: #64748b; font-weight: 600; }
+        .badge {
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            background: #e2e8f0;
+        }
+        .action-cell { text-align: center; }
+        .delete-icon { color: var(--danger); cursor: pointer; background: none; border: none; font-size: 16px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>Budget Tracker</h2>
+    <h2 style="text-align: center; margin-bottom: 24px;">Financial Dashboard</h2>
     
-    <div class="budget-box">
-        <div>Remaining Budget: <strong>$<span id="remaining">0.00</span></strong></div>
-        <small>Spent: $<span id="total-spent">0.00</span> of $<span id="budget-val">0.00</span></small>
+    <!-- Summary Metrics -->
+    <div class="grid-3">
+        <div class="card">
+            <h4>Total Budget</h4>
+            <input type="number" id="monthly-budget" value="2000" style="width: 80%; text-align: center; font-weight: bold; font-size: 18px; padding: 4px;">
+        </div>
+        <div class="card">
+            <h4>Total Spent</h4>
+            <div id="total-spent" style="color: var(--danger);">$0.00</div>
+        </div>
+        <div class="card">
+            <h4>Remaining</h4>
+            <div id="remaining" style="color: var(--success);">$0.00</div>
+        </div>
+    </div>
+
+    <!-- Progress Meter -->
+    <div style="margin-bottom: 30px;">
+        <div style="display: flex; justify-content: space-between; font-size: 13px; color: #64748b;">
+            <span>Budget Usage Limit</span>
+            <span id="usage-percent">0%</span>
+        </div>
         <div class="progress-container">
             <div id="progress" class="progress-bar"></div>
         </div>
     </div>
 
-    <div class="form-group">
-        <label for="monthly-budget">Set Monthly Budget ($)</label>
-        <input type="number" id="monthly-budget" value="1000" min="0">
+    <!-- Input Form -->
+    <h3>Log New Transaction</h3>
+    <div class="form-row">
+        <div class="form-group" style="grid-column: span 2;">
+            <label for="exp-title">Description</label>
+            <input type="text" id="exp-title" placeholder="Merchant or item name...">
+        </div>
+        <div class="form-group">
+            <label for="exp-amount">Amount ($)</label>
+            <input type="number" id="exp-amount" placeholder="0.00" min="0" step="0.01">
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group">
+            <label for="exp-category">Category</label>
+            <select id="exp-category">
+                <option value="Housing">Housing/Rent</option>
+                <option value="Groceries">Groceries</option>
+                <option value="Utilities">Utilities</option>
+                <option value="Entertainment">Entertainment</option>
+                <option value="Transport">Transportation</option>
+                <option value="Others">Others</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="exp-date">Date</label>
+            <input type="date" id="exp-date">
+        </div>
+    </div>
+    <button id="add-btn">Add Transaction</button>
+
+    <!-- Filters & Toolbox -->
+    <div class="controls">
+        <input type="text" id="search-input" class="search-bar" placeholder="Search transactions...">
+        <select id="filter-category" class="filter-select">
+            <option value="All">All Categories</option>
+            <option value="Housing">Housing</option>
+            <option value="Groceries">Groceries</option>
+            <option value="Utilities">Utilities</option>
+            <option value="Entertainment">Entertainment</option>
+            <option value="Transport">Transport</option>
+            <option value="Others">Others</option>
+        </select>
     </div>
 
-    <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 20px 0;">
-
-    <h3>Add New Expense</h3>
-    <div class="form-group">
-        <label for="exp-title">Description</label>
-        <input type="text" id="exp-title" placeholder="Groceries, Rent, Gas...">
+    <!-- Ledger Table -->
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Description</th>
+                    <th>Category</th>
+                    <th>Amount</th>
+                    <th class="action-cell">Action</th>
+                </tr>
+            </thead>
+            <tbody id="ledger-body"></tbody>
+        </table>
     </div>
-    <div class="form-group">
-        <label for="exp-amount">Amount ($)</label>
-        <input type="number" id="exp-amount" placeholder="0.00" min="0">
-    </div>
-    <button id="add-btn">Add Expense</button>
 
-    <ul id="expense-list" class="expense-list"></ul>
+    <!-- Bulk Utilities -->
+    <div class="btn-group">
+        <button class="secondary" id="export-btn">Export Data (CSV)</button>
+        <button class="danger-btn" id="clear-btn">Clear All Logs</button>
+    </div>
 </div>
 
 <script>
-    // Load data from localStorage or set defaults
-    let budget = parseFloat(localStorage.getItem('budget')) || 1000;
-    let expenses = JSON.parse(localStorage.getItem('expenses')) || [];
+    let budget = parseFloat(localStorage.getItem('adv_budget')) || 2000;
+    let expenses = JSON.parse(localStorage.getItem('adv_expenses')) || [];
 
-    // DOM Elements
     const budgetInput = document.getElementById('monthly-budget');
     const expTitle = document.getElementById('exp-title');
     const expAmount = document.getElementById('exp-amount');
+    const expCategory = document.getElementById('exp-category');
+    const expDate = document.getElementById('exp-date');
     const addBtn = document.getElementById('add-btn');
-    const expenseList = document.getElementById('expense-list');
-    
+    const ledgerBody = document.getElementById('ledger-body');
+    const searchInput = document.getElementById('search-input');
+    const filterCategory = document.getElementById('filter-category');
+
+    // Auto-populate current date helper
+    expDate.value = new Date().toISOString().split('T')[0];
     budgetInput.value = budget;
 
-    function updateUI() {
+    function updateDashboard() {
         const totalSpent = expenses.reduce((sum, exp) => sum + exp.amount, 0);
         const remaining = budget - totalSpent;
-        
-        // Update text indicators
-        document.getElementById('budget-val').textContent = budget.toFixed(2);
-        document.getElementById('total-spent').textContent = totalSpent.toFixed(2);
-        document.getElementById('remaining').textContent = remaining.toFixed(2);
-
-        // Update Progress Bar
         const percent = Math.min((totalSpent / budget) * 100, 100) || 0;
+
+        document.getElementById('total-spent').textContent = `$${totalSpent.toFixed(2)}`;
+        document.getElementById('remaining').textContent = `$${remaining.toFixed(2)}`;
+        document.getElementById('usage-percent').textContent = `${Math.round((totalSpent / budget) * 100 || 0)}%`;
+
         const progressBar = document.getElementById('progress');
         progressBar.style.width = percent + '%';
         
-        if (totalSpent > budget) {
-            progressBar.classList.add('warning');
-        } else {
-            progressBar.classList.remove('warning');
-        }
+        progressBar.className = 'progress-bar';
+        if (percent >= 90) progressBar.classList.add('danger');
+        else if (percent >= 75) progressBar.classList.add('warning');
 
-        // Render List
-        expenseList.innerHTML = '';
-        expenses.forEach((exp, index) => {
-            const li = document.createElement('li');
-            li.className = 'expense-item';
-            li.innerHTML = `
-                <span>${exp.title} - <strong>$${exp.amount.toFixed(2)}</strong></span>
-                <button class="delete-btn" onclick="deleteExpense(${index})">✕</button>
-            `;
-            expenseList.appendChild(li);
-        });
+        renderTable();
 
-        // Save states
-        localStorage.setItem('budget', budget);
-        localStorage.setItem('expenses', JSON.stringify(expenses));
+        localStorage.setItem('adv_budget', budget);
+        localStorage.setItem('adv_expenses', JSON.stringify(expenses));
     }
 
-    // Event Listeners
-    budgetInput.addEventListener('input', (e) => {
-        budget = parseFloat(e.target.value) || 0;
-        updateUI();
-    });
+    function renderTable() {
+        const query = searchInput.value.toLowerCase();
+        const catFilter = filterCategory.value;
 
-    addBtn.addEventListener('click', () => {
-        const title = expTitle.value.trim();
-        const amount = parseFloat(expAmount.value);
+        ledgerBody.innerHTML = '';
 
-        if (!title || isNaN(amount) || amount <= 0) {
-            alert('Please enter a valid description and amount.');
-            return;
-        }
-
-        expenses.push({ title, amount });
-        expTitle.value = '';
-        expAmount.value = '';
-        updateUI();
-    });
-
-    window.deleteExpense = function(index) {
-        expenses.splice(index, 1);
-        updateUI();
-    };
-
-    // Initial render
-    updateUI();
-</script>
-</body>
-</html>
+        expenses.filter(exp => {
+            const matchesSearch = exp.title.toLowerCase().includes(query);
