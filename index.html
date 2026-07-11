@@ -3,227 +3,274 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DevTool Nexus Dashboard</title>
+    <title>Utility Studio Engine</title>
     <style>
         :root {
-            --bg: #0b0f19;
-            --surface: #131a2c;
-            --surface-light: #1e2942;
-            --accent: #38bdf8;
-            --success: #34d399;
-            --danger: #f87171;
-            --text: #f8fafc;
-            --text-muted: #64748b;
-            --border: #22314d;
+            --bg-base: #090d16;
+            --surface-card: #121824;
+            --surface-inner: #1a2336;
+            --neon-accent: #a855f7;
+            --neon-hover: #c084fc;
+            --text-light: #f3f4f6;
+            --text-dark: #9ca3af;
+            --border-line: #29354f;
         }
+
         body {
-            font-family: system-ui, -apple-system, sans-serif;
-            background: var(--bg);
-            color: var(--text);
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-base);
+            color: var(--text-light);
             margin: 0;
             padding: 24px;
         }
-        header { text-align: center; margin-bottom: 32px; }
-        header h1 { margin: 0 0 8px 0; font-size: 28px; color: var(--accent); }
-        
-        /* Navigation Tabs Layout */
-        .tabs {
-            display: flex;
-            gap: 8px;
-            justify-content: center;
-            margin-bottom: 24px;
-            flex-wrap: wrap;
-        }
-        .tab-btn {
-            background: var(--surface);
-            color: var(--text-muted);
-            border: 1px solid var(--border);
-            padding: 10px 18px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.2s;
-        }
-        .tab-btn.active, .tab-btn:hover {
-            background: var(--accent);
-            color: var(--bg);
-            border-color: var(--accent);
+
+        .wrapper {
+            max-width: 900px;
+            margin: 0 auto;
         }
 
-        /* Modular Panels */
-        .tool-panel { display: none; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; max-width: 900px; margin: 0 auto; box-shadow: 0 10px 25px rgba(0,0,0,0.4); }
-        .tool-panel.active { display: block; }
-        
-        .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
-        .flex-row { display: flex; gap: 8px; margin-bottom: 12px; }
-        
-        label { display: block; margin-bottom: 6px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent); font-weight: 600; }
-        textarea, input, select {
-            width: 100%;
-            background: var(--bg);
-            border: 1px solid var(--border);
-            color: var(--text);
+        header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        header h1 {
+            margin: 0 0 6px 0;
+            font-size: 26px;
+            color: var(--neon-accent);
+            letter-spacing: -0.02em;
+        }
+
+        .navigation-tabs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 10px;
+            margin-bottom: 24px;
+        }
+
+        .tab-trigger {
+            background-color: var(--surface-card);
+            color: var(--text-dark);
+            border: 1px solid var(--border-line);
+            padding: 12px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .tab-trigger.active, .tab-trigger:hover {
+            background-color: var(--neon-accent);
+            color: var(--bg-base);
+            border-color: var(--neon-accent);
+        }
+
+        .workspace-panel {
+            display: none;
+            background-color: var(--surface-card);
+            border: 1px solid var(--border-line);
+            border-radius: 14px;
+            padding: 24px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+        }
+
+        .workspace-panel.active {
+            display: block;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .field-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--neon-accent);
+            margin-bottom: 6px;
+            letter-spacing: 0.05em;
+        }
+
+        input, textarea, select {
+            background-color: var(--surface-inner);
+            border: 1px solid var(--border-line);
+            color: var(--text-light);
             padding: 12px;
             border-radius: 8px;
-            box-sizing: border-box;
-            font-family: monospace;
-            font-size: 14px;
+            font-size: 15px;
             outline: none;
+            box-sizing: border-box;
+            width: 100%;
         }
-        textarea { resize: vertical; min-height: 140px; }
-        textarea:focus, input:focus { border-color: var(--accent); }
-        
-        button.action {
-            background: var(--surface-light);
-            color: var(--text);
-            border: 1px solid var(--border);
-            padding: 10px 16px;
-            border-radius: 8px;
+
+        input:focus, textarea:focus, select:focus {
+            border-color: var(--neon-accent);
+        }
+
+        textarea {
+            min-height: 120px;
+            font-family: inherit;
+            resize: vertical;
+        }
+
+        .action-button {
+            background-color: var(--surface-inner);
+            color: var(--text-light);
+            border: 1px solid var(--border-line);
+            padding: 10px 14px;
+            border-radius: 6px;
             cursor: pointer;
             font-weight: 600;
-            flex: 1;
+            font-size: 13px;
+            transition: all 0.2s;
         }
-        button.action:hover { background: var(--accent); color: var(--bg); }
-        
-        /* Status Elements */
-        .status-box { padding: 12px; border-radius: 8px; margin-top: 12px; font-size: 14px; font-weight: 500; display: none; }
-        .status-box.success { display: block; background: rgba(52,211,153,0.1); border: 1px solid var(--success); color: var(--success); }
-        .status-box.error { display: block; background: rgba(248,113,113,0.1); border: 1px solid var(--danger); color: var(--danger); }
-        
-        /* Output Visualizers */
-        .preview-output { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 16px; overflow-y: auto; height: 140px; font-size: 14px; line-height: 1.5; }
-        .contrast-sample { font-size: 20px; font-weight: bold; text-align: center; padding: 24px; border-radius: 8px; border: 1px solid var(--border); }
+
+        .action-button:hover {
+            background-color: var(--neon-accent);
+            color: var(--bg-base);
+        }
+
+        .output-well {
+            background-color: var(--surface-inner);
+            border-left: 4px solid var(--neon-accent);
+            padding: 14px;
+            border-radius: 6px;
+            font-family: monospace;
+            margin-top: 14px;
+            font-size: 14px;
+            word-break: break-all;
+            line-height: 1.5;
+        }
+
+        .stats-strip {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            background-color: var(--surface-inner);
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            color: var(--text-dark);
+        }
+
+        .stats-strip strong {
+            color: var(--text-light);
+        }
     </style>
 </head>
 <body>
 
-<header>
-    <h1>DevTool Nexus</h1>
-    <p style="color: var(--text-muted); margin: 0;">Multi-Utility Offline Workstation</p>
-</header>
+<div class="wrapper">
+    <header>
+        <h1>Utility Studio Engine</h1>
+        <p style="color: var(--text-dark); margin: 0; font-size: 14px;">Multi-Module Conversion Sandbox</p>
+    </header>
 
-<div class="tabs">
-    <button class="tab-btn active" onclick="switchTool('json-panel')">JSON Formatter</button>
-    <button class="tab-btn" onclick="switchTool('codec-panel')">Base64/URL</button>
-    <button class="tab-btn" onclick="switchTool('markdown-panel')">Markdown Live</button>
-    <button class="tab-btn" onclick="switchTool('regex-panel')">Regex Tester</button>
-    <button class="tab-btn" onclick="switchTool('contrast-panel')">Contrast Ratio</button>
-</div>
-
-<!-- 1. JSON FORMATTER PANEL -->
-<div id="json-panel" class="tool-panel active">
-    <label for="json-input">JSON String Entry</label>
-    <textarea id="json-input" placeholder='Paste raw or minified JSON here: {"id":1,"status":"active"}'></textarea>
-    <div class="flex-row" style="margin-top: 12px;">
-        <button class="action" onclick="processJSON(2)">Format (2 Spaces)</button>
-        <button class="action" onclick="processJSON(4)">Format (4 Spaces)</button>
-        <button class="action" onclick="minifyJSON()">Minify String</button>
+    <div class="navigation-tabs">
+        <button class="tab-trigger active" onclick="routeTab('aspect-panel')">Aspect Ratio</button>
+        <button class="tab-trigger" onclick="routeTab('epoch-panel')">Unix Timestamp</button>
+        <button class="tab-trigger" onclick="routeTab('string-panel')">Text Studio</button>
+        <button class="tab-trigger" onclick="routeTab('storage-panel')">Data Storage Calc</button>
     </div>
-    <div id="json-status" class="status-box"></div>
-</div>
 
-<!-- 2. CODEC ENCODER/DECODER PANEL -->
-<div id="codec-panel" class="tool-panel">
-    <div class="grid-2">
-        <div>
-            <label for="codec-input">Input Raw/Processed Text</label>
-            <textarea id="codec-input" placeholder="Type or paste payload targets here..."></textarea>
+    <!-- 1. ASPECT RATIO TOOL -->
+    <div id="aspect-panel" class="workspace-panel active">
+        <h3 style="margin-top:0;">Image & Video Aspect Ratio Solver</h3>
+        <div class="form-grid">
+            <div class="field-group">
+                <label for="aspect-w">Original Width (W1)</label>
+                <input type="number" id="aspect-w" value="1920" oninput="solveAspect('w')">
+            </div>
+            <div class="field-group">
+                <label for="aspect-h">Original Height (H1)</label>
+                <input type="number" id="aspect-h" value="1080" oninput="solveAspect('h')">
+            </div>
         </div>
-        <div>
-            <label for="codec-output">Computed Conversion Output</label>
-            <textarea id="codec-output" readonly placeholder="Result parameters appear here..."></textarea>
+        <hr style="border:0; border-top:1px solid var(--border-line); margin:20px 0;">
+        <div class="form-grid">
+            <div class="field-group">
+                <label for="target-w">New Target Width (W2)</label>
+                <input type="number" id="target-w" placeholder="Auto calculates..." oninput="solveAspect('w')">
+            </div>
+            <div class="field-group">
+                <label for="target-h">New Target Height (H2)</label>
+                <input type="number" id="target-h" placeholder="Auto calculates..." oninput="solveAspect('h')">
+            </div>
+        </div>
+        <div class="output-well" id="aspect-ratio-output">Detected Base Ratio: 16:9</div>
+    </div>
+
+    <!-- 2. UNIX TIMESTAMP TOOL -->
+    <div id="epoch-panel" class="workspace-panel">
+        <h3 style="margin-top:0;">Unix Epoch Timestamp Decoder</h3>
+        <div class="field-group" style="margin-bottom:12px;">
+            <label for="epoch-input">Target Unix Timestamp (Seconds)</label>
+            <input type="number" id="epoch-input" value="1783713600">
+        </div>
+        <div style="display:flex; gap:10px;">
+            <button class="action-button" onclick="convertEpoch()">Decode Timestamp</button>
+            <button class="action-button" onclick="setEpochNow()">Use Current Time</button>
+        </div>
+        <div class="output-well" id="epoch-output">Click Decode to calculate calendar strings...</div>
+    </div>
+
+    <!-- 3. TEXT MATRIX TOOL -->
+    <div id="string-panel" class="workspace-panel">
+        <h3 style="margin-top:0;">Text Metrics & Case Formatter</h3>
+        <div class="field-group" style="margin-bottom:12px;">
+            <label for="text-string-input">Input Body Text</label>
+            <textarea id="text-string-input" oninput="analyzeText()" placeholder="Type or drop text strings here to run metric analytics..."></textarea>
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;">
+            <button class="action-button" onclick="transformCase('upper')">UPPERCASE</button>
+            <button class="action-button" onclick="transformCase('lower')">lowercase</button>
+            <button class="action-button" onclick="transformCase('slug')">slug-case-urls</button>
+            <button class="action-button" onclick="clearTextString()">Clear</button>
+        </div>
+        <div class="stats-strip">
+            <span>Words: <strong id="stat-words">0</strong></span>
+            <span>Characters: <strong id="stat-chars">0</strong></span>
+            <span>Est. Reading Time: <strong id="stat-time">0s</strong></span>
         </div>
     </div>
-    <div class="flex-row" style="margin-top: 12px;">
-        <button class="action" onclick="runCodec('b64enc')">Base64 Encode</button>
-        <button class="action" onclick="runCodec('b64dec')">Base64 Decode</button>
-        <button class="action" onclick="runCodec('urlenc')">URL Encode</button>
-        <button class="action" onclick="runCodec('urldec')">URL Decode</button>
-    </div>
-</div>
 
-<!-- 3. MARKDOWN LIVE PREVIEW PANEL -->
-<div id="markdown-panel" class="tool-panel">
-    <div class="grid-2">
-        <div>
-            <label for="md-input">Markdown Input Matrix</label>
-            <textarea id="md-input" oninput="liveMarkdown()" placeholder="# Heading 1&#10;## Heading 2&#10;- Bullet point item&#10;**Bold emphasis text**"></textarea>
+    <!-- 4. DATA SCALE CALCULATOR -->
+    <div id="storage-panel" class="workspace-panel">
+        <h3 style="margin-top:0;">Digital Data Unit Converter</h3>
+        <div class="form-grid">
+            <div class="field-group">
+                <label for="storage-value">Data Quantity Value</label>
+                <input type="number" id="storage-value" value="1" oninput="convertStorage()">
+            </div>
+            <div class="field-group">
+                <label for="storage-unit">Input Metric Unit</label>
+                <select id="storage-unit" onchange="convertStorage()">
+                    <option value="MB">Megabytes (MB)</option>
+                    <option value="GB" selected>Gigabytes (GB)</option>
+                    <option value="TB">Terabytes (TB)</option>
+                </select>
+            </div>
         </div>
-        <div>
-            <label>Real-Time HTML Render Preview</label>
-            <div id="md-output" class="preview-output" style="height: calc(100% - 24px);"></div>
-        </div>
-    </div>
-</div>
-
-<!-- 4. REGEX TESTER PANEL -->
-<div id="regex-panel" class="tool-panel">
-    <div class="flex-row">
-        <div style="flex: 2;">
-            <label for="regex-pattern">Regex Formula Pattern (No enclosing slashes)</label>
-            <input type="text" id="regex-pattern" oninput="testRegex()" placeholder="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}">
-        </div>
-        <div style="flex: 1;">
-            <label for="regex-flags">Pattern Flags</label>
-            <input type="text" id="regex-flags" oninput="testRegex()" value="g" placeholder="g, i, m">
-        </div>
-    </div>
-    <label for="regex-text" style="margin-top: 12px;">Target Body Evaluation Text</label>
-    <textarea id="regex-text" oninput="testRegex()" placeholder="Enter string contents here to locate pattern matching conditions..."></textarea>
-    <label style="margin-top: 12px;">Identified Matrix Matches Output</label>
-    <div id="regex-output" class="preview-output"></div>
-</div>
-
-<!-- 5. WCAG CONTRAST CHECKER PANEL -->
-<div id="contrast-panel" class="tool-panel">
-    <div class="grid-2">
-        <div>
-            <label for="color-bg">Background Hex Target</label>
-            <input type="text" id="color-bg" oninput="checkContrast()" value="#1e2942">
-            <label for="color-text" style="margin-top: 12px;">Foreground Text Hex Target</label>
-            <input type="text" id="color-text" oninput="checkContrast()" value="#38bdf8">
-        </div>
-        <div>
-            <label>Visual Presentation Sample Block</label>
-            <div id="contrast-preview" class="contrast-sample">Readability Sample Matrix</div>
-            <div id="contrast-result" style="margin-top: 12px; font-weight: bold; text-align: center;"></div>
+        <div class="output-well" id="storage-output">
+            Select properties to run data bit-scale conversions...
         </div>
     </div>
 </div>
 
 <script>
-    // Tab Switching Engine Router
-    function switchTool(panelId) {
-        document.querySelectorAll('.tool-panel').forEach(p => p.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(panelId).classList.add('active');
-        event.currentTarget.classList.add('active');
-    }
-
-    // 1. JSON Processing Implementations
-    function processJSON(spaces) {
-        const input = document.getElementById('json-input');
-        const status = document.getElementById('json-status');
-        try {
-            if (!input.value.trim()) return;
-            const parsed = JSON.parse(input.value);
-            input.value = JSON.stringify(parsed, null, spaces);
-            status.className = "status-box success";
-            status.textContent = "Valid structure arrangement completed.";
-        } catch (e) {
-            status.className = "status-box error";
-            status.textContent = `Parser breakdown anomaly: ${e.message}`;
-        }
-    }
-
-    function minifyJSON() {
-        const input = document.getElementById('json-input');
-        try {
-            if (!input.value.trim()) return;
-            input.value = JSON.stringify(JSON.parse(input.value));
-        } catch (e) { alert("Minification failure: Verify JSON structure string integrity first."); }
-    }
-
-    // 2. Base64 & URL Processing Engine
-    function runCodec(mode) {
-        const src = document.getElementById('codec-input').value;
+    function routeTab(targetId) {
+        document.querySelectorAll('.workspace-panel').forEach(panel => panel.classList.remove('active'));
+        document.querySelectorAll('.tab-trigger').forEach(tab => tab.classList.remove('active'));
+        
+        document.getElementById(targetId).classList.add('active');
+        if (event && event.currentTarget) {
