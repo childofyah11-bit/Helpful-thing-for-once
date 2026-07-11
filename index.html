@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Survival Arena: Chaos Edition</title>
-    <!-- PeerJS Framework Module -->
-    <script src="https://unpkg.com"></script>
+    <title>Survival Arena: Multiplayer Chaos</title>
+    <!-- We use GunDB for instant, unblockable multiplayer sync on GitHub Pages -->
+    <script src="https://jsdelivr.net"></script>
     <style>
         :root {
             --bg: #090d16;
@@ -67,185 +67,105 @@
         }
 
         .status-footer { font-size: 13px; color: #64748b; margin-top: 8px; font-family: monospace; }
-        
-        .pulse {
-            width: 10px; height: 10px; background: #ea580c; border-radius: 50%;
-            display: inline-block; animation: blink 1.5s infinite;
-        }
-        @keyframes blink { 0%, 100% { opacity: 0.4; transform: scale(0.9); } 50% { opacity: 1; transform: scale(1.1); } }
     </style>
 </head>
 <body>
 
-    <h2>SURVIVAL ARENA: CHAOS MODE</h2>
+    <h2>SURVIVAL ARENA: MULTIPLAYER</h2>
     
     <div class="dashboard">
-        <div class="panel-card">
-            <div id="lobby-pulse" class="pulse"></div>
-            <span id="match-status-label">Initializing internal network matrices...</span>
-        </div>
+        <div class="panel-card"><span id="match-status-label">Lobby Status: Active Sandbox</span></div>
         <div class="panel-card score-card">Coins: <span id="score-val">0</span></div>
-        <div class="panel-card" style="color: var(--success); border-color: var(--success);">⚡ Boost: <span id="boost-status">READY</span></div>
+        <div class="panel-card" style="color: var(--success); border-color: var(--success);">⚡ Dash: <span id="boost-status">READY</span></div>
     </div>
 
     <canvas id="game-canvas" width="850" height="480"></canvas>
     
     <div class="status-footer">
-        Controls: [W,A,S,D / Arrows] Move | [Spacebar] Instant Burst Dash | System: <span id="connection-status">Booting cores...</span>
+        Controls: [W,A,S,D / Arrows] Move | [Spacebar] Dash Burst | Room: <span id="connection-status">Connecting to sync relay...</span>
     </div>
 
 <script>
     const canvas = document.getElementById('game-canvas');
     const ctx = canvas.getContext('2d');
 
-    // Network Engine Parameters
-    let peer;
-    let connections = [];
-    let myId = null;
-    let players = {};
-    let baseSpeed = 5;
-    let currentSpeed = 5;
-    let keysPressed = {};
-    let score = 0;
-
-    // Matchmaking Room Configuration Strings
-    const LOBBY_HOST_ID = 'nexus_public_matchmaker_lobby_v3';
-    let isHost = false;
-    let hasRealOpponent = false;
-
-    // Advanced Game Mechanics & Entity States
-    let coin = { x: 425, y: 240, radius: 9 };
-    let speedBoost = { x: 200, y: 150, radius: 10, active: true, respawnTimer: 0 };
-    let aiBot = { x: 100, y: 100, radius: 15, baseSpeed: 2.2, currentSpeed: 2.2 };
+    // Generate a unique ID for this player window
+    const myId = 'player_' + Math.random().toString(36).substring(2, 9);
     
-    let boostDuration = 0;
+    // Connect to a public GunDB network node relay
+    const gun = Gun(['https://herokuapp.com']);
+    const gameRoom = gun.get('nexus_global_multiplayer_arena_v4');
+
+    // Local player properties
+    let me = {
+        id: myId,
+        x: Math.floor(Math.random() * 500) + 150,
+        y: Math.floor(Math.random() * 250) + 100,
+        color: `hsl(${Math.random() * 360}, 85%, 60%)`,
+        score: 0
+    };
+
+    let players = {};
+    let keysPressed = {};
+    let speed = 5;
     let dashCooldown = 0;
 
-    function createSelfPlayer(id) {
-        myId = id;
-        players[myId] = {
-            id: myId,
-            x: Math.floor(Math.random() * 500) + 150,
-            y: Math.floor(Math.random() * 250) + 100,
-            color: `hsl(${Math.random() * 360}, 85%, 60%)`,
-            label: id.startsWith('client_') ? 'Guest' : 'Host'
-        };
-    }
+    // Game Entities
+    let coin = { x: 425, y: 240, radius: 9 };
+    let aiBot = { x: 100, y: 100, radius: 15, speed: 2.2 };
 
-    function startMatchmaking() {
-        const statusLabel = document.getElementById('match-status-label');
-        statusLabel.innerHTML = 'Searching match clusters... [Solo Sandbox Running]';
-
-        const clientRandomId = 'client_' + Math.random().toString(36).substring(2, 9);
-        peer = new Peer(clientRandomId, {
-            config: { 'iceServers': [{ url: 'stun:://google.com' }, { url: 'stun:://google.com' }] }
-        });
-
-        peer.on('open', (id) => {
-            createSelfPlayer(id);
-            const conn = peer.connect(LOBBY_HOST_ID);
-            setupConnectionTracking(conn);
-
-            setTimeout(() => {
-                if (connections.length === 0 && !isHost) {
-                    switchToHostMode();
-                }
-            }, 2500);
-        });
-
-        peer.on('error', (err) => {
-            if (err.type === 'unavailable-id') switchToHostMode();
+    // --- NETWORK SYNC: Send our position to the cloud database ---
+    function sendMyData() {
+        gameRoom.get(myId).put({
+            id: me.id,
+            x: me.x,
+            y: me.y,
+            color: me.color,
+            score: me.score,
+            lastSeen: Date.now()
         });
     }
 
-    function switchToHostMode() {
-        if (isHost) return;
-        isHost = true;
-        if (peer) peer.destroy();
-
-        const statusLabel = document.getElementById('match-status-label');
-        const pulse = document.getElementById('lobby-pulse');
+    // --- NETWORK SYNC: Listen for all other players joining ---
+    gameRoom.map().on((playerData, id) => {
+        if (!playerData) return;
         
-        statusLabel.innerHTML = 'Solo Chaos Mode (Waiting for human connections...)';
-        pulse.style.backgroundColor = '#ea580c'; // Search mode pulse
+        // If player has been offline for more than 7 seconds, remove them
+        if (Date.now() - playerData.lastSeen > 7000) {
+            delete players[id];
+            return;
+        }
 
-        peer = new Peer(LOBBY_HOST_ID, {
-            config: { 'iceServers': [{ url: 'stun:://google.com' }, { url: 'stun:://google.com' }] }
-        });
+        if (id !== myId) {
+            players[id] = playerData;
+        }
+    });
 
-        peer.on('open', (id) => {
-            createSelfPlayer(id);
-            document.getElementById('connection-status').textContent = "P2P Lobby active.";
-        });
+    // Sync global coin coordinates through the database
+    gameRoom.get('shared_coin_target').on((coinData) => {
+        if (coinData) {
+            coin.x = coinData.x;
+            coin.y = coinData.y;
+        }
+    });
 
-        peer.on('connection', (conn) => {
-            setupConnectionTracking(conn);
-        });
-    }
+    document.getElementById('connection-status').textContent = "Connected to global peer chain!";
 
-    function setupConnectionTracking(conn) {
-        conn.on('open', () => {
-            connections.push(conn);
-            hasRealOpponent = true;
-            document.getElementById('match-status-label').innerHTML = 'Multiplayer Connected! Bot disabled. ⚔️';
-            document.getElementById('lobby-pulse').style.backgroundColor = 'var(--success)';
-            document.getElementById('connection-status').textContent = "Mesh pipeline stable.";
-            
-            conn.send({ type: 'handshake', player: players[myId], coin: coin, boost: speedBoost });
-        });
-
-        conn.on('data', (data) => {
-            if (data.type === 'handshake' || data.type === 'sync') {
-                players[data.player.id] = data.player;
-                if (data.coin) coin = data.coin;
-                if (data.boost) speedBoost = data.boost;
-                if (data.type === 'handshake') conn.send({ type: 'sync', player: players[myId], coin: coin, boost: speedBoost });
-            } 
-            else if (data.type === 'move') {
-                if (players[data.id]) {
-                    players[data.id].x = data.x;
-                    players[data.id].y = data.y;
-                }
-            }
-            else if (data.type === 'coinGathered') {
-                coin = data.nextCoin;
-            }
-            else if (data.type === 'boostGathered') {
-                speedBoost = data.nextBoost;
-            }
-        });
-
-        conn.on('close', () => {
-            document.getElementById('match-status-label').innerHTML = 'Opponent left. Returning to Solo Mode...';
-            document.getElementById('lobby-pulse').style.backgroundColor = '#ea580c';
-            connections = connections.filter(c => c !== conn);
-            hasRealOpponent = false;
-            
-            for (let id in players) {
-                if (id !== myId) delete players[id];
-            }
-            if (!isHost) switchToHostMode();
-        });
-    }
-
+    // Input handlers
     window.addEventListener('keydown', (e) => { 
         keysPressed[e.key.toLowerCase()] = true; 
         
-        // --- DASH EXECUTION UTILITY (Spacebar Trigger) ---
+        // Spacebar Dash mechanics
         if (e.key === ' ' || e.code === 'Space') {
             e.preventDefault();
-            if (dashCooldown <= 0 && (myId && players[myId])) {
-                executeBurstDash(players[myId]);
+            if (dashCooldown <= 0) {
+                executeBurstDash();
             }
         }
     });
     window.addEventListener('keyup', (e) => { keysPressed[e.key.toLowerCase()] = false; });
 
-    function broadcastState(type, dataMap) {
-        connections.forEach(conn => { if (conn.open) conn.send({ type: type, ...dataMap }); });
-    }
-
-    function executeBurstDash(me) {
+    function executeBurstDash() {
         let dx = 0; let dy = 0;
         if (keysPressed['w'] || keysPressed['arrowup']) dy = -1;
         if (keysPressed['s'] || keysPressed['arrowdown']) dy = 1;
@@ -253,24 +173,111 @@
         if (keysPressed['d'] || keysPressed['arrowright']) dx = 1;
 
         if (dx !== 0 || dy !== 0) {
-            // Normalize velocity vector
             let length = Math.hypot(dx, dy);
-            me.x += (dx / length) * 45;
-            me.y += (dy / length) * 45;
-            dashCooldown = 90; // Frame counter delay restriction
+            me.x += (dx / length) * 50;
+            me.y += (dy / length) * 50;
+            dashCooldown = 60; // 1 second cooldown
             document.getElementById('boost-status').textContent = 'CHARGING';
             document.getElementById('boost-status').parentElement.style.borderColor = 'var(--danger)';
             document.getElementById('boost-status').parentElement.style.color = 'var(--danger)';
         }
     }
 
-    function processMovementLogic() {
-        if (!myId || !players[myId]) return;
-
-        let me = players[myId];
+    function processGameLogic() {
         let moved = false;
 
-        // Manage Timers
         if (dashCooldown > 0) {
             dashCooldown--;
-            if(dashCooldown === 0) {
+            if (dashCooldown === 0) {
+                document.getElementById('boost-status').textContent = 'READY';
+                document.getElementById('boost-status').parentElement.style.borderColor = 'var(--success)';
+                document.getElementById('boost-status').parentElement.style.color = 'var(--success)';
+            }
+        }
+
+        if (keysPressed['w'] || keysPressed['arrowup']) { me.y -= speed; moved = true; }
+        if (keysPressed['s'] || keysPressed['arrowdown']) { me.y += speed; moved = true; }
+        if (keysPressed['a'] || keysPressed['arrowleft']) { me.x -= speed; moved = true; }
+        if (keysPressed['d'] || keysPressed['arrowright']) { me.x += speed; moved = true; }
+
+        me.x = Math.max(16, Math.min(canvas.width - 16, me.x));
+        me.y = Math.max(16, Math.min(canvas.height - 16, me.y));
+
+        // Periodically announce presence and movement vectors
+        if (moved || Math.random() < 0.05) {
+            sendMyData();
+        }
+
+        // Count active network players
+        let activeOpponents = Object.keys(players).length;
+        const statusLabel = document.getElementById('match-status-label');
+        
+        if (activeOpponents > 0) {
+            statusLabel.innerHTML = `Multiplayer Active: ${activeOpponents + 1} Players in Lobby ⚔️`;
+        } else {
+            statusLabel.innerHTML = 'Practice Mode: Waiting for human players...';
+        }
+
+        // --- Coin Gathering Mechanic ---
+        if (Math.hypot(me.x - coin.x, me.y - coin.y) < 16 + coin.radius) {
+            me.score++;
+            document.getElementById('score-val').textContent = me.score;
+            
+            // Randomize and upload new shared coin coordinates to the database
+            gameRoom.get('shared_coin_target').put({
+                x: Math.floor(Math.random() * (canvas.width - 60)) + 30,
+                y: Math.floor(Math.random() * (canvas.height - 60)) + 30
+            });
+            sendMyData();
+        }
+
+        // --- AI Chaser Drone (Only moves if you are alone) ---
+        if (activeOpponents === 0) {
+            let angle = Math.atan2(me.y - aiBot.y, me.x - aiBot.x);
+            aiBot.x += Math.cos(angle) * (aiBot.speed + (me.score * 0.1));
+            aiBot.y += Math.sin(angle) * (aiBot.speed + (me.score * 0.1));
+
+            if (Math.hypot(me.x - aiBot.x, me.y - aiBot.y) < 16 + aiBot.radius) {
+                me.score = 0;
+                document.getElementById('score-val').textContent = me.score;
+                aiBot.x = aiBot.x > canvas.width / 2 ? 40 : canvas.width - 40;
+                aiBot.y = aiBot.y > canvas.height / 2 ? 40 : canvas.height - 40;
+                sendMyData();
+            }
+        }
+    }
+
+    function renderLoop() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        processGameLogic();
+
+        // 1. Render Golden Coins
+        ctx.beginPath();
+        ctx.arc(coin.x, coin.y, coin.radius, 0, Math.PI * 2);
+        ctx.fillStyle = 'var(--gold)';
+        ctx.shadowBlur = 15; ctx.shadowColor = 'var(--gold)';
+        ctx.fill();
+        ctx.closePath();
+        ctx.shadowBlur = 0;
+
+        // 2. Render Drone if singleplayer
+        if (Object.keys(players).length === 0) {
+            ctx.beginPath();
+            ctx.arc(aiBot.x, aiBot.y, aiBot.radius, 0, Math.PI * 2);
+            ctx.fillStyle = 'var(--danger)';
+            ctx.shadowBlur = 10; ctx.shadowColor = 'var(--danger)';
+            ctx.fill();
+            ctx.closePath();
+            ctx.shadowBlur = 0;
+        }
+
+        // 3. Render Opponent Players
+        for (let id in players) {
+            let p = players[id];
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, 16, 0, Math.PI * 2);
+            ctx.fillStyle = p.color;
+            ctx.fill();
+            ctx.closePath();
+
+            // Label tag rendering
