@@ -3,274 +3,256 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Utility Studio Engine</title>
+    <title>Persistent Memory AI Companion</title>
     <style>
         :root {
-            --bg-base: #090d16;
-            --surface-card: #121824;
-            --surface-inner: #1a2336;
-            --neon-accent: #a855f7;
-            --neon-hover: #c084fc;
-            --text-light: #f3f4f6;
+            --bg: #090d16;
+            --panel: #121824;
+            --inner: #1a2336;
+            --accent: #38bdf8;
+            --text: #f3f4f6;
             --text-dark: #9ca3af;
-            --border-line: #29354f;
+            --border: #29354f;
         }
-
         body {
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-            background-color: var(--bg-base);
-            color: var(--text-light);
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
             margin: 0;
-            padding: 24px;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
         }
-
-        .wrapper {
-            max-width: 900px;
-            margin: 0 auto;
-        }
-
-        header {
-            text-align: center;
-            margin-bottom: 32px;
-        }
-
-        header h1 {
-            margin: 0 0 6px 0;
-            font-size: 26px;
-            color: var(--neon-accent);
-            letter-spacing: -0.02em;
-        }
-
-        .navigation-tabs {
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 16px;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-            gap: 10px;
-            margin-bottom: 24px;
-        }
-
-        .tab-trigger {
-            background-color: var(--surface-card);
-            color: var(--text-dark);
-            border: 1px solid var(--border-line);
-            padding: 12px;
-            border-radius: 10px;
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-align: center;
-        }
-
-        .tab-trigger.active, .tab-trigger:hover {
-            background-color: var(--neon-accent);
-            color: var(--bg-base);
-            border-color: var(--neon-accent);
-        }
-
-        .workspace-panel {
-            display: none;
-            background-color: var(--surface-card);
-            border: 1px solid var(--border-line);
-            border-radius: 14px;
-            padding: 24px;
+            grid-template-columns: 260px 1fr;
+            height: 85vh;
+            overflow: hidden;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
         }
-
-        .workspace-panel.active {
-            display: block;
-        }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 16px;
-            margin-bottom: 16px;
-        }
-
-        .field-group {
+        /* Memory Sidebar */
+        .sidebar {
+            background: #0d121f;
+            border-right: 1px solid var(--border);
+            padding: 16px;
             display: flex;
             flex-direction: column;
+            gap: 12px;
+            overflow-y: auto;
         }
-
-        label {
-            font-size: 12px;
-            font-weight: 700;
-            text-transform: uppercase;
-            color: var(--neon-accent);
-            margin-bottom: 6px;
-            letter-spacing: 0.05em;
+        .sidebar h3 { margin: 0; font-size: 14px; color: var(--accent); text-transform: uppercase; }
+        .memory-chip {
+            background: var(--inner);
+            border: 1px solid var(--border);
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 13px;
+            position: relative;
         }
-
-        input, textarea, select {
-            background-color: var(--surface-inner);
-            border: 1px solid var(--border-line);
-            color: var(--text-light);
-            padding: 12px;
+        .delete-btn {
+            position: absolute;
+            top: 4px;
+            right: 6px;
+            color: #ef4444;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        /* Chat Engine */
+        .chat-area { display: flex; flex-direction: column; height: 100%; }
+        .chat-box {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .msg { padding: 12px 16px; border-radius: 12px; max-width: 75%; line-height: 1.5; }
+        .msg.user { background: var(--accent); color: #000; align-self: flex-end; font-weight: 500; }
+        .msg.ai { background: var(--inner); border: 1px solid var(--border); align-self: flex-start; }
+        
+        .input-area {
+            padding: 16px;
+            background: #0d121f;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 10px;
+        }
+        input {
+            flex: 1;
+            background: var(--inner);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 14px;
             border-radius: 8px;
             font-size: 15px;
             outline: none;
-            box-sizing: border-box;
-            width: 100%;
         }
-
-        input:focus, textarea:focus, select:focus {
-            border-color: var(--neon-accent);
-        }
-
-        textarea {
-            min-height: 120px;
-            font-family: inherit;
-            resize: vertical;
-        }
-
-        .action-button {
-            background-color: var(--surface-inner);
-            color: var(--text-light);
-            border: 1px solid var(--border-line);
-            padding: 10px 14px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 13px;
-            transition: all 0.2s;
-        }
-
-        .action-button:hover {
-            background-color: var(--neon-accent);
-            color: var(--bg-base);
-        }
-
-        .output-well {
-            background-color: var(--surface-inner);
-            border-left: 4px solid var(--neon-accent);
-            padding: 14px;
-            border-radius: 6px;
-            font-family: monospace;
-            margin-top: 14px;
-            font-size: 14px;
-            word-break: break-all;
-            line-height: 1.5;
-        }
-
-        .stats-strip {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 16px;
-            background-color: var(--surface-inner);
-            padding: 12px;
+        input:focus { border-color: var(--accent); }
+        button {
+            background: var(--accent);
+            color: #000;
+            border: none;
+            padding: 0 20px;
             border-radius: 8px;
-            font-size: 13px;
-            color: var(--text-dark);
-        }
-
-        .stats-strip strong {
-            color: var(--text-light);
+            font-weight: bold;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
 
-<div class="wrapper">
-    <header>
-        <h1>Utility Studio Engine</h1>
-        <p style="color: var(--text-dark); margin: 0; font-size: 14px;">Multi-Module Conversion Sandbox</p>
-    </header>
-
-    <div class="navigation-tabs">
-        <button class="tab-trigger active" onclick="routeTab('aspect-panel')">Aspect Ratio</button>
-        <button class="tab-trigger" onclick="routeTab('epoch-panel')">Unix Timestamp</button>
-        <button class="tab-trigger" onclick="routeTab('string-panel')">Text Studio</button>
-        <button class="tab-trigger" onclick="routeTab('storage-panel')">Data Storage Calc</button>
+<div class="container">
+    <!-- Long-Term Knowledge Bank Sidebar -->
+    <div class="sidebar">
+        <h3>Permanent Memories</h3>
+        <div id="memory-bank-list"></div>
     </div>
 
-    <!-- 1. ASPECT RATIO TOOL -->
-    <div id="aspect-panel" class="workspace-panel active">
-        <h3 style="margin-top:0;">Image & Video Aspect Ratio Solver</h3>
-        <div class="form-grid">
-            <div class="field-group">
-                <label for="aspect-w">Original Width (W1)</label>
-                <input type="number" id="aspect-w" value="1920" oninput="solveAspect('w')">
-            </div>
-            <div class="field-group">
-                <label for="aspect-h">Original Height (H1)</label>
-                <input type="number" id="aspect-h" value="1080" oninput="solveAspect('h')">
-            </div>
+    <!-- Live Dialog Terminal -->
+    <div class="chat-area">
+        <div class="chat-box" id="chat-box-display">
+            <div class="msg ai">Hello! I am your companion engine. Anything important you tell me will be written straight to my permanent memory bank panel on the left so I never forget you.</div>
         </div>
-        <hr style="border:0; border-top:1px solid var(--border-line); margin:20px 0;">
-        <div class="form-grid">
-            <div class="field-group">
-                <label for="target-w">New Target Width (W2)</label>
-                <input type="number" id="target-w" placeholder="Auto calculates..." oninput="solveAspect('w')">
-            </div>
-            <div class="field-group">
-                <label for="target-h">New Target Height (H2)</label>
-                <input type="number" id="target-h" placeholder="Auto calculates..." oninput="solveAspect('h')">
-            </div>
-        </div>
-        <div class="output-well" id="aspect-ratio-output">Detected Base Ratio: 16:9</div>
-    </div>
-
-    <!-- 2. UNIX TIMESTAMP TOOL -->
-    <div id="epoch-panel" class="workspace-panel">
-        <h3 style="margin-top:0;">Unix Epoch Timestamp Decoder</h3>
-        <div class="field-group" style="margin-bottom:12px;">
-            <label for="epoch-input">Target Unix Timestamp (Seconds)</label>
-            <input type="number" id="epoch-input" value="1783713600">
-        </div>
-        <div style="display:flex; gap:10px;">
-            <button class="action-button" onclick="convertEpoch()">Decode Timestamp</button>
-            <button class="action-button" onclick="setEpochNow()">Use Current Time</button>
-        </div>
-        <div class="output-well" id="epoch-output">Click Decode to calculate calendar strings...</div>
-    </div>
-
-    <!-- 3. TEXT MATRIX TOOL -->
-    <div id="string-panel" class="workspace-panel">
-        <h3 style="margin-top:0;">Text Metrics & Case Formatter</h3>
-        <div class="field-group" style="margin-bottom:12px;">
-            <label for="text-string-input">Input Body Text</label>
-            <textarea id="text-string-input" oninput="analyzeText()" placeholder="Type or drop text strings here to run metric analytics..."></textarea>
-        </div>
-        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;">
-            <button class="action-button" onclick="transformCase('upper')">UPPERCASE</button>
-            <button class="action-button" onclick="transformCase('lower')">lowercase</button>
-            <button class="action-button" onclick="transformCase('slug')">slug-case-urls</button>
-            <button class="action-button" onclick="clearTextString()">Clear</button>
-        </div>
-        <div class="stats-strip">
-            <span>Words: <strong id="stat-words">0</strong></span>
-            <span>Characters: <strong id="stat-chars">0</strong></span>
-            <span>Est. Reading Time: <strong id="stat-time">0s</strong></span>
-        </div>
-    </div>
-
-    <!-- 4. DATA SCALE CALCULATOR -->
-    <div id="storage-panel" class="workspace-panel">
-        <h3 style="margin-top:0;">Digital Data Unit Converter</h3>
-        <div class="form-grid">
-            <div class="field-group">
-                <label for="storage-value">Data Quantity Value</label>
-                <input type="number" id="storage-value" value="1" oninput="convertStorage()">
-            </div>
-            <div class="field-group">
-                <label for="storage-unit">Input Metric Unit</label>
-                <select id="storage-unit" onchange="convertStorage()">
-                    <option value="MB">Megabytes (MB)</option>
-                    <option value="GB" selected>Gigabytes (GB)</option>
-                    <option value="TB">Terabytes (TB)</option>
-                </select>
-            </div>
-        </div>
-        <div class="output-well" id="storage-output">
-            Select properties to run data bit-scale conversions...
+        <div class="input-area">
+            <input type="text" id="user-msg-input" placeholder="Say something or share a detail about yourself..." autocomplete="off">
+            <button id="send-msg-btn">Send</button>
         </div>
     </div>
 </div>
 
 <script>
-    function routeTab(targetId) {
-        document.querySelectorAll('.workspace-panel').forEach(panel => panel.classList.remove('active'));
-        document.querySelectorAll('.tab-trigger').forEach(tab => tab.classList.remove('active'));
+    // Pull archived logs from native local engine storage paths
+    let permanentMemories = JSON.parse(localStorage.getItem('ai_longterm_memories')) || [];
+    let conversationHistory = JSON.parse(localStorage.getItem('ai_chat_history')) || [];
+    let aiSession;
+
+    const memoryDisplay = document.getElementById('memory-bank-list');
+    const chatDisplay = document.getElementById('chat-box-display');
+    const textInput = document.getElementById('user-msg-input');
+    const sendBtn = document.getElementById('send-msg-btn');
+
+    // Bootstrap local offline browser LLM orchestrations
+    async function initializeLocalAI() {
+        try {
+            if (window.ai && window.ai.assistant) {
+                aiSession = await window.ai.assistant.create({
+                    systemPrompt: "You are a helpful AI assistant with access to a long-term memory bank. Answer naturally, concisely, and cleanly."
+                });
+            } else {
+                console.warn("Built-in browser LLM interface missing. Falling back to synthetic simulation mode.");
+            }
+        } catch (err) {
+            console.error("AI Session Init Fault:", err);
+        }
+    }
+
+    function syncMemoryUI() {
+        memoryDisplay.innerHTML = '';
+        permanentMemories.forEach((fact, index) => {
+            const chip = document.createElement('div');
+            chip.className = 'memory-chip';
+            chip.innerHTML = `${fact} <span class="delete-btn" onclick="forgetMemory(${index})">✕</span>`;
+            memoryDisplay.appendChild(chip);
+        });
+        localStorage.setItem('ai_longterm_memories', JSON.stringify(permanentMemories));
+    }
+
+    function syncChatUI() {
+        // Clear back to the default message
+        chatDisplay.innerHTML = '<div class="msg ai">Hello! I am your companion engine. Anything important you tell me will be written straight to my permanent memory bank panel on the left so I never forget you.</div>';
+        conversationHistory.forEach(msg => {
+            appendMessageNode(msg.text, msg.sender);
+        });
+        chatDisplay.scrollTop = chatDisplay.scrollHeight;
+    }
+
+    function appendMessageNode(text, sender) {
+        const div = document.createElement('div');
+        div.className = `msg ${sender}`;
+        div.textContent = text;
+        chatDisplay.appendChild(div);
+        chatDisplay.scrollTop = chatDisplay.scrollHeight;
+    }
+
+    // Heuristic script parsing logic to scan for self-referential inputs
+    function profileUserTraits(text) {
+        const patterns = [
+            /\bmy name is\s+([a-z0-9 ]+)/i,
+            /\bi am a\s+([a-z0-9 ]+)/i,
+            /\bi like\s+([a-z0-9 ]+)/i,
+            /\bi live in\s+([a-z0-9 ]+)/i,
+            /\bremember that\s+([a-z0-9 ,.!?]+)/i
+        ];
+
+        patterns.forEach(regex => {
+            const match = text.match(regex);
+            if (match && match[1]) {
+                const cleanFact = match[0].trim();
+                if (!permanentMemories.includes(cleanFact)) {
+                    permanentMemories.push(cleanFact);
+                    syncMemoryUI();
+                }
+            }
+        });
+    }
+
+    async function handleTransmission() {
+        const queryText = textInput.value.trim();
+        if (!queryText) return;
+
+        appendMessageNode(queryText, 'user');
+        conversationHistory.push({ text: queryText, sender: 'user' });
+        textInput.value = '';
+
+        // Extract context and store memory flags instantly
+        profileUserTraits(queryText);
+
+        // Inject long-term memory background context parameters right into the prompt boundary limits
+        let contextInjection = "";
+        if (permanentMemories.length > 0) {
+            contextInjection = `[Context information from your long term memory bank: ${permanentMemories.join('. ')}]\n`;
+        }
+
+        let replyString = "";
+        if (aiSession) {
+            try {
+                replyString = await aiSession.prompt(`${contextInjection}User says: ${queryText}`);
+            } catch (e) {
+                replyString = "I encountered an error trying to process that message locally.";
+            }
+        } else {
+            // High-fidelity local algorithmic backup fallback routine 
+            replyString = "I noticed that fact and saved it to my memory vaults! ";
+            if (permanentMemories.length > 0) {
+                replyString += `I currently know ${permanentMemories.length} details about you. Since your local browser AI is not yet fully activated, I will simulate this environment right here.`;
+            }
+        }
+
+        appendMessageNode(replyString, 'ai');
+        conversationHistory.push({ text: replyString, sender: 'ai' });
         
-        document.getElementById(targetId).classList.add('active');
-        if (event && event.currentTarget) {
+        // Commit chat string histories directly down to localStorage paths
+        localStorage.setItem('ai_chat_history', JSON.stringify(conversationHistory));
+    }
+
+    window.forgetMemory = function(idx) {
+        permanentMemories.splice(idx, 1);
+        syncMemoryUI();
+    };
+
+    sendBtn.addEventListener('click', handleTransmission);
+    textInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleTransmission(); });
+
+    // Startup bootstrap routines
+    initializeLocalAI();
+    syncMemoryUI();
+    syncChatUI();
+</script>
+</body>
+</html>
