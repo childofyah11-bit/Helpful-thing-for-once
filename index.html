@@ -3,259 +3,128 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nexus Virtual Open Web Browser</title>
+    <title>Real-Time Multiplayer Arena</title>
     <style>
-        :root {
-            --bg-main: #0f172a;
-            --browser-frame: #1e293b;
-            --url-bar: #0f172a;
-            --viewport-bg: #ffffff;
-            --accent: #38bdf8;
-            --text-dark: #1e293b;
-            --text-light: #f8fafc;
-            --border: #334155;
-        }
-
         body {
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-            background-color: var(--bg-main);
-            color: var(--text-light);
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
             margin: 0;
-            padding: 16px;
+            padding: 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            min-height: 100vh;
-            box-sizing: border-box;
-        }
-
-        .browser-container {
-            width: 100%;
-            max-width: 1050px;
-            background-color: var(--browser-frame);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            display: flex;
-            flex-direction: column;
-            height: 88vh;
             overflow: hidden;
+        }
+        h2 { margin: 0 0 10px 0; color: #38bdf8; letter-spacing: -0.01em; }
+        .controls-hint { font-size: 14px; color: #94a3b8; margin-bottom: 15px; }
+        #game-canvas {
+            background-color: #1e293b;
+            border: 2px solid #334155;
+            border-radius: 12px;
             box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
         }
-
-        .tab-strip {
-            display: flex;
-            background-color: #0b0f19;
-            padding: 8px 8px 0 8px;
-            gap: 4px;
-            overflow-x: auto;
-        }
-
-        .tab {
-            background-color: #1e293b;
-            color: #94a3b8;
-            padding: 8px 16px;
-            border-radius: 8px 8px 0 0;
-            font-size: 13px;
-            font-weight: 500;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            min-width: 100px;
-            max-width: 160px;
-            border: 1px solid var(--border);
-            border-bottom: none;
-        }
-
-        .tab.active {
-            background-color: var(--browser-frame);
-            color: var(--text-light);
-            border-color: var(--border);
-        }
-
-        .close-tab {
-            margin-left: auto;
-            color: #ef4444;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .add-tab-btn {
-            background: none;
-            border: none;
-            color: var(--accent);
-            font-size: 20px;
-            cursor: pointer;
-            padding: 0 12px;
-            align-self: center;
-        }
-
-        .chrome-navigation {
-            display: flex;
-            align-items: center;
-            padding: 10px;
-            gap: 10px;
-            background-color: var(--browser-frame);
-            border-bottom: 1px solid var(--border);
-        }
-
-        .nav-btn {
-            background: var(--url-bar);
-            border: 1px solid var(--border);
-            color: var(--text-light);
-            width: 34px;
-            height: 34px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .nav-btn:hover { background-color: var(--border); }
-
-        .address-bar-input {
-            flex: 1;
-            background-color: var(--url-bar);
-            border: 1px solid var(--border);
-            color: var(--text-light);
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 14px;
-            outline: none;
-        }
-
-        .address-bar-input:focus { border-color: var(--accent); }
-
-        .bookmark-bar {
-            display: flex;
-            gap: 12px;
-            padding: 6px 12px;
-            background-color: #131d31;
-            border-bottom: 1px solid var(--border);
-            font-size: 12px;
-        }
-
-        .bookmark-link { color: var(--accent); text-decoration: none; cursor: pointer; }
-
-        .viewport {
-            flex: 1;
-            background-color: var(--viewport-bg);
-            color: var(--text-dark);
-            overflow-y: auto;
-            position: relative;
-        }
-
-        .sandbox-loading-overlay {
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(255,255,255,0.9);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            font-weight: bold;
-            color: #4f46e5;
-            font-size: 18px;
-            z-index: 10;
-        }
-
-        /* Built-in Portal Pages Layouts */
-        .welcome-screen { text-align: center; padding: 40px 20px; }
-        .welcome-screen h2 { color: #4f46e5; font-size: 24px; }
-        
-        .search-results-block { padding: 20px; }
-        .search-item { margin-bottom: 24px; padding-bottom: 12px; border-bottom: 1px solid #e5e7eb; }
-        .search-item a { color: #1d4ed8; font-size: 18px; font-weight: 600; text-decoration: none; cursor: pointer; }
-        .search-item p { margin: 4px 0 0 0; color: #4b5563; font-size: 14px; }
-
-        /* Proxy Sandbox Container Style Tweaks */
-        .proxy-content-wrapper {
-            padding: 20px;
-            width: 100%;
-            box-sizing: border-box;
-        }
-        .proxy-content-wrapper a { color: #2563eb; cursor: pointer; }
     </style>
 </head>
 <body>
 
-<div class="browser-container">
-    <div class="tab-strip" id="tab-strip-container"></div>
+    <h2>Multiplayer Sandbox Arena</h2>
+    <div class="controls-hint">Use <strong>W, A, S, D</strong> or the <strong>Arrow Keys</strong> to pilot your node around the arena.</div>
 
-    <div class="chrome-navigation">
-        <button class="nav-btn" onclick="browserBack()">◀</button>
-        <button class="nav-btn" onclick="browserRefresh()">🔄</button>
-        <button class="nav-btn" onclick="browserHome()">🏠</button>
-        <input type="text" class="address-bar-input" id="browser-url-field" placeholder="Type a URL (example: wikipedia.org) or search terms...">
-        <button class="nav-btn" onclick="toggleBookmark()">⭐</button>
-    </div>
-
-    <div class="bookmark-bar" id="bookmarks-container"></div>
-
-    <div class="viewport" id="viewport-screen">
-        <div class="sandbox-loading-overlay" id="loading-overlay">Proxying secure network stream...</div>
-        <div id="view-content-target" style="height: 100%; width: 100%;"></div>
-    </div>
-</div>
+    <canvas id="game-canvas" width="800" height="500"></canvas>
 
 <script>
-    let tabs = [
-        { id: 1, title: "Home Portal", url: "nexus://home", history: ["nexus://home"], historyIndex: 0 }
-    ];
-    let activeTabId = 1;
-    let bookmarks = JSON.parse(localStorage.getItem('v_bookmarks')) || ["nexus://home", "nexus://search", "nexus://notes"];
+    const canvas = document.getElementById('game-canvas');
+    const ctx = canvas.getContext('2d');
 
-    const tabStrip = document.getElementById('tab-strip-container');
-    const urlField = document.getElementById('browser-url-field');
-    const contentTarget = document.getElementById('view-content-target');
-    const bookmarksBar = document.getElementById('bookmarks-container');
-    const loader = document.getElementById('loading-overlay');
+    let socket;
+    let myId = null;
+    let players = {};
+    let speed = 4;
+    let keysPressed = {};
 
-    const mockInternetRegistry = {
-        "nexus://home": `
-            <div class="welcome-screen">
-                <h2>Nexus Proxy-Bypass OS Browser</h2>
-                <p>Equipped with a CORS web-scraping bridge engine to pull contents live from external domains.</p>
-                <div style="margin-top:24px; display:flex; gap:12px; justify-content:center;">
-                    <button onclick="navigateViewport('nexus://search')" style="padding:12px 20px; background:#4f46e5; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:600;">Open Search Network</button>
-                    <button onclick="navigateViewport('nexus://notes')" style="padding:12px 20px; background:#10b981; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:600;">Scratchpad Notes</button>
-                </div>
-                <p style="margin-top:30px; font-size:13px; color:#64748b;">Try entering <strong>wikipedia.org</strong> or <strong>example.com</strong> up in the navigation link block bar!</p>
-            </div>`,
-        "nexus://search": `
-            <div style="max-width:550px; margin:40px auto; text-align:center; padding: 0 20px;">
-                <h2 style="color:#2563eb; margin-bottom:20px;">Search Nexus</h2>
-                <div style="display:flex; gap:6px;">
-                    <input type="text" id="internal-search-input" placeholder="Search web spaces..." style="flex:1; padding:12px; border:1px solid #cbd5e1; border-radius:6px; font-size:15px;">
-                    <button onclick="executeInternalSearch()" style="padding:12px 20px; background:#2563eb; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:600;">Search</button>
-                </div>
-                <div id="internal-results" style="text-align:left; margin-top:24px;"></div>
-            </div>`,
-        "nexus://notes": `
-            <div style="padding:20px;">
-                <h3>Isolated System Scratchpad</h3>
-                <textarea id="scratchpad-box" oninput="saveScratchNotes()" style="width:100%; height:250px; padding:14px; border:1px solid #cbd5e1; border-radius:8px; font-family:inherit; font-size:15px; box-sizing:border-box;" placeholder="Type notes here. Saved permanently into localized workspace caches..."></textarea>
-            </div>`
-    };
+    function connectToGameServer() {
+        const hostLocation = window.location.origin.replace(/^http/, 'ws');
+        const socketUrl = hostLocation.includes('github') ? 'wss://://herokuapp.com' : 'ws://localhost:3000';
+        
+        socket = new WebSocket(socketUrl);
 
-    function renderTabs() {
-        tabStrip.innerHTML = '';
-        tabs.forEach(t => {
-            const tabEl = document.createElement('div');
-            tabEl.className = `tab ${t.id === activeTabId ? 'active' : ''}`;
-            tabEl.setAttribute('onclick', `switchTab(${t.id})`);
-            tabEl.innerHTML = `
-                <span>${t.title}</span>
-                <span class="close-tab" onclick="closeTab(${t.id}); event.stopPropagation();">✕</span>
-            `;
-            tabStrip.appendChild(tabEl);
-        });
+        socket.onmessage = (event) => {
+            const data = JSON.parse(event.data);
 
-        const addBtn = document.createElement('button');
-        addBtn.className = 'add-tab-btn';
-        addBtn.onclick = addNewTab;
-        addBtn.textContent = '+';
-        tabStrip.appendChild(addBtn);
+            if (data.type === 'init') {
+                myId = data.id;
+                players = data.players;
+            } else if (data.type === 'newPlayer') {
+                players[data.player.id] = data.player;
+            } else if (data.type === 'update') {
+                if (players[data.id]) {
+                    players[data.id].x = data.x;
+                    players[data.id].y = data.y;
+                }
+            } else if (data.type === 'playerLeft') {
+                delete players[data.id];
+            }
+        };
+
+        socket.onclose = () => {
+            setTimeout(connectToGameServer, 2000);
+        };
     }
 
+    window.addEventListener('keydown', (e) => { keysPressed[e.key.toLowerCase()] = true; });
+    window.addEventListener('keyup', (e) => { keysPressed[e.key.toLowerCase()] = false; });
+
+    function processMovementLogic() {
+        if (!myId || !players[myId]) return;
+
+        let localPlayer = players[myId];
+        let originalX = localPlayer.x;
+        let originalY = localPlayer.y;
+
+        if (keysPressed['w'] || keysPressed['arrowup']) localPlayer.y -= speed;
+        if (keysPressed['s'] || keysPressed['arrowdown']) localPlayer.y += speed;
+        if (keysPressed['a'] || keysPressed['arrowleft']) localPlayer.x -= speed;
+        if (keysPressed['d'] || keysPressed['arrowright']) localPlayer.x += speed;
+
+        localPlayer.x = Math.max(15, Math.min(canvas.width - 15, localPlayer.x));
+        localPlayer.y = Math.max(15, Math.min(canvas.height - 15, localPlayer.y));
+
+        if (localPlayer.x !== originalX || localPlayer.y !== originalY) {
+            if (socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({
+                    type: 'move',
+                    x: localPlayer.x,
+                    y: localPlayer.y
+                }));
+            }
+        }
+    }
+
+    function renderLoop() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        processMovementLogic();
+
+        for (let id in players) {
+            let p = players[id];
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, 15, 0, Math.PI * 2);
+            ctx.fillStyle = p.color;
+            ctx.fill();
+            
+            if (id === myId) {
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+            }
+            ctx.closePath();
+        }
+
+        requestAnimationFrame(renderLoop);
+    }
+
+    connectToGameServer();
+    renderLoop();
+</script>
+</body>
+</html>
