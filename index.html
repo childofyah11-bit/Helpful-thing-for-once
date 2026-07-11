@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Serverless P2P Arena</title>
+    <title>Auto-Matchmaking P2P Arena</title>
+    <!-- PeerJS Framework Module -->
     <script src="https://unpkg.com"></script>
     <style>
         body {
@@ -19,70 +20,58 @@
         h2 { margin: 0; color: #38bdf8; }
         .setup-box {
             background: #1e293b;
-            padding: 15px;
+            padding: 12px 24px;
             border-radius: 8px;
             margin: 15px 0;
             display: flex;
-            gap: 10px;
+            gap: 15px;
             align-items: center;
             border: 1px solid #334155;
+            font-weight: 500;
         }
-        input {
-            background: #0f172a;
-            border: 1px solid #475569;
-            color: #fff;
-            padding: 8px 12px;
-            border-radius: 6px;
-            outline: none;
-        }
-        button {
-            background: #38bdf8;
-            color: #0f172a;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        button:hover { background: #7dd3fc; }
         #game-canvas {
             background-color: #1e293b;
             border: 2px solid #334155;
             border-radius: 12px;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3);
         }
         .status { font-size: 14px; color: #94a3b8; margin-top: 5px; }
+        .pulse {
+            width: 8px; height: 8px; background: #eab308; border-radius: 50%;
+            display: inline-block; animation: blink 1.5s infinite;
+        }
+        @keyframes blink { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
     </style>
 </head>
 <body>
 
-    <h2>P2P Multiplayer Sandbox</h2>
-    <p class="status">Move your circle using <strong>W, A, S, D</strong> or <strong>Arrow Keys</strong>.</p>
+    <h2>Auto-Matchmaking Arena</h2>
+    <p class="status">Move using <strong>W, A, S, D</strong> or the <strong>Arrow Keys</strong>.</p>
 
+    <!-- Automated Status Panel Layout -->
     <div class="setup-box">
-        <div>
-            <span>Your Code: </span>
-            <strong id="my-code-display" style="color: #a855f7;">Generating...</strong>
-        </div>
-        <div style="border-left: 1px solid #475569; height: 20px; margin: 0 10px;"></div>
-        <div>
-            <input type="text" id="join-code-input" placeholder="Paste friend's code...">
-            <button onclick="connectToFriend()">Join Friend</button>
-        </div>
+        <div id="lobby-pulse" class="pulse"></div>
+        <span id="match-status-label">Initializing matchmaking matrix...</span>
     </div>
 
     <canvas id="game-canvas" width="800" height="450"></canvas>
-    <p id="connection-status" class="status">Waiting for network initialization...</p>
+    <p id="connection-status" class="status">Connecting to matchmaking services...</p>
 
 <script>
     const canvas = document.getElementById('game-canvas');
     const ctx = canvas.getContext('2d');
 
+    // Network & Game state tracking configurations
     let peer;
     let connections = [];
     let myId = null;
     let players = {};
     let speed = 5;
     let keysPressed = {};
+
+    // Standard public cluster room name identifiers
+    const LOBBY_HOST_ID = 'nexus_public_matchmaker_lobby_v1';
+    let isHost = false;
 
     function createSelfPlayer(id) {
         myId = id;
@@ -92,47 +81,88 @@
             y: Math.floor(Math.random() * 300) + 100,
             color: `hsl(${Math.random() * 360}, 80%, 60%)`
         };
-        document.getElementById('connection-status').textContent = "Ready! Share your code or join a friend.";
     }
 
-    // --- FIX: Injected open STUN backup configurations to bypass network blockers ---
-    peer = new Peer({
-        config: {
-            'iceServers': [
-                { url: 'stun:://google.com' },
-                { url: 'stun:://google.com' },
-                { url: 'stun:://google.com' }
-            ]
-        }
-    });
+    // Attempt to join as a client first to see if an active host exists
+    function startMatchmaking() {
+        const statusLabel = document.getElementById('match-status-label');
+        statusLabel.innerHTML = 'Searching for an open match...';
 
-    peer.on('open', (id) => {
-        document.getElementById('my-code-display').textContent = id;
-        createSelfPlayer(id);
-    });
+        // 1. Initialize client peer profile using a randomized tracking string
+        const clientRandomId = 'client_' + Math.random().toString(36).substring(2, 9);
+        peer = new Peer(clientRandomId, {
+            config: {
+                'iceServers': [
+                    { url: 'stun:://google.com' },
+                    { url: 'stun:://google.com' }
+                ]
+            }
+        });
 
-    peer.on('error', (err) => {
-        console.error("Network Link Fault:", err.type);
-        document.getElementById('connection-status').textContent = `Connection lost: ${err.type}. Try reloading.`;
-    });
+        peer.on('open', (id) => {
+            createSelfPlayer(id);
+            
+            // Try connecting directly to the designated Host ID slot
+            const conn = peer.connect(LOBBY_HOST_ID);
+            setupConnectionTracking(conn);
 
-    peer.on('connection', (conn) => {
-        setupConnectionTracking(conn);
-    });
+            // Timeout safety latch: If the host doesn't accept the connection, become the host instead
+            setTimeout(() => {
+                if (connections.length === 0 && !isHost) {
+                    switchToHostMode();
+                }
+            }, 3000);
+        });
 
-    function connectToFriend() {
-        const friendId = document.getElementById('join-code-input').value.trim();
-        if (!friendId) return alert("Please enter a room code first!");
+        peer.on('error', (err) => {
+            // Intercept taken broker errors gracefully to switch layout states
+            if (err.type === 'unavailable-id') {
+                switchToHostMode();
+            }
+        });
+    }
+
+    // 2. Initialize Host Profile mode if no active host is found
+    function switchToHostMode() {
+        if (isHost) return;
+        isHost = true;
         
-        document.getElementById('connection-status').textContent = "Connecting to friend...";
-        const conn = peer.connect(friendId);
-        setupConnectionTracking(conn);
+        if (peer) peer.destroy();
+
+        const statusLabel = document.getElementById('match-status-label');
+        const pulse = document.getElementById('lobby-pulse');
+        
+        statusLabel.innerHTML = 'Waiting for players to join your session...';
+        pulse.style.backgroundColor = '#10b981'; // Green status anchor
+
+        // Bind directly to the standard public room ID slot
+        peer = new Peer(LOBBY_HOST_ID, {
+            config: {
+                'iceServers': [
+                    { url: 'stun:://google.com' },
+                    { url: 'stun:://google.com' }
+                ]
+            }
+        });
+
+        peer.on('open', (id) => {
+            createSelfPlayer(id);
+            document.getElementById('connection-status').textContent = "Lobby active. You are the host.";
+        });
+
+        peer.on('connection', (conn) => {
+            setupConnectionTracking(conn);
+        });
     }
 
     function setupConnectionTracking(conn) {
         conn.on('open', () => {
             connections.push(conn);
-            document.getElementById('connection-status').textContent = "Connected to player arena!";
+            document.getElementById('match-status-label').innerHTML = 'Match Found! Opponent Connected. 🔥';
+            document.getElementById('lobby-pulse').style.backgroundColor = '#2563eb'; // Blue active status
+            document.getElementById('connection-status').textContent = "Arena synchronized via peer pipelines.";
+            
+            // Send local player properties to the connected peer
             conn.send({ type: 'handshake', player: players[myId] });
         });
 
@@ -153,11 +183,22 @@
         });
 
         conn.on('close', () => {
-            document.getElementById('connection-status').textContent = "Player disconnected.";
+            document.getElementById('match-status-label').innerHTML = 'Opponent left. Re-entering matchmaking...';
+            document.getElementById('lobby-pulse').style.backgroundColor = '#eab308';
             connections = connections.filter(c => c !== conn);
+            
+            // Clean up left player reference
+            for (let id in players) {
+                if (id !== myId) delete players[id];
+            }
+
+            if (!isHost) {
+                switchToHostMode();
+            }
         });
     }
 
+    // Input collection listeners
     window.addEventListener('keydown', (e) => { keysPressed[e.key.toLowerCase()] = true; });
     window.addEventListener('keyup', (e) => { keysPressed[e.key.toLowerCase()] = false; });
 
@@ -180,8 +221,8 @@
         if (keysPressed['a'] || keysPressed['arrowleft']) { me.x -= speed; changed = true; }
         if (keysPressed['d'] || keysPressed['arrowright']) { me.x += speed; changed = true; }
 
-        me.x = Math.max(15, Math.min(canvas.width - 15, me.x));
-        me.y = Math.max(15, Math.min(canvas.height - 15, me.y));
+        me.x = Math.max(16, Math.min(canvas.width - 16, me.x));
+        me.y = Math.max(16, Math.min(canvas.height - 16, me.y));
 
         if (changed) {
             broadcastMovement(me.x, me.y);
@@ -210,6 +251,8 @@
         requestAnimationFrame(renderLoop);
     }
 
+    // Boot up automated matchmaking initialization sequence
+    startMatchmaking();
     renderLoop();
 </script>
 </body>
