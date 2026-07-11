@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Serverless game</title>
-    <!-- We load PeerJS directly in the browser so we don't need a server -->
+    <title>Serverless P2P Arena</title>
     <script src="https://unpkg.com"></script>
     <style>
         body {
@@ -96,11 +95,25 @@
         document.getElementById('connection-status').textContent = "Ready! Share your code or join a friend.";
     }
 
-    peer = new Peer();
+    // --- FIX: Injected open STUN backup configurations to bypass network blockers ---
+    peer = new Peer({
+        config: {
+            'iceServers': [
+                { url: 'stun:://google.com' },
+                { url: 'stun:://google.com' },
+                { url: 'stun:://google.com' }
+            ]
+        }
+    });
 
     peer.on('open', (id) => {
         document.getElementById('my-code-display').textContent = id;
         createSelfPlayer(id);
+    });
+
+    peer.on('error', (err) => {
+        console.error("Network Link Fault:", err.type);
+        document.getElementById('connection-status').textContent = `Connection lost: ${err.type}. Try reloading.`;
     });
 
     peer.on('connection', (conn) => {
