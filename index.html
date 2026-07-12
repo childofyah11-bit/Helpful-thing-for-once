@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RadioNet: Inter-Tab Broadcast Grid</title>
+    <title>RadioNet: Cross-Device P2P Transmitter</title>
     <style>
         :root {
-            --bg-base: #0a0b10;
-            --panel-card: #141622;
-            --broadcast-green: #39ff14;
-            --alert-cyan: #00e5ff;
+            --bg-base: #060814;
+            --panel-card: #0f1326;
+            --accent-blue: #00bfff;
+            --accent-green: #39ff14;
             --txt-bright: #ffffff;
-            --txt-muted: #525a70;
+            --txt-muted: #5e6987;
         }
 
         body {
@@ -19,7 +19,7 @@
             padding: 20px;
             background-color: var(--bg-base);
             color: var(--txt-bright);
-            font-family: 'SF Pro Display', system-ui, -apple-system, sans-serif;
+            font-family: 'Segoe UI', system-ui, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -27,268 +27,196 @@
             box-sizing: border-box;
         }
 
-        .broadcaster-station {
+        .station-container {
             width: 100%;
-            max-width: 900px;
+            max-width: 950px;
             background: var(--panel-card);
-            border-radius: 14px;
+            border-radius: 12px;
             padding: 25px;
-            border: 1px solid #222638;
-            box-shadow: 0 25px 55px rgba(0, 0, 0, 0.75);
+            border: 1px solid #1f274a;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
         }
 
-        .station-header {
+        header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid #222638;
+            border-bottom: 1px solid #1f274a;
             padding-bottom: 15px;
-            margin-bottom: 25px;
-        }
-
-        h1 {
-            margin: 0;
-            font-size: 1.4rem;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            color: var(--alert-cyan);
-        }
-
-        .badge-live {
-            background: rgba(57, 255, 20, 0.1);
-            color: var(--broadcast-green);
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 800;
-            border: 1px solid var(--broadcast-green);
-            letter-spacing: 1px;
-            animation: pulse-glow 2s infinite ease-in-out;
-        }
-
-        .setup-alert {
-            background: #1c0f17;
-            border: 1px dashed #ff2a6d;
-            padding: 12px;
-            border-radius: 6px;
-            font-size: 0.85rem;
-            color: #ff5e97;
             margin-bottom: 20px;
-            line-height: 1.4;
         }
 
-        .layout-grid {
+        h1 { margin: 0; font-size: 1.3rem; letter-spacing: 1px; color: var(--accent-blue); text-transform: uppercase; }
+        
+        .status-badge {
+            background: rgba(255, 68, 68, 0.1);
+            color: #ff4444;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            border: 1px solid #ff4444;
+        }
+        .status-badge.connected {
+            background: rgba(57, 255, 20, 0.1);
+            color: var(--accent-green);
+            border: 1px solid var(--accent-green);
+        }
+
+        .grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 20px;
         }
 
-        .console-deck {
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid #1a1d2e;
+        .deck {
+            background: rgba(0,0,0,0.4);
+            border: 1px solid #141b36;
             padding: 20px;
             border-radius: 8px;
-            display: flex;
-            flex-direction: column;
         }
 
-        h2 {
-            margin: 0 0 15px 0;
-            font-size: 1rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--txt-muted);
+        h2 { margin: 0 0 12px 0; font-size: 0.95rem; text-transform: uppercase; color: var(--txt-muted); letter-spacing: 0.5px; }
+
+        textarea {
+            width: 100%; height: 75px; background: #03050d; color: #fff;
+            border: 1px solid #1f274a; border-radius: 6px; padding: 10px;
+            font-family: monospace; font-size: 0.8rem; box-sizing: border-box; resize: none;
         }
+        textarea:focus { outline: 1px solid var(--accent-blue); }
+
+        .btn {
+            width: 100%; background: var(--accent-blue); color: #000; font-weight: bold;
+            border: none; padding: 10px; border-radius: 6px; cursor: pointer; margin-top: 10px;
+        }
+        .btn:hover { opacity: 0.9; }
+        .btn-alt { background: #1f274a; color: #fff; border: 1px solid #343f75; }
+        .btn-alt:hover { background: #283361; }
 
         /* Control Input Layout Fields */
-        .input-row {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
+        .transmit-row { display: flex; gap: 8px; margin-bottom: 12px; }
+        .transmit-row input {
+            flex: 1; background: #03050d; border: 1px solid #1f274a;
+            border-radius: 6px; padding: 10px; color: #fff;
         }
+        .transmit-row input:focus { outline: 1px solid var(--accent-blue); }
+        .transmit-row .btn { width: auto; margin: 0; padding: 0 15px; }
 
-        input[type="text"] {
-            flex: 1;
-            background: #06070a;
-            border: 1px solid #222638;
-            border-radius: 6px;
-            padding: 12px;
-            color: #fff;
-            font-size: 0.95rem;
-        }
+        .audio-macros { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .macro-btn { background: #131933; border: 1px solid #232c5c; color: white; padding: 8px; border-radius: 4px; cursor: pointer; font-size: 0.75rem; }
+        .macro-btn:hover { border-color: var(--accent-blue); }
 
-        input[type="text"]:focus {
-            outline: 1px solid var(--alert-cyan);
+        .terminal {
+            background: #020308; border: 1px solid #121730; height: 160px;
+            border-radius: 6px; padding: 10px; overflow-y: auto; font-family: monospace; font-size: 0.8rem;
         }
-
-        .transmit-btn {
-            background: var(--alert-cyan);
-            color: #000;
-            border: none;
-            padding: 0 20px;
-            border-radius: 6px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: opacity 0.15s;
-        }
-
-        .transmit-btn:hover {
-            opacity: 0.85;
-        }
-
-        /* Signal Sound Blocks */
-        .macro-row {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-        }
-
-        .macro-trigger {
-            background: #1e2236;
-            color: #fff;
-            border: 1px solid #2c324e;
-            padding: 10px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.8rem;
-            font-weight: 600;
-        }
-
-        .macro-trigger:hover {
-            background: #252b44;
-            border-color: var(--alert-cyan);
-        }
-
-        /* Receiver Feeds Feed log styling */
-        .terminal-feed {
-            background: #050608;
-            border: 1px solid #1a1d2e;
-            height: 185px;
-            border-radius: 6px;
-            padding: 12px;
-            overflow-y: auto;
-            font-family: monospace;
-            font-size: 0.85rem;
-            line-height: 1.5;
-        }
-
-        .feed-entry {
-            margin-bottom: 8px;
-            padding-bottom: 6px;
-            border-bottom: 1px solid #10121d;
-            word-break: break-all;
-        }
-
-        .feed-timestamp {
-            color: var(--txt-muted);
-            margin-right: 8px;
-        }
-
-        .feed-tag {
-            color: var(--broadcast-green);
-            font-weight: bold;
-            margin-right: 6px;
-        }
-
-        @keyframes pulse-glow {
-            0% { opacity: 0.6; }
-            50% { opacity: 1; box-shadow: 0 0 8px rgba(57, 255, 20, 0.2); }
-            100% { opacity: 0.6; }
-        }
+        .log-line { margin-bottom: 6px; border-bottom: 1px solid #090c1a; padding-bottom: 4px; }
     </style>
 </head>
 <body>
 
-    <div class="broadcaster-station">
-        <div class="station-header">
-            <h1>📡 RadioNet Dashboard</h1>
-            <div class="badge-live">CROSS-TAB MATRIX LIVE</div>
-        </div>
+    <div class="station-container">
+        <header>
+            <h1>📡 Hardware P2P Transceiver</h1>
+            <div class="status-badge" id="netStatus">OFFLINE / AIR-GAPPED</div>
+        </header>
 
-        <!-- Testing validation alert instructions -->
-        <div class="setup-alert">
-            <strong>How to test transmission capability:</strong> Copy the URL of this window, open a <strong>second duplicate browser tab</strong> (or drag it side-by-side onto another monitor), and type a message or tap an alert macro below. Watch both screens update instantly without connecting to external networks!
-        </div>
-
-        <div class="layout-grid">
-            <!-- Left Deck: Transmission Modulation Area -->
-            <div class="console-deck">
-                <h2>Transmission Controls</h2>
-                
-                <div class="input-row">
-                    <input type="text" id="signalPayload" placeholder="Enter transmission packet data...">
-                    <button class="transmit-btn" onclick="broadcastTextPayload()">Transmit</button>
+        <div class="grid">
+            <!-- DECK 1: WebRTC Device Pairing Signaling Terminal -->
+            <div class="deck">
+                <h2>1. Device Link Link Handshake</h2>
+                <div style="font-size: 0.75rem; color: var(--txt-muted); margin-bottom: 8px;">
+                    <strong>Device A:</strong> Click "Generate Offer Token", copy it, and paste it onto Device B.<br>
+                    <strong>Device B:</strong> Paste the token into the input box below and click "Accept Offer & Reply". Copy Device B's Answer token back into Device A's box and click "Finalize Link".
                 </div>
-
-                <h2>Broadcast Frequency Hooks</h2>
-                <div class="macro-row">
-                    <button class="macro-trigger" onclick="broadcastMacroAlert('Ping', 880, 0.1)">🔔 Ping Tab</button>
-                    <button class="macro-trigger" onclick="broadcastMacroAlert('Pulse', 440, 0.3)">⚡ Pulse Tone</button>
-                    <button class="macro-trigger" onclick="broadcastMacroAlert('Siren', 1200, 0.4)">🚨 Alarm Out</button>
+                <textarea id="handshakeBox" placeholder="Paste incoming device link token packets here..."></textarea>
+                
+                <div style="display: flex; gap: 8px; margin-top: 8px;">
+                    <button class="btn btn-alt" style="margin:0; flex:1; font-size:0.75rem;" onclick="initializeP2POffer()">Create Offer</button>
+                    <button class="btn btn-alt" style="margin:0; flex:1; font-size:0.75rem;" onclick="acceptIncomingOffer()">Accept & Reply</button>
+                    <button class="btn" style="margin:0; flex:1; font-size:0.75rem;" onclick="finalizeP2PLink()">Finalize Link</button>
                 </div>
             </div>
 
-            <!-- Right Deck: Receiver Terminal Array Logs -->
-            <div class="console-deck">
-                <h2>Receiver Stream Feed Terminal</h2>
-                <div class="terminal-feed" id="terminalFeedBox">
-                    <div class="feed-entry" style="color: var(--txt-muted);">[System Initialization Complete. Awaiting local stream sync...]</div>
+            <!-- DECK 2: Device Hardware Broadcast Modulation controls -->
+            <div class="deck">
+                <h2>2. Outbound Broadcast Controls</h2>
+                <div class="transmit-row">
+                    <input type="text" id="msgPayload" placeholder="Type data stream to beam...">
+                    <button class="btn" onclick="sendDataPacket()">Beam</button>
+                </div>
+                <h2>Audio Frequency Macro Triggers</h2>
+                <div class="audio-macros">
+                    <button class="macro-btn" onclick="sendAudioMacro('Ping', 900, 0.15)">🔔 Ping</button>
+                    <button class="macro-btn" onclick="sendAudioMacro('Pulse', 500, 0.3)">⚡ Pulse</button>
+                    <button class="macro-btn" onclick="sendAudioMacro('Siren', 1400, 0.5)">🚨 Siren</button>
+                </div>
+            </div>
+
+            <!-- DECK 3: Receiver Feed Logger Terminal Console -->
+            <div class="deck" style="grid-column: 1 / -1;">
+                <h2>3. Transceiver Stream System Output Feed</h2>
+                <div class="terminal" id="termFeed">
+                    <div class="log-line" style="color: var(--txt-muted);">[System Awake. Initialize a connection sequence to beam data across physical hardware spaces.]</div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Channel Initialization parameters
-        const INTEGRATED_BROADCAST_CHANNEL = new BroadcastChannel('radionet_frequency_sync');
-        const terminalLogViewElementNode = document.getElementById('terminalFeedBox');
+        // Global WebRTC Configuration Settings Mapping
+        const ICE_SERVERS = { iceServers: [{ urls: 'stun:://google.com' }] }; // Free STUN server to find local IPs
+        
+        let localPeerConnection = null;
+        let localDataChannel = null;
+        let audioHardwareCtx = null;
 
-        // Web Audio Synthesizer Interface Hardware Hook Engine
-        let soundHardwareContextInstance = null;
+        const uiLogTerminal = document.getElementById('termFeed');
+        const tokenInputArea = document.getElementById('handshakeBox');
+        const connectionBadgeElement = document.getElementById('netStatus');
 
-        function playLocalSynthesisBeep(pitchFrequency, soundDurationSec) {
-            if (!soundHardwareContextInstance) {
-                soundHardwareContextInstance = new (window.AudioContext || window.webkitAudioContext)();
-            }
-            
-            const oscillator = soundHardwareContextInstance.createOscillator();
-            const gainController = soundHardwareContextInstance.createGain();
-
-            oscillator.type = 'sine';
-            oscillator.frequency.setValueAtTime(pitchFrequency, soundHardwareContextInstance.currentTime);
-            
-            gainController.gain.setValueAtTime(0.15, soundHardwareContextInstance.currentTime);
-            gainController.gain.exponentialRampToValueAtTime(0.001, soundHardwareContextInstance.currentTime + soundDurationSec);
-
-            oscillator.connect(gainController);
-            gainController.connect(soundHardwareContextInstance.destination);
-            
-            oscillator.start();
-            oscillator.stop(soundHardwareContextInstance.currentTime + soundDurationSec);
+        function appendLog(tag, text, color = '#ffffff') {
+            const line = document.createElement('div');
+            line.classList.add('log-line');
+            line.style.color = color;
+            line.innerHTML = `<span style="color: var(--txt-muted)">[${new Date().toLocaleTimeString()}]</span> <strong>${tag}:</strong> ${text}`;
+            uiLogTerminal.appendChild(line);
+            uiLogTerminal.scrollTop = uiLogTerminal.scrollHeight;
         }
 
-        // Format system log timeline stamps
-        function generateLogTimestamp() {
-            const timeObject = new Date();
-            return timeObject.toTimeString().split(' ')[0];
+        function playBeep(freq, duration) {
+            if (!audioHardwareCtx) audioHardwareCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = audioHardwareCtx.createOscillator();
+            const gain = audioHardwareCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, audioHardwareCtx.currentTime);
+            gain.gain.setValueAtTime(0.1, audioHardwareCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioHardwareCtx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(audioHardwareCtx.destination);
+            osc.start();
+            osc.stop(audioHardwareCtx.currentTime + duration);
         }
 
-        // Output formatting function to append directly into receiver display node
-        function appendIncomingDataToTerminalLog(labelTag, bodyMessageText, textHexColor = '#ffffff') {
-            const rowLogContainerWrapper = document.createElement('div');
-            rowLogContainerWrapper.classList.add('feed-entry');
-            rowLogContainerWrapper.style.color = textHexColor;
+        // Setup common data channel triggers 
+        function bindDataChannelEvents() {
+            localDataChannel.onopen = () => {
+                connectionBadgeElement.textContent = "CONNECTED DIRECTLY TO DEVICE";
+                connectionBadgeElement.classList.add('connected');
+                appendLog('SYSTEM', 'Data transmission channel established successfully!', 'var(--accent-green)');
+            };
 
-            rowLogContainerWrapper.innerHTML = `
-                <span class="feed-timestamp">[${generateLogTimestamp()}]</span>
-                <span class="feed-tag">${labelTag}:</span>
-                <span>${bodyMessageText}</span>
-            `;
-
-            terminalLogViewElementNode.appendChild(rowLogContainerWrapper);
-            terminalLogViewElementNode.scrollTop = terminalLogViewElementNode.scrollHeight;
+            localDataChannel.onmessage = (event) => {
+                const packet = JSON.parse(event.data);
+                if (packet.type === 'TEXT') {
+                    appendLog('BEAM_IN', packet.payload, 'var(--accent-blue)');
+                } else if (packet.type === 'AUDIO') {
+                    appendLog('SIGNAL_IN', `Remote device played sound: ${packet.name}`, 'var(--accent-green)');
+                    playBeep(packet.freq, packet.dur);
+                }
+            };
         }
 
-        // --- TRANSMITTER OPERATIONS ---
-        function broadcastTextPayload() {
-            const inputFieldElementNode = document.getElementById('signalPayload');
+        // --- STEP A: DEVICE 1 INITIATES OFFER ---
+        function initializeP2POffer() {
+            localPeerConnection = new RTCPeerConnection(ICE_SERVERS);
