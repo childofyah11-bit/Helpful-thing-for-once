@@ -90,7 +90,6 @@
     </div>
     <div id="achievementBox" class="achievement" style="display:none"></div>
     <script>
-       
         const PERKS = {
             rapid_fire: { name: 'Rapid Fire', cost: 1500, desc: '↑30% fire rate permanently', category: 'weapon', effect: ()=>{ player.rate *= 0.7; } },
             spread_shot: { name: 'Spread Shot', cost: 5000, desc: 'Fire 3 projectiles at once', category: 'weapon', tempDuration: 12000 },
@@ -103,3 +102,54 @@
             quantum_split: { name: 'Quantum Split', cost: 2190, desc: 'Clone projectiles in flight', category: 'weapon' },
             targeting_ai: { name: 'Targeting A.I.', cost: 1790, desc: 'Auto-aim + ↑accuracy 300%', category: 'support', passive: true },
             energy_shield: { name: 'Energy Shield', cost: 1595, desc: 'Reflect 50% of incoming fire', category: 'defense', passive: true },
+            phase_shift: { name: 'Phase Shift', cost: 1805, desc: 'Become invulnerable for 6 sec', category: 'defense', tempDuration: 6000, effect: ()=>{ player.invul = 360; } },
+```javascript
+        const cvs = document.getElementById('canvas'); const ctx = cvs.getContext('2d');
+        resizeCanvas(); window.addEventListener('resize', resizeCanvas);
+        function resizeCanvas(){ const ratio = window.devicePixelRatio || 1; const size = Math.min(1100, Math.max(640, Math.floor(Math.min(window.innerWidth*0.9, 980)))); cvs.width = size * ratio; cvs.height = size * ratio; ctx.scale(ratio, ratio); }
+        let audioCtx, masterGain, musicNode; let muted = false;
+        function ensureAudio(){ if (!audioCtx){ audioCtx = new (window.AudioContext||window.webkitAudioContext)(); masterGain = audioCtx.createGain(); masterGain.connect(audioCtx.destination); masterGain.gain.value = 0.07; } }
+        function toggleMute(){ muted = !muted; if (masterGain) masterGain.gain.value = muted ? 0 : 0.07; document.getElementById('muteBtn').innerText = muted ? '🔇' : '🔊'; }
+        function startMusic(){ try{ const o1 = audioCtx.createOscillator(); const o2 = audioCtx.createOscillator(); const g = audioCtx.createGain(); o1.type='sine'; o2.type='sine'; o1.frequency.value = 110; o2.frequency.value = 165; o1.connect(g); o2.connect(g); g.connect(masterGain); g.gain.value = 0.02; o1.start(); o2.start(); }catch(e){} }
+        function sfx(type,pitch=1,when=0){ try{ ensureAudio(); const t = audioCtx.currentTime + when; if (type==='shoot'){ const o=audioCtx.createOscillator(); const g=audioCtx.createGain(); o.type='sawtooth'; o.frequency.value=180*pitch; o.connect(g); g.connect(masterGain); g.gain.setValueAtTime(0.04,t); g.gain.exponentialRampToValueAtTime(0.01,t+0.1); o.start(t); o.stop(t+0.1); } else if(type==='hit'){ const o=audioCtx.createOscillator(); const g=audioCtx.createGain(); o.type='sine'; o.frequency.setValueAtTime(200*pitch,t); o.frequency.exponentialRampToValueAtTime(80*pitch,t+0.15); o.connect(g); g.connect(masterGain); g.gain.setValueAtTime(0.05,t); g.gain.exponentialRampToValueAtTime(0.01,t+0.15); o.start(t); o.stop(t+0.15); } }catch(e){} }
+        
+        let score = 0, multiplier = 1, comboTimer = 0, frame = 0, isOver = true, running = false, timeSlowActive = false;
+        let asteroids = [], enemies = [], lasers = [], bullets = [], pickups = [], particles = [], floats = [];
+        let activeBoss = null, bossStage = 0, wave = 0, chaosMode = false;
+        let activePerkTimers = {}, perkProcs = 0;
+        const keys = { left:false, right:false, fire:false, shift:false };
+        const player = { x: 450, y: 820, w:28, h:24, speed:7.2, cooldown:0, rate:10, health:1, lives:3, shield:0, shieldTimer:0, spread:false, rapid:false, skin:'default', dmg:1, energy:100, maxEnergy:100 };
+        const aiAlpha = { x: 160, y: 820, w:24, h:20, speed:4.8, cooldown:0, alive:true, respawn:0, moveDir:1, moveTimer:0 };
+        const aiBeta = { x: 560, y: 820, w:24, h:20, speed:5.6, cooldown:0, alive:false, respawn:0, moveDir:1, moveTimer:0 };
+        const aiGamma = { x: 360, y: 820, w:20, h:18, speed:6, cooldown:0, alive:false, respawn:0, moveDir:1, moveTimer:0 };
+        
+        function applyShopOwned(){ shopOwned = JSON.parse(localStorage.getItem(SHOP_KEYS.OWNED) || '[]'); activePerkTimers = {}; for (let perkId of shopOwned) { const p = PERKS[perkId]; if (p && p.effect && !p.tempDuration) { p.effect(); } if (p && p.passive) { activePerkTimers[perkId] = true; } } }
+        applyShopOwned();
+        
+        const overlay = document.getElementById('overlay'); const panel = document.getElementById('panel'); const title = document.getElementById('title'); const scoreHud = document.getElementById('score-hud'); const playerHud = document.getElementById('player-hud'); const aiHud = document.getElementById('ai-hud');
+        const btnLeft = document.getElementById('btn-left'); const btnRight = document.getElementById('btn-right'); const btnFire = document.getElementById('btn-fire');
+        
+        if (btnLeft){ btnLeft.addEventListener('touchstart', ()=>keys.left=true); btnLeft.addEventListener('touchend', ()=>keys.left=false); }
+        if (btnRight){ btnRight.addEventListener('touchstart', ()=>keys.right=true); btnRight.addEventListener('touchend', ()=>keys.right=false); }
+        if (btnFire){ btnFire.addEventListener('touchstart', ()=>keys.fire=true); btnFire.addEventListener('touchend', ()=>keys.fire=false); }
+        
+        window.addEventListener('keydown',(e)=>{ if (e.key==='ArrowLeft'){ e.preventDefault(); keys.left=true; } if (e.key==='ArrowRight'){ e.preventDefault(); keys.right=true; } if (e.key===' '){ e.preventDefault(); keys.fire=true; if(isOver && !running) startGame(); } if (e.key==='Shift') keys.shift=true; });
+        window.addEventListener('keyup',(e)=>{ if (e.key==='ArrowLeft') keys.left=false; if (e.key==='ArrowRight') keys.right=false; if (e.key===' ') keys.fire=false; if (e.key==='Shift') keys.shift=false; });
+        
+        let clickCount = 0;
+        title.addEventListener('click',(e)=>{ if (keys.shift){ clickCount++; if (clickCount>=3){ clickCount = 0; if (!shopOwned.includes('cheat_drone')){ shopOwned.push('cheat_drone'); localStorage.setItem(SHOP_KEYS.OWNED, JSON.stringify(shopOwned)); } aiBeta.alive=true; aiBeta.x = player.x + 40; aiBeta.respawn=0; aiGamma.alive=true; aiGamma.x = player.x - 40; aiGamma.respawn=0; unlockAchievement('hidden_unlock', 'CLASSIFIED ACCESS GRANTED'); if (isOver) startGame(); } } else { clickCount=0; if (isOver) startGame(); } });
+        
+        function spawnAsteroid(){ const W = cvs.width/(window.devicePixelRatio||1); asteroids.push({ x: Math.random()*(W-40), y:-30-Math.random()*80, size:18+Math.random()*46, speed:(timeSlowActive?1.8:2.6)+Math.random()*3.2, spin:Math.random()*0.08-0.04, rot:0 }); }
+        function spawnEnemy(){ const W = cvs.width/(window.devicePixelRatio||1); enemies.push({ x:Math.random()*(W-36), y:-20, size:18, hp: (chaosMode?4: 3 + Math.floor(Math.random()*2)), speed:(timeSlowActive?1.2:(chaosMode?2.8:2.6)) + Math.random()*1.2, cooldown: 60+Math.random()*80 }); }
+        function spawnPickup(x,y){ const types=['rapid','shield','spread','bomb','score','homing','energy']; const t=types[Math.floor(Math.random()*types.length)]; pickups.push({ x,y,type:t,vy:1.2,t:t }); }
+        function spawnParticles(x,y,color,count=18,spread=2){ for(let i=0;i<count;i++){ const a=Math.random()*Math.PI*2; const s=Math.random()*spread+0.6; particles.push({ x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:100,color:color }); } }
+        function showFloating(txt,x,y,color='#fff'){ floats.push({txt,x,y,color,alpha:1,life:90}); }
+        function rectHit(aX,aY,aW,aH,bX,bY,bW,bH){ return aX < bX + bW && aX + aW > bX && aY < bY + bH && aY + aH > bY; }
+        function updateHUD(){ scoreHud.innerText = `SCORE: ${score}  ×${(multiplier).toFixed(2)}`; playerHud.innerText = `LIVES: ${player.lives} | LVL ${playerLevel}`; aiHud.innerText = `DRONES: ${[aiAlpha,aiBeta,aiGamma].filter(a=>a.alive).length} | WAVE: ${wave}`; }
+        
+        function startGame(){ ensureAudio(); score=0; multiplier=1; comboTimer=0; frame=0; isOver=false; running=true; asteroids=[]; enemies=[]; lasers=[]; bullets=[]; pickups=[]; particles=[]; floats.length=0; activeBoss=null; bossStage=0; wave=1; timeSlowActive=false; respawnPlayer(); startMusic(); loop(); }
+        function respawnPlayer(){ const W = cvs.width/(window.devicePixelRatio||1); const H = cvs.height/(window.devicePixelRatio||1); player.x=W/2 - player.w/2; player.y=H-100; player.cooldown=0; player.invul=120; player.shieldTimer=0; }
+        function endGame(){ isOver=true; running=false; overlay.style.display='flex'; saveScore(); panel.innerHTML=`<h2>💥 MISSION FAILED 💥</h2><div style="margin-top:10px"><strong>Final Score:</strong> ${score}</div><div style="margin-top:8px;font-size:12px">📊 Level: ${playerLevel} | XP: ${Math.floor(playerXP)}</div><button class="btn" onclick="location.reload()">Play Again</button><button class="btn secondary" onclick="openLeaderboard()">View Scores</button>`; }
+        function maybeSpawnBoss(){ if (!activeBoss){ if (score > (chaosMode?800:350) && bossStage===0){ bossStage=1; spawnBoss(1);} else if (score > (chaosMode?2200:900) && bossStage===1){ bossStage=2; spawnBoss(2); } else if (score > (chaosMode?4000:1500) && bossStage===2){ bossStage=3; spawnBoss(3); wave++; } } }
+        function spawnBoss(type){ const W = cvs.width/(window.devicePixelRatio||1); if (type===1) activeBoss={name:'VANGUARD',x:120,y:-120,w:160,h:46,hp:Math.floor(140 * 1.5),maxHp:Math.floor(140 * 1.5),cooldown:40,pattern:0,patternTimer:0}; else if(type===2) activeBoss={name:'SENTINEL',x:W/2-80,y:-120,w:160,h:40,hp:Math.floor(220 * 1.5),maxHp:Math.floor(220 * 1.5),cooldown:30,pattern:0,patternTimer:0}; else if(type===3) activeBoss={name:'OMEGA',x:W/2-100,y:-140,w:200,h:50,hp:Math.floor(300 * 1.5),maxHp:Math.floor(300 * 1.5),cooldown:25,pattern:0,patternTimer:0}; }
+        
