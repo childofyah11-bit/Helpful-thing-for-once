@@ -3,223 +3,282 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> index.html</title>
+    <title>Retro Space Arcade Shooter</title>
     <style>
         body {
             margin: 0;
             padding: 20px;
-            background-color: #0b1016;
+            background-color: #080c10;
             color: #ffffff;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
             gap: 20px;
+            justify-content: center;
+            align-items: center;
             height: 95vh;
             overflow: hidden;
             user-select: none;
         }
-        #game-container {
+        #game-wrapper {
             display: flex;
-            flex-direction: column;
-            gap: 15px;
-            width: 450px;
-            align-items: center;
-        }
-        #stats-panel {
-            width: 100%;
-            background: #161f2c;
+            gap: 20px;
+            background: #10161e;
             padding: 15px;
-            border-radius: 8px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            font-size: 1.1em;
-            font-weight: bold;
-            border: 1px solid #233043;
-            box-sizing: border-box;
+            border-radius: 12px;
+            border: 2px solid #1f2937;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
-        .stat-row {
-            display: flex;
-            justify-content: space-between;
-        }
-        .stat-label { color: #b0bec5; font-size: 0.9em; }
-        .stat-money { color: #ffd700; }
-        .stat-val { color: #00bcd4; }
-        
-        #click-zone {
-            width: 100%;
-            height: 380px;
-            background: #121820;
-            border: 2px solid #233043;
-            border-radius: 8px;
+        #canvas-container {
             position: relative;
-            cursor: pointer;
-            overflow: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
         }
-        #reactor-core {
-            width: 160px;
-            height: 160px;
-            background: radial-gradient(circle, #00f0ff 0%, #0044ff 70%, #121820 100%);
-            border-radius: 50%;
-            box-shadow: 0 0 30px #0055ff;
-            transition: transform 0.05s, box-shadow 0.05s;
+        canvas {
+            background-color: #040608;
+            border: 2px solid #374151;
+            border-radius: 6px;
+            display: block;
         }
-        #reactor-core:active {
-            transform: scale(0.92);
-            box-shadow: 0 0 50px #00ffff;
-        }
-        .click-float {
-            position: absolute;
-            color: #ffd700;
-            font-weight: bold;
-            font-size: 1.3em;
-            pointer-events: none;
-            animation: floatUp 0.8s ease-out forwards;
-        }
-        @keyframes floatUp {
-            0% { transform: translateY(0); opacity: 1; }
-            100% { transform: translateY(-80px); opacity: 0; }
-        }
-
-        #tycoon-panel {
-            flex: 1;
-            background: #161f2c;
-            border: 2px solid #233043;
+        #shop-panel {
+            width: 280px;
+            background: #151f2b;
+            border: 2px solid #243346;
             border-radius: 8px;
             padding: 15px;
             display: flex;
             flex-direction: column;
             overflow-y: auto;
+            height: 500px;
         }
         h2 {
             margin-top: 0;
-            color: #ffd700;
-            border-bottom: 2px solid #233043;
-            padding-bottom: 5px;
-            font-size: 1.4em;
+            color: #38bdf8;
+            font-size: 1.3em;
+            text-align: center;
+            border-bottom: 2px solid #243346;
+            padding-bottom: 8px;
         }
-        .category-title {
-            font-size: 1.05em;
-            color: #00bcd4;
-            margin: 15px 0 6px 0;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            border-left: 3px solid #00bcd4;
-            padding-left: 6px;
+        .stats-display {
+            background: #0c131a;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            border: 1px solid #1f2937;
+            font-weight: bold;
         }
-        .upgrade-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 8px;
+        .stat-line {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+            font-size: 0.9em;
         }
-        .upgrade-card {
-            background: #233043;
-            border: 1px solid #34495e;
+        .upgrade-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .upgrade-item {
+            background: #1e293b;
+            border: 1px solid #334155;
             border-radius: 6px;
             padding: 10px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            transition: 0.2s;
-        }
-        .upgrade-card:hover {
-            border-color: #00bcd4;
-            background: #2c3e50;
         }
         .upgrade-info {
             display: flex;
             flex-direction: column;
             gap: 2px;
         }
-        .upgrade-name { font-weight: bold; font-size: 0.95em; }
-        .upgrade-desc { font-size: 0.8em; color: #b0bec5; }
-        .upgrade-level { font-size: 0.8em; color: #4caf50; font-weight: bold; }
-        
-        .upgrade-btn {
-            background: #4caf50;
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 4px;
-            cursor: pointer;
+        .upgrade-title {
             font-weight: bold;
             font-size: 0.9em;
-            min-width: 90px;
-            text-align: center;
+            color: #f3f4f6;
+        }
+        .upgrade-cost {
+            font-size: 0.8em;
+            color: #fbbf24;
+            font-weight: bold;
+        }
+        .upgrade-btn {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.8em;
+            transition: background 0.2s;
+        }
+        .upgrade-btn:hover:not(:disabled) {
+            background: #059669;
         }
         .upgrade-btn:disabled {
-            background: #555;
-            color: #888;
+            background: #4b5563;
+            color: #9ca3af;
             cursor: not-allowed;
+        }
+        .controls-hint {
+            margin-top: auto;
+            font-size: 0.75em;
+            color: #9ca3af;
+            text-align: center;
+            line-height: 1.4;
+            border-top: 1px dashed #243346;
+            padding-top: 10px;
         }
     </style>
 </head>
 <body>
 
-    <div id="game-container">
-        <div id="stats-panel">
-            <div class="stat-row">
-                <span class="stat-label">TOTAL CAPITAL:</span>
-                <span class="stat-money">$<span id="cash-txt">0</span></span>
-            </div>
-            <div class="stat-row">
-                <span class="stat-label">AUTO-GENERATION:</span>
-                <span class="stat-val">$<span id="income-txt">0</span>/s</span>
-            </div>
-            <div class="stat-row">
-                <span class="stat-label">CLICK COEFFICIENT:</span>
-                <span class="stat-val">+$<span id="click-txt">1</span></span>
-            </div>
+    <div id="game-wrapper">
+        <div id="canvas-container">
+            <canvas id="arcadeCanvas" width="480" height="530"></canvas>
         </div>
-        
-        <div id="click-zone">
-            <div id="reactor-core"></div>
-        </div>
-    </div>
 
-    <div id="tycoon-panel">
-        <h2>Quantum Core Matrix Upgrades (30 Protocols)</h2>
-        <div id="upgrades-container"></div>
+        <div id="shop-panel">
+            <h2>Hangar Upgrades</h2>
+            <div class="stats-display">
+                <div class="stat-line"><span>Credits:</span><span style="color:#fbbf24;" id="credits-txt">$0</span></div>
+                <div class="stat-line"><span>Current Score:</span><span style="color:#38bdf8;" id="score-txt">0</span></div>
+                <div class="stat-line"><span>Current Wave:</span><span style="color:#a855f7;" id="wave-txt">1</span></div>
+            </div>
+
+            <div class="upgrade-list" id="upgrades-container"></div>
+
+            <div class="controls-hint">
+                <strong>[CONTROLS]</strong><br>
+                ← / → Keys or Mouse to Move<br>
+                Spacebar or Mouse Click to Shoot
+            </div>
+        </div>
     </div>
 
     <script>
-        let cash = 0;
-        let passiveIncome = 0;
-        let clickValue = 1;
+        const canvas = document.getElementById('arcadeCanvas');
+        const ctx = canvas.getContext('2d');
 
-        let globalPassiveMult = 1.0;
-        let globalClickMult = 1.0;
-        let criticalChance = 0;
-        let interestRate = 0;
-        let clickCombo = 0;
-        let comboTimeout = null;
+        // Game Configuration & Currencies
+        let credits = 0;
+        let score = 0;
+        let wave = 1;
+        let gameOver = false;
 
-        const container = document.getElementById('upgrades-container');
-        const clickZone = document.getElementById('click-zone');
-        const reactorCore = document.getElementById('reactor-core');
+        // Player Attributes
+        const player = {
+            x: canvas.width / 2,
+            y: canvas.height - 40,
+            w: 30,
+            h: 20,
+            speed: 5,
+            hp: 3,
+            maxHp: 3,
+            fireRate: 400, // Cooldown in ms
+            lastShot: 0,
+            bulletSpeed: 7,
+            multishot: 1
+        };
 
-        const upgradesConfig = [
-            // BRANCH 1: ACTIVE CAPACITATION
-            { id: 1, cat: "Active Capacitation", name: "Copper Contact Points", desc: "Adds flat raw generation value to each click.", lvl: 0, max: 10, cost: 15, scale: 1.4, effect: () => { clickValue += 1; } },
-            { id: 2, cat: "Active Capacitation", name: "Inductor Coils", desc: "Increases baseline tap values further.", lvl: 0, max: 10, cost: 120, scale: 1.45, effect: () => { clickValue += 5; } },
-            { id: 3, cat: "Active Capacitation", name: "Kinetic Amplifiers", desc: "Substantial click value injection increments.", lvl: 0, max: 10, cost: 500, scale: 1.5, effect: () => { clickValue += 25; } },
-            { id: 4, cat: "Active Capacitation", name: "Static Accumulators", desc: "Massive scale manual output adjustment points.", lvl: 0, max: 8, cost: 2500, scale: 1.6, effect: () => { clickValue += 120; } },
-            { id: 5, cat: "Active Capacitation", name: "Critical Discharge Grid", desc: "Grants a 5% chance to hit critical 3x damage clicks.", lvl: 0, max: 6, cost: 1000, scale: 1.8, effect: () => { criticalChance += 0.05; } },
-            { id: 6, cat: "Active Capacitation", name: "Thermal Friction Pipes", desc: "Boosts overall click values by 20% globally.", lvl: 0, max: 5, cost: 4000, scale: 2.2, effect: () => { globalClickMult += 0.20; } },
-            { id: 7, cat: "Active Capacitation", name: "Synaptic Capacitors", desc: "Provides high-tier raw click values.", lvl: 0, max: 5, cost: 15000, scale: 2.0, effect: () => { clickValue += 800; } },
-            { id: 8, cat: "Active Capacitation", name: "Impact Overdrive Engine", desc: "Doubles total global manual tap power values.", lvl: 0, max: 1, cost: 100000, scale: 1.0, effect: () => { globalClickMult *= 2; } },
+        // Arrays for Game Entities
+        let bullets = [];
+        let enemies = [];
+        let enemyBullets = [];
+        let particles = [];
+        let powerups = [];
 
-            // BRANCH 2: PASSIVE FRAMEWORKS
-            { id: 9, cat: "Passive Frameworks", name: "Substation Generators", desc: "Generates $1/sec automatically.", lvl: 0, max: 15, cost: 50, scale: 1.35, effect: () => { passiveIncome += 1; } },
-            { id: 10, cat: "Passive Frameworks", name: "Turbine Relays", desc: "Generates $8/sec passively.", lvl: 0, max: 12, cost: 350, scale: 1.4, effect: () => { passiveIncome += 8; } },
-            { id: 11, cat: "Passive Frameworks", name: "Fossil Fuel Arrays", desc: "Generates $45/sec passively.", lvl: 0, max: 10, cost: 1800, scale: 1.45, effect: () => { passiveIncome += 45; } },
-            { id: 12, cat: "Passive Frameworks", name: "Hydroelectric Dams", desc: "Generates $260/sec passively.", lvl: 0, max: 10, cost: 9500, scale: 1.5, effect: () => { passiveIncome += 260; } },
-            { id: 13, cat: "Passive Frameworks", name: "Geothermal Drills", desc: "Generates $1,400/sec passively.", lvl: 0, max: 8, cost: 48000, scale: 1.55, effect: () => { passiveIncome += 1400; } },
-            { id: 14, cat: "Passive Frameworks", name: "Fission Reactors", desc: "Generates $8,500/sec passively.", lvl: 0, max: 5, cost: 220000, scale: 1.6, effect: () => { passiveIncome += 8500; } },
-            { id: 15, cat: "Passive Frameworks", name: "Efficiency Insulation", desc: "Augments global auto-generation metrics by 15%.", lvl: 0, max: 5, cost: 12000, scale: 1.9, effect: () => { globalPassiveMult += 0.15; } },
-            { id: 16, cat: "Passive Frameworks", name: "Dyson Swarm Blueprint", desc: "Doubles entire cumulative passive output rates.", lvl: 0, max: 1, cost: 1500000, scale: 1.0, effect: () => { globalPassiveMult *= 2; } },
+        // Keyboard State
+        const keys = {};
 
-            // BRANCH 3: ECONOMY SPECULATION
-            { id: 17, cat: "Economy Speculation", name: "Venture Grants", desc: "Injects an immediate $250 flat lump sum.", lvl: 0, max: 20, cost: 100, scale: 1.5, effect: () => { cash += 250; } },
+        // 6 Progressive Shop Upgrades
+        const upgrades = [
+            { id: 'speed', name: 'Engine Tuning', desc: 'Increases movement speed.', lvl: 1, max: 5, cost: 40, scale: 1.6, action: () => player.speed += 1 },
+            { id: 'firerate', name: 'Overclock Lasers', desc: 'Increases firing frequency.', lvl: 1, max: 5, cost: 60, scale: 1.8, action: () => player.fireRate *= 0.8 },
+            { id: 'bulletspeed', name: 'Plasma Boost', desc: 'Bullets travel much faster.', lvl: 1, max: 4, cost: 50, scale: 1.5, action: () => player.bulletSpeed += 2 },
+            { id: 'multishot', name: 'Split Shot Matrix', desc: 'Fires extra spreading bullets.', lvl: 1, max: 3, cost: 200, scale: 3.0, action: () => player.multishot += 1 },
+            { id: 'maxhp', name: 'Reinforced Hull', desc: 'Adds an extra Max HP container.', lvl: 3, max: 6, cost: 100, scale: 2.0, action: () => { player.maxHp++; player.hp++; } },
+            { id: 'repair', name: 'Emergency Repair', desc: 'Heals 1 missing health point.', lvl: 0, max: 99, cost: 25, scale: 1.1, action: () => { if(player.hp < player.maxHp) player.hp++; } }
+        ];
+
+        // Setup Event Listeners
+        window.addEventListener('keydown', e => keys[e.key] = true);
+        window.addEventListener('keyup', e => keys[e.key] = false);
+
+        // Optional mouse control handlers
+        let useMouse = false;
+        canvas.addEventListener('mousemove', e => {
+            useMouse = true;
+            const rect = canvas.getBoundingClientRect();
+            player.x = e.clientX - rect.left;
+            // Prevent going out of screen boundaries
+            if (player.x < player.w/2) player.x = player.w/2;
+            if (player.x > canvas.width - player.w/2) player.x = canvas.width - player.w/2;
+        });
+        canvas.addEventListener('mousedown', () => { if(!gameOver) fireBullet(); });
+
+        function renderShop() {
+            document.getElementById('credits-txt').innerText = `$${credits}`;
+            document.getElementById('score-txt').innerText = score;
+            document.getElementById('wave-txt').innerText = wave;
+
+            const container = document.getElementById('upgrades-container');
+            container.innerHTML = '';
+
+            upgrades.forEach(upg => {
+                const item = document.createElement('div');
+                item.className = 'upgrade-item';
+
+                let isMax = upg.lvl >= upg.max;
+                let cost = Math.floor(upg.cost * Math.pow(upg.scale, upg.id === 'repair' ? 1 : upg.lvl - 1));
+                let displayCost = isMax ? 'MAX' : `$${cost}`;
+                
+                let canBuy = credits >= cost && !isMax;
+                if (upg.id === 'repair' && player.hp >= player.maxHp) canBuy = false;
+
+                item.innerHTML = `
+                    <div class="upgrade-info">
+                        <span class="upgrade-title">${upg.name} ${upg.id !== 'repair' ? `[Lv ${upg.lvl}]` : ''}</span>
+                        <span style="font-size:0.75em; color:#94a3b8;">${upg.desc}</span>
+                        <span class="upgrade-cost">${displayCost}</span>
+                    </div>
+                    <button class="upgrade-btn" ${canBuy ? '' : 'disabled'} onclick="buyUpgrade('${upg.id}', ${cost})">Buy</button>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function buyUpgrade(id, cost) {
+            let upg = upgrades.find(u => u.id === id);
+            if (credits >= cost) {
+                credits -= cost;
+                upg.lvl++;
+                upg.action();
+                renderShop();
+            }
+        }
+
+        function spawnParticles(x, y, color, count = 8) {
+            for (let i = 0; i < count; i++) {
+                particles.push({
+                    x: x, y: y,
+                    vx: (Math.random() - 0.5) * 4,
+                    vy: (Math.random() - 0.5) * 4,
+                    radius: Math.random() * 3 + 1,
+                    alpha: 1,
+                    color: color
+                });
+            }
+        }
+
+        function spawnWave() {
+            enemies = [];
+            enemyBullets = [];
+            let rows = Math.min(5, 2 + Math.floor(wave / 2));
+            let cols = 6;
+            
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    enemies.push({
+                        x: 50 + c * 60,
+                        y: 40 + r * 40,
+                        w: 24,
+                        h: 18,
