@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>um  not trash</title>
+    <title>The Secret Scrub-O-Matic 32</title>
     <style>
         :root {
             --bg-color: #0f172a;
@@ -138,35 +138,35 @@
 <body>
 
 <div class="container">
-    <h1>Privacy Sanitizer & Text Utility</h1>
-    <p class="subtitle">Quickly strip confidential records and adjust text formatting locally in your browser before saving or sharing text assets.</p>
+    <h1>The Secret Scrub-O-Matic 3000</h1>
+    <p class="subtitle">Quickly vaporize accidental leaks and bad spacing mistakes before someone on the internet laughs at your raw data strings.</p>
 
     <div class="grid">
         <div>
-            <label for="input-text">Raw Input Text</label>
-            <textarea id="input-text" placeholder="Paste logs, copy-pasted document strings, or confidential messages here..."></textarea>
+            <label for="input-text">Dump your messy texts here</label>
+            <textarea id="input-text" placeholder="Throw in your secret emails, wild texts, server logs, or anything else you don't want the boss or an AI bot seeing..."></textarea>
             <div class="stats-bar">
-                <span id="input-chars">Characters: 0</span>
-                <span id="input-words">Words: 0</span>
+                <span id="input-chars">Letter count: 0</span>
+                <span id="input-words">Word count: 0</span>
             </div>
         </div>
         <div>
-            <label for="output-text">Sanitized / Formatted Output</label>
-            <textarea id="output-text" readonly placeholder="Your clean text will display here..."></textarea>
+            <label for="output-text">Squeaky clean outputs</label>
+            <textarea id="output-text" readonly placeholder="Magic happens here..."></textarea>
             <div class="stats-bar">
-                <span id="output-chars">Characters: 0</span>
-                <span id="output-words">Words: 0</span>
+                <span id="output-chars">Letter count: 0</span>
+                <span id="output-words">Word count: 0</span>
             </div>
         </div>
     </div>
 
     <div class="actions">
-        <button class="primary" onclick="sanitizePII()">🔒 Strip PII</button>
-        <button onclick="changeCase('upper')">ABC</button>
-        <button onclick="changeCase('lower')">abc</button>
-        <button onclick="cleanWhitespace()">Clean Whitespace</button>
-        <button onclick="stripMarkdown()">Strip Markdown</button>
-        <button onclick="copyToClipboard()" style="margin-left: auto; border: 1px solid var(--accent); color: var(--accent);">📋 Copy Output</button>
+        <button class="primary" onclick="sanitizePII()">🔒 Obliterate Secrets</button>
+        <button onclick="changeCase('upper')">SHOUT IT</button>
+        <button onclick="changeCase('lower')">whisper it</button>
+        <button onclick="cleanWhitespace()">Fix Broken Spacing</button>
+        <button onclick="stripMarkdown()">Destroy Markdown</button>
+        <button onclick="copyToClipboard()" style="margin-left: auto; border: 1px solid var(--accent); color: var(--accent);">📋 Yoink Clean Text</button>
         <span id="toast" class="toast">Copied to clipboard!</span>
     </div>
 </div>
@@ -176,66 +176,55 @@
     const outputArea = document.getElementById('output-text');
     const toast = document.getElementById('toast');
 
-    // Live counter metrics 
     inputArea.addEventListener('input', () => {
         updateStats(inputArea.value, 'input');
     });
 
     function updateStats(text, prefix) {
-        document.getElementById(`${prefix}-chars`).textContent = `Characters: ${text.length}`;
+        const charLabel = prefix === 'input' ? 'Letter count' : 'Letter count';
+        const wordLabel = prefix === 'input' ? 'Word count' : 'Word count';
+        
+        document.getElementById(`${prefix}-chars`).textContent = `${charLabel}: ${text.length}`;
         const words = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
-        document.getElementById(`${prefix}-words`).textContent = `Words: ${words}`;
+        document.getElementById(`${prefix}-words`).textContent = `${wordLabel}: ${words}`;
     }
 
-    // Feature 1: Regex Redaction for PII 
     function sanitizePII() {
         let text = inputArea.value;
 
-        // Email Pattern
-        text = text.replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, "[REDACTED_EMAIL]");
-        
-        // Phone Numbers (Flexible common formats)
-        text = text.replace(/(\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/g, "[REDACTED_PHONE]");
-        
-        // IPv4 Addresses
-        text = text.replace(/\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b/g, "[REDACTED_IP]");
-        
-        // Credit Cards
-        text = text.replace(/\b\d{4}[- ]?\d{4}[- ]?\d{4}[- ]?\d{4}\b/g, "[REDACTED_CARD]");
+        text = text.replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, "[NADA_EMAIL]");
+        text = text.replace(/(\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/g, "[NOPE_PHONE]");
+        text = text.replace(/\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b/g, "[HIDDEN_IP]");
+        text = text.replace(/\b\d{4}[- ]?\d{4}[- ]?\d{4}[- ]?\d{4}\b/g, "[EMPTY_WALLET]");
 
         outputArea.value = text;
         updateStats(text, 'output');
     }
 
-    // Feature 2: Character Transformations
     function changeCase(type) {
         let text = inputArea.value;
         outputArea.value = type === 'upper' ? text.toUpperCase() : text.toLowerCase();
         updateStats(outputArea.value, 'output');
     }
 
-    // Feature 3: Standardize Spacing
     function cleanWhitespace() {
-        // Removes empty line padding and multi-space formatting mistakes
         let text = inputArea.value.replace(/[ \t]+/g, ' ').replace(/^\s+|\s+$/mg, '');
         outputArea.value = text;
         updateStats(text, 'output');
     }
 
-    // Feature 4: Markdown Demolition 
     function stripMarkdown() {
         let text = inputArea.value;
         text = text
-            .replace(/([_*~`]+)(.*?)\1/g, '$2') // bold, italic, strikethrough, inline-code
-            .replace(/^#+\s+/gm, '')             // Headers
-            .replace(/\[(.*?)\]\((.*?)\)/g, '$1') // Links preservation
-            .replace(/^\s*[-*+]\s+/gm, '')        // Unordered lists
-            .replace(/^\s*\d+\.\s+/gm, '');       // Ordered lists
+            .replace(/([_*~`]+)(.*?)\1/g, '$2') 
+            .replace(/^#+\s+/gm, '')             
+            .replace(/\[(.*?)\]\((.*?)\)/g, '$1') 
+            .replace(/^\s*[-*+]\s+/gm, '')        
+            .replace(/^\s*\d+\.\s+/gm, '');       
         outputArea.value = text;
         updateStats(text, 'output');
     }
 
-    // Utility: Quick Clipboard copy
     function copyToClipboard() {
         if (!outputArea.value) return;
         navigator.clipboard.writeText(outputArea.value).then(() => {
