@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blank tab</title>
+    <title>Tower Defense Tycoon & Clicker</title>
     <style>
         body {
             margin: 0;
@@ -15,6 +15,7 @@
             gap: 20px;
             height: 95vh;
             overflow: hidden;
+            user-select: none;
         }
         #game-container {
             display: flex;
@@ -25,7 +26,7 @@
             background-color: #121820;
             border: 2px solid #233043;
             border-radius: 8px;
-            cursor: pointer;
+            cursor: default;
         }
         #stats-panel {
             background: #161f2c;
@@ -37,7 +38,7 @@
             font-weight: bold;
             border: 1px solid #233043;
         }
-        .stat { color: #4caf50; }
+        .stat { color: #00bcd4; }
         .stat-money { color: #ffd700; }
         .stat-hp { color: #f44336; }
         
@@ -165,16 +166,22 @@
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
 
+        // Game Grid Configuration (40x40 px tiles)
+        const TILE_SIZE = 40;
+        const GRID_COLS = 16;
+        const GRID_ROWS = 12;
+
         // Core Game Variables
-        let cash = 500;
+        let cash = 550;
         let baseHp = 100;
         let maxBaseHp = 100;
         let passiveIncome = 10;
+        let clickValue = 5;
         let wave = 1;
         let waveTimer = 0;
         let selectedBuildType = 1;
 
-        // Configuration Modifiers (Affected by upgrades)
+        // Upgrade Modifiers
         let globalDamageMult = 1.0;
         let globalRangeMult = 1.0;
         let globalSpeedMult = 1.0;
@@ -185,39 +192,46 @@
         let criticalChance = 0;
         let plasmaSlowAmount = 0;
 
-        // Path configurations
-        const path = [
-            {x: 0, y: 120}, {x: 200, y: 120}, {x: 200, y: 360},
-            {x: 440, y: 360}, {x: 440, y: 200}, {x: 640, y: 200}
+        // Clicker visual feedback floats
+        let clickFloats = [];
+
+        // Exact grid tile definitions for path blocking
+        const mapGrid = Array(GRID_ROWS).fill().map(() => Array(GRID_COLS).fill(0));
+        
+        // Define path tiles (Row, Col) to block placement and draw path precisely
+        const pathTiles = [
+            {r:3, c:0}, {r:3, c:1}, {r:3, c:2}, {r:3, c:3}, {r:3, c:4}, {r:3, c:5},
+            {r:4, c:5}, {r:5, c:5}, {r:6, c:5}, {r:7, c:5}, {r:8, c:5}, {r:9, c:5},
+            {r:9, c:6}, {r:9, c:7}, {r:9, c:8}, {r:9, c:9}, {r:9, c:10}, {r:9, c:11},
+            {r:8, c:11}, {r:7, c:11}, {r:6, c:11}, {r:5, c:11},
+            {r:5, c:12}, {r:5, c:13}, {r:5, c:14}, {r:5, c:15}
         ];
+        pathTiles.forEach(t => mapGrid[t.r][t.c] = 1); // 1 = Path
+
+        // Define Clicker Core bounding area (bottom left corner space)
+        const clickerCore = { x: 40, y: 380, w: 100, h: 80, pulse: 0 };
 
         let towers = [];
         let enemies = [];
         let projectiles = [];
 
-        // Definition of the 30 unique multi-level tycoon upgrades
+        // Definition of the 30 unique upgrades
         const upgradesConfig = [
             // CATEGORY 1: ECONOMY BOOSTER (1-8)
-            { id: 1, cat: "Economy", name: "Solar Generators", desc: "Increases passive income generation rate.", lvl: 0, max: 90, cost: 80, scale: 1.5, effect: () => { passiveIncome += 5; } },
-            { id: 2, cat: "Economy", name: "Bounty Contracts", desc: "Earn extra money from every enemy eliminated.", lvl: 0, max: 70, cost: 150, scale: 1.6, effect: () => { killRewardMult += 0.2; } },
-            { id: 3, cat: "Economy", name: "Corporate Interest", desc: "Earn 2% of your current cash at the end of each wave.", lvl: 0, max: 5, cost: 300, scale: 2.0, effect: () => { interestRate += 0.02; } },
-            { id: 4, cat: "Economy", name: "Siphon rounds", desc: "Gain pocket money every single time a projectile strikes an enemy.", lvl: 0, max: 5, cost: 400, scale: 1.8, effect: () => { goldPerHit += 1; } },
-            { id: 5, cat: "Economy", name: "Liquidation Policy", desc: "Improves refund money recovered when removing towers.", lvl: 0, max: 3, cost: 200, scale: 2.2, effect: () => { sellReturnRate += 0.15; } },
-            { id: 6, cat: "Economy", name: "Crypto Mining Rig", desc: "Provides a flat mega lump sum injection instantly.", lvl: 0, max: 10, cost: 500, scale: 1.7, effect: () => { cash += 400; } },
-            { id: 7, cat: "Economy", name: "Wholesale Permits", desc: "Reduces original placement costs of all defense layout units.", lvl: 0, max: 5, cost: 600, scale: 1.6, effect: () => { /* Calculated dynamically */ } },
-            { id: 8, cat: "Economy", name: "Hyper Inflation Engine", desc: "Boosts overall passive generation power levels globally.", lvl: 0, max: 3, cost: 1200, scale: 2.5, effect: () => { passiveIncome *= 1.3; } },
+            { id: 1, cat: "Economy", name: "Solar Generators", desc: "Increases passive income generation rate.", lvl: 0, max: 10, cost: 80, scale: 1.5, effect: () => { passiveIncome += 6; } },
+            { id: 2, cat: "Economy", name: "Kinetic Capacitors", desc: "Increases your manual click generator value significantly.", lvl: 0, max: 10, cost: 60, scale: 1.4, effect: () => { clickValue += 8; } },
+            { id: 3, cat: "Economy", name: "Bounty Contracts", desc: "Earn extra money from every enemy eliminated.", lvl: 0, max: 10, cost: 150, scale: 1.6, effect: () => { killRewardMult += 0.25; } },
+            { id: 4, cat: "Economy", name: "Corporate Interest", desc: "Earn 2% of your cash reserves back at end of cycles.", lvl: 0, max: 5, cost: 300, scale: 2.0, effect: () => { interestRate += 0.02; } },
+            { id: 5, cat: "Economy", name: "Siphon Rounds", desc: "Gain pocket money when projectiles strike hostiles.", lvl: 0, max: 5, cost: 400, scale: 1.8, effect: () => { goldPerHit += 1; } },
+            { id: 6, cat: "Economy", name: "Liquidation Policy", desc: "Improves refund money recovered when removing towers.", lvl: 0, max: 3, cost: 200, scale: 2.2, effect: () => { sellReturnRate += 0.15; } },
+            { id: 7, cat: "Economy", name: "Wholesale Permits", desc: "Reduces original building layout unit prices.", lvl: 0, max: 5, cost: 500, scale: 1.6, effect: () => {} },
+            { id: 8, cat: "Economy", name: "Hyper Inflation Engine", desc: "Boosts overall passive generation power globally by 30%.", lvl: 0, max: 3, cost: 1200, scale: 2.5, effect: () => { passiveIncome *= 1.3; } },
 
             // CATEGORY 2: COMBAT MATRIX (9-16)
-            { id: 9, cat: "Combat", name: "Caliber Overhaul", desc: "Augments baseline impact output damage points directly.", lvl: 0, max: 10, cost: 100, scale: 1.5, effect: () => { globalDamageMult += 0.15; } },
-            { id: 10, cat: "Combat", name: "Polished Focal Lenses", desc: "Widens target validation tracking grid footprint scopes.", lvl: 0, max: 10, cost: 120, scale: 1.4, effect: () => { globalRangeMult += 0.08; } },
-            { id: 11, cat: "Combat", name: "Overclocked Rotors", desc: "Enables modules to fire rapid munitions configurations.", lvl: 0, max: 8, cost: 200, scale: 1.6, effect: () => { globalSpeedMult += 0.12; } },
-            { id: 12, cat: "Combat", name: "Weakspot Protocols", desc: "Grants a chance to land double damage critical hits.", lvl: 0, max: 5, cost: 350, scale: 1.8, effect: () => { criticalChance += 0.06; } },
-            { id: 13, cat: "Combat", name: "Dense Alloys", desc: "Increases basic gun projectile speeds.", lvl: 0, max: 5, cost: 150, scale: 1.4, effect: () => { } },
-            { id: 14, cat: "Combat", name: "Cryo Cores", desc: "Plasma beams lower enemy movement parameters upon impact.", lvl: 0, max: 5, cost: 400, scale: 1.7, effect: () => { plasmaSlowAmount += 0.1; } },
-            { id: 15, cat: "Combat", name: "Uranium Coating", desc: "Adds tiny passive damage ticks over time.", lvl: 0, max: 5, cost: 500, scale: 1.9, effect: () => { globalDamageMult += 0.25; } },
-            { id: 16, cat: "Combat", name: "Singularity Drive", desc: "Massive final scale execution damage threshold modifier.", lvl: 0, max: 2, cost: 2000, scale: 3.0, effect: () => { globalDamageMult *= 1.5; } },
-
-            // CATEGORY 3: FORTRESS INFRASTRUCTURE (17-24)
-            { id: 17, cat: "Fortress", name: "Titanium Bulkheads", desc: "Increases maximum health pool cap threshold limits.", lvl: 0, max: 10, cost: 100, scale: 1.4, effect: () => { maxBaseHp += 50; baseHp += 50; } },
-            { id: 18, cat: "Fortress", name: "Nanite Restoration", desc: "Instantly fixes structure integrity stress values.", lvl: 0, max: 20, cost: 75, scale: 1.3, effect: () => { baseHp = Math.min(maxBaseHp, baseHp + 30); } },
-            { id: 19, cat: "Fortress", name: "Reactive Spikes", desc: "Damages close range hostiles who strike defensive grids.", lvl: 0, max: 5, cost: 250, scale: 1.6, effect: () => { } },
+            { id: 9, cat: "Combat", name: "Caliber Overhaul", desc: "Augments baseline impact output damage points directly.", lvl: 0, max: 10, cost: 100, scale: 1.5, effect: () => { globalDamageMult += 0.2; } },
+            { id: 10, cat: "Combat", name: "Polished Lenses", desc: "Widens target validation tracking range.", lvl: 0, max: 10, cost: 120, scale: 1.4, effect: () => { globalRangeMult += 0.1; } },
+            { id: 11, cat: "Combat", name: "Overclocked Rotors", desc: "Enables modules to fire rapid munitions configurations.", lvl: 0, max: 8, cost: 200, scale: 1.6, effect: () => { globalSpeedMult += 0.15; } },
+            { id: 12, cat: "Combat", name: "Weakspot Protocols", desc: "Grants a chance to land double damage critical hits.", lvl: 0, max: 5, cost: 350, scale: 1.8, effect: () => { criticalChance += 0.08; } },
+            { id: 13, cat: "Combat", name: "Dense Alloys", desc: "Speeds up projectile tracking velocities.", lvl: 0, max: 5, cost: 150, scale: 1.4, effect: () => { } },
+            { id: 14, cat: "Combat", name: "Cryo Cores", desc: "Plasma beams lower enemy movement parameters upon impact.", lvl: 0, max: 5, cost: 400, scale: 1.7, effect: () => { plasmaSlowAmount += 0.12; } },
+            { id: 15, cat: "Combat", name: "Uranium Coating", desc: "Adds large toxic auxiliary damage modifiers.", lvl: 0, max: 5, cost: 500, scale: 1.9, effect: () => { globalDamageMult += 0.3; } },
