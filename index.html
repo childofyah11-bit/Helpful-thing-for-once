@@ -3,247 +3,241 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neo-City Chronicles: Text RPG</title>
+    <title>Cosmic Gravity Sandbox</title>
     <style>
-        :root {
-            --term-bg: #0a0a0f;
-            --neon-green: #39ff14;
-            --neon-blue: #00f0ff;
-            --neon-amber: #ffb703;
-            --text-main: #d1d5db;
-        }
-
         body {
-            background-color: var(--term-bg);
-            color: var(--text-main);
-            font-family: 'Courier New', Courier, monospace;
             margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            box-sizing: border-box;
+            overflow: hidden;
+            background-color: #03030c;
+            color: #eceff1;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            user-select: none;
         }
 
-        .terminal-container {
-            width: 100%;
-            max-width: 750px;
-            background: #12121a;
-            border: 2px solid var(--neon-blue);
+        #canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+            cursor: crosshair;
+        }
+
+        /* Information overlay setup container HUD panel */
+        .hud-overlay {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(13, 13, 25, 0.85);
+            padding: 18px;
             border-radius: 8px;
-            padding: 25px;
-            box-shadow: 0 0 20px rgba(0, 240, 255, 0.2);
-            box-sizing: border-box;
+            border: 1px solid #2a2b45;
+            pointer-events: none;
+            max-width: 280px;
         }
 
-        /* Status Parameters HUD Bar Layout */
-        .hud-bar {
+        h1 {
+            margin: 0 0 6px 0;
+            font-size: 1.15rem;
+            letter-spacing: 1px;
+            color: #4fc3f7;
+            text-transform: uppercase;
+        }
+
+        .instruction {
+            font-size: 0.8rem;
+            color: #90a4ae;
+            line-height: 1.4;
+            margin-bottom: 12px;
+        }
+
+        .metric {
+            font-size: 0.85rem;
+            font-family: monospace;
+            color: #00e676;
+            margin-top: 4px;
+        }
+
+        /* Configuration utility modifier trigger container */
+        .control-shelf {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
             display: flex;
-            justify-content: space-between;
-            border-bottom: 2px dashed #2a2a3a;
-            padding-bottom: 12px;
-            margin-bottom: 20px;
-            color: var(--neon-blue);
-            font-size: 0.9rem;
-            font-weight: bold;
+            gap: 10px;
         }
 
-        .hud-item span {
-            color: var(--neon-amber);
-        }
-
-        /* Dynamic Main Console Messaging Frame */
-        .story-display {
-            min-height: 180px;
-            line-height: 1.6;
-            font-size: 1.05rem;
-            margin-bottom: 25px;
-            white-space: pre-line;
-        }
-
-        .system-alert {
-            color: var(--neon-amber);
-            font-weight: bold;
-        }
-
-        /* Interactive Decisions Layout Setup */
-        .options-container {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .choice-btn {
-            background: #1a1a26;
-            color: var(--neon-green);
-            border: 1px solid var(--neon-green);
-            padding: 14px 18px;
+        .btn {
+            background: #1c1c30;
+            color: white;
+            border: 1px solid #4fc3f7;
+            padding: 8px 16px;
             border-radius: 4px;
             cursor: pointer;
-            font-family: inherit;
-            font-size: 0.95rem;
-            text-align: left;
+            font-size: 0.8rem;
+            font-weight: bold;
             transition: all 0.2s;
+            pointer-events: auto;
         }
 
-        .choice-btn:hover {
-            background: rgba(57, 255, 20, 0.1);
-            box-shadow: 0 0 10px rgba(57, 255, 20, 0.3);
-            transform: translateX(4px);
-        }
-
-        /* Inventory Panel Tags */
-        .inventory-box {
-            margin-top: 25px;
-            padding-top: 15px;
-            border-top: 2px dashed #2a2a3a;
-            font-size: 0.85rem;
-            color: #8a8a9a;
-        }
-
-        .inventory-list {
-            display: inline-flex;
-            gap: 8px;
-            color: var(--text-main);
-            margin-left: 5px;
-        }
-
-        .inv-tag {
-            background: #222233;
-            padding: 2px 8px;
-            border-radius: 4px;
-            border: 1px solid #3d3d5c;
+        .btn:hover {
+            background: #4fc3f7;
+            color: #03030c;
+            box-shadow: 0 0 12px rgba(79, 195, 247, 0.4);
         }
     </style>
 </head>
 <body>
 
-    <div class="terminal-container">
-        <!-- Dashboard Live Status Metrics -->
-        <div class="hud-bar">
-            <div class="hud-item">LOC: <span id="hudLoc">NEO-CITY GRID 0</span></div>
-            <div class="hud-item">CREDITS: <span id="hudCash">100</span></div>
-            <div class="hud-item">REPUTATION: <span id="hudRep">NEUTRAL</span></div>
-        </div>
+    <!-- Target Engine Context Node Matrix Canvas Viewport Frame Layer -->
+    <canvas id="canvas"></canvas>
 
-        <!-- System Narrative Delivery Screen Module -->
-        <div class="story-display" id="storyText">Loading mainframe...</div>
+    <!-- Information Layer Monitoring Viewport -->
+    <div class="hud-overlay">
+        <h1>Gravity Sandbox</h1>
+        <div class="instruction">Click and drag cursor across empty space to aim and launch custom orbital masses.</div>
+        <div class="metric">Active Planetesimals: <span id="planetCount">0</span></div>
+    </div>
 
-        <!-- Choice Navigation Buttons Block -->
-        <div class="options-container" id="choicesBox"></div>
-
-        <!-- Databank Items Tracking Footnotes -->
-        <div class="inventory-box">
-            💾 DATABANK INVENTORY: <span id="invList" class="inventory-list">Empty</span>
-        </div>
+    <!-- Interface operations reset bar block -->
+    <div class="control-shelf">
+        <button class="btn" onclick="clearPlanets()">Collapse Universe</button>
     </div>
 
     <script>
-        // --- LIVE METRIC MONITOR VARS ---
-        let gameState = {
-            credits: 100,
-            reputation: "Neutral",
-            inventory: [],
-            currentScene: "start"
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const countMetricDisplayNode = document.getElementById('planetCount');
+
+        // Physics constants Configuration parameters
+        const G_GRAVITATIONAL_CONSTANT = 0.15;
+        const TIME_STEP_FACTOR = 1;
+
+        let canvasWidth = canvas.width = window.innerWidth;
+        let canvasHeight = canvas.height = window.innerHeight;
+
+        let cosmicBodiesList = [];
+        let interactionState = { isDragging: false, startX: 0, startY: 0, currentX: 0, currentY: 0 };
+
+        // Central Anchor Massive Node Body Structure Definition Properties
+        const StarSunAnchorNode = {
+            x: canvasWidth / 2,
+            y: canvasHeight / 2,
+            mass: 12000,
+            radius: 24,
+            color: '#ffb300'
         };
 
-        // --- SCENARIO NODE DATABASES ---
-        const storyNodes = {
-            start: {
-                location: "DISTRICT 9 - DOCKING BAY",
-                text: "You awaken in a neon-drenched alleyway. Rain drips from glowing advertisements above. Your data-jack is buzzing.\n\nA local fixer named Kael stands under an umbrella nearby, tossing a cryptographic data-chip in his hand. 'Got a job for you, runner. Pays well, but it's dangerous.'",
-                choices: [
-                    { text: "Accept the data-chip job from Kael.", next: "accept_job" },
-                    { text: "Hack Kael's private cyberware rig instead.", next: "hack_kael" },
-                    { text: "Ignore him and head straight into the Net-Bar.", next: "net_bar" }
-                ]
-            },
-            accept_job: {
-                location: "DOWNTOWN - CORPORATE PLAZA",
-                text: "Kael hands you the chip. 'Deliver this to the bartender at the Tech-Noire Club.'\n\nAs you walk down Corporate Plaza, an armored corporate drone drops down, flashing red warning lights: <span class='system-alert'>[HALT SECURE SCAN IN PROGRESS]</span>. Do you run or stay?",
-                action: () => { 
-                    gameState.inventory.push("Data-Chip"); 
-                    gameState.credits += 50;
-                },
-                choices: [
-                    { text: "Bribe the drone data ports using 50 credits.", next: "bribe_drone", condition: () => gameState.credits >= 50 },
-                    { text: "Sprint down into the subterranean maintenance tunnels.", next: "subway_run" }
-                ]
-            },
-            hack_kael: {
-                location: "DISTRICT 9 - ALLEY",
-                text: "Your neural interface spikes into his system. Success! You siphon 200 credits into your accounts, but your rig overheats.\n\nKael realizes what you did, draws a plasma shock-pistol, and alerts local street gangs.",
-                action: () => { 
-                    gameState.credits += 200; 
-                    gameState.reputation = "Wanted";
-                },
-                choices: [
-                    { text: "Dive through the glass window into the Net-Bar.", next: "net_bar" },
-                    { text: "Surrender and offer to pay back double.", next: "surrender_kael" }
-                ]
-            },
-            net_bar: {
-                location: "THE REBOOT BAR",
-                text: "The bar smells of ozone and synthetic gin. Net-runners are floating in deep sensory tanks. The bartender looks you over.\n\n'Looking for clean hardware or dirty data, stranger?'",
-                choices: [
-                    { text: "Ask if anyone needs a mercenary data specialist.", next: "find_work" },
-                    { text: "Leave the bar before trouble arrives.", next: "start" }
-                ]
-            },
-            bribe_drone: {
-                location: "TECH-NOIRE CLUB",
-                text: "The drone accepts the encrypted payment protocol, resets its pathing vectors, and flies off. You safely deliver the Data-Chip to the bartender!\n\n<span class='system-alert'>[MISSION COMPLETE]</span> Kael wires your bonus rewards. You are safe... for tonight.",
-                action: () => { 
-                    gameState.credits += 300; 
-                    gameState.reputation = "Legendary";
-                    gameState.inventory = gameState.inventory.filter(i => i !== "Data-Chip");
-                },
-                choices: [
-                    { text: "Restart Simulation", next: "start", reset: true }
-                ]
-            },
-            subway_run: {
-                location: "SUBTERRANEAN TUNNELS",
-                text: "You slide down a ventilation shaft. The drone loses lock coordinates but tracking dogs are barking nearby.\n\nYou stumble across a black-market cyber-clinic hidden in the dark.",
-                choices: [
-                    { text: "Trade information for safe passage out.", next: "find_work" }
-                ]
-            },
-            surrender_kael: {
-                location: "DISTRICT 9 - DETENTION CELL",
-                text: "Kael laughs, strips your data deck, and throws you to the corporate police enforcers.\n\nYour cybernetic run has come to an early end.",
-                action: () => { 
-                    gameState.credits = 0; 
-                    gameState.reputation = "Incarcerated";
-                },
-                choices: [
-                    { text: "Reboot Cyberdeck (Restart)", next: "start", reset: true }
-                ]
-            },
-            find_work: {
-                location: "THE NET-BAR COUCHES",
-                text: "A mysterious operative in a long trench coat sits across from you. 'I hear you're fast with terminal matrices. Let's see what you can do.'\n\nTo be continued in Chapter II...",
-                choices: [
-                    { text: "Restart Matrix", next: "start", reset: true }
-                ]
+        // Screen geometry window adjustments tracking loop operations routing handles
+        window.addEventListener('resize', () => {
+            canvasWidth = canvas.width = window.innerWidth;
+            canvasHeight = canvas.height = window.innerHeight;
+            StarSunAnchorNode.x = canvasWidth / 2;
+            StarSunAnchorNode.y = canvasHeight / 2;
+        });
+
+        // Interactive Viewport Mouse Handling Event Trigger Actions Listener Methods
+        canvas.addEventListener('mousedown', (e) => {
+            interactionState.startX = e.clientX;
+            interactionState.startY = e.clientY;
+            interactionState.currentX = e.clientX;
+            interactionState.currentY = e.clientY;
+            interactionState.isDragging = true;
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (interactionState.isDragging) {
+                interactionState.currentX = e.clientX;
+                interactionState.currentY = e.clientY;
             }
-        };
+        });
 
-        // --- SCENE ROUTER PROCESSOR ---
-        function renderActiveScene(nodeKey) {
-            const node = storyNodes[nodeKey];
-            if (!node) return;
+        canvas.addEventListener('mouseup', (e) => {
+            if (interactionState.isDragging) {
+                interactionState.isDragging = false;
 
-            gameState.currentScene = nodeKey;
+                // Slingshot physics calculation vector velocity metrics definition
+                const deltaX = interactionState.startX - e.clientX;
+                const deltaY = interactionState.startY - e.clientY;
+                const launchingVelocityScaleFactor = 0.08;
 
-            // Execute scene setup calculations if present
-            if (node.action) {
-                node.action();
+                // Generate structural planet mass parameters instantiation data package array structure mapping
+                cosmicBodiesList.push({
+                    x: interactionState.startX,
+                    y: interactionState.startY,
+                    vx: deltaX * launchingVelocityScaleFactor,
+                    vy: deltaY * launchingVelocityScaleFactor,
+                    mass: 10 + Math.random() * 40,
+                    radius: 4 + Math.random() * 5,
+                    color: `hsl(${Math.random() * 360}, 85%, 65%)`,
+                    pathHistoryTraceLogs: []
+                });
             }
+        });
 
-            // Sync structural component data properties to GUI outputs
-            document.getElementById('hudLoc').textContent = node.location;
-            document.getElementById('hudCash').textContent = gameState.credits;
-            document.getElementById('hudRep').textContent = gameState.reputation.toUpperCase();
+        // Wipe collection array properties reset values parameters configuration data references
+        function clearPlanets() {
+            cosmicBodiesList = [];
+        }
 
+        // Processing mathematical calculations logic tick framing sequence loops runtime operations execution handler
+        function enginePhysicsLoopUpdateFrameSequence() {
+            // Draw background viewport trace shadows layers frame clear adjustments masking
+            ctx.fillStyle = 'rgba(3, 3, 12, 0.25)';
+            ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+            // Render Central Star Core Node structural details asset parameters map
+            ctx.beginPath();
+            ctx.arc(StarSunAnchorNode.x, StarSunAnchorNode.y, StarSunAnchorNode.radius, 0, Math.PI * 2);
+            ctx.fillStyle = StarSunAnchorNode.color;
+            ctx.shadowBlur = 30;
+            ctx.shadowColor = '#ff8000';
+            ctx.fill();
+            ctx.shadowBlur = 0; // Clear structural shadow properties maps arrays configurations profiles definitions
+
+            // Process dynamic calculation matrices properties mappings looping iterations variables transformations updates
+            for (let i = cosmicBodiesList.length - 1; i >= 0; i--) {
+                const planet = cosmicBodiesList[i];
+
+                // Calculate vector coordinates spatial delta relative points coordinates variables metrics mappings
+                const dx = StarSunAnchorNode.x - planet.x;
+                const dy = StarSunAnchorNode.y - planet.y;
+                const planarDistanceCoordinatesValue = Math.sqrt(dx * dx + dy * dy);
+
+                // Safe range boundary validation loop verification routing parameters configurations criteria mapping bounds
+                if (planarDistanceCoordinatesValue < StarSunAnchorNode.radius + planet.radius) {
+                    cosmicBodiesList.splice(i, 1);
+                    continue;
+                }
+
+                // Standard universal Newtonian gravitational physics acceleration calculations math modeling matrix formula 
+                const gravityPullForceMagnitudeMetricValue = (G_GRAVITATIONAL_CONSTANT * StarSunAnchorNode.mass) / (planarDistanceCoordinatesValue * planarDistanceCoordinatesValue);
+                
+                // Track directional acceleration coordinate modifications updates profiles components variables properties
+                planet.vx += (dx / planarDistanceCoordinatesValue) * gravityPullForceMagnitudeMetricValue * TIME_STEP_FACTOR;
+                planet.vy += (dy / planarDistanceCoordinatesValue) * gravityPullForceMagnitudeMetricValue * TIME_STEP_FACTOR;
+
+                // Sync positional adjustments translation vectors transformations mappings parameters values elements tracking arrays
+                planet.x += planet.vx * TIME_STEP_FACTOR;
+                planet.y += planet.vy * TIME_STEP_FACTOR;
+
+                // Log trajectory paths coordinate plots tracing history logs collections lists map index parameters details elements
+                planet.pathHistoryTraceLogs.push({ x: planet.x, y: planet.y });
+                if (planet.pathHistoryTraceLogs.length > 45) {
+                    planet.pathHistoryTraceLogs.shift();
+                }
+
+                // Render orbital tracer trail paths lines canvas paths elements parameters data layout rendering properties map configurations
+                ctx.beginPath();
+                if (planet.pathHistoryTraceLogs.length > 0) {
+                    ctx.moveTo(planet.pathHistoryTraceLogs[0].x, planet.pathHistoryTraceLogs[0].y);
+                    for (let point of planet.pathHistoryTraceLogs) {
+                        ctx.lineTo(point.x, point.y);
+                    }
+                }
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+
+                // Draw planet rendering parameters profile structure geometry dimensions circles coordinates objects array configuration nodes map details
+                ctx.beginPath();
+                ctx.arc(planet.x, planet.y, planet.radius, 0, Math.PI * 2);
+                ctx.fillStyle = planet.color;
