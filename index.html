@@ -3,23 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Block Hunt</title>
+    <title>Neon Swing: Overdrive</title>
     <style>
         :root {
-            --bg: #0b0f19;
-            --surface: #1e293b;
-            --accent: #38bdf8;
-            --danger: #ef4444;
-            --border: #334155;
-            --text: #f8fafc;
+            --bg: #040209;
+            --surface: #0c0817;
+            --accent: #00f0ff;
+            --magenta: #ff0055;
+            --gold: #ffb700;
+            --success: #00ff66;
+            --border: #1a1235;
         }
 
         body {
-            font-family: 'Segoe UI', system-ui, sans-serif;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
             background-color: var(--bg);
-            color: var(--text);
+            color: #f0f3ff;
             margin: 0;
-            padding: 10px;
+            padding: 15px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -30,264 +31,283 @@
         .hud-top {
             display: flex;
             justify-content: space-between;
-            width: 1100px;
+            width: 1000px;
             align-items: center;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
         }
 
-        h2 { margin: 0; font-size: 24px; color: var(--accent); font-weight: 800; letter-spacing: 1px; }
+        h1 { 
+            margin: 0; 
+            font-size: 26px; 
+            font-weight: 900; 
+            color: var(--magenta); 
+            letter-spacing: 2px;
+            text-shadow: 0 0 12px rgba(255, 0, 85, 0.6);
+        }
 
-        .timer-card {
+        .stats-wrap { display: flex; gap: 10px; }
+        .hud-card {
             background: var(--surface);
             padding: 8px 16px;
             border-radius: 8px;
             border: 1px solid var(--border);
-            font-weight: bold;
-            font-size: 16px;
+            font-weight: 700;
+            font-size: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
         }
+        .distance-card { border-color: var(--accent); color: var(--accent); }
+        .score-card { border-color: var(--gold); color: var(--gold); }
 
         #game-canvas {
-            background-color: #5cbeee; /* Sky color */
-            border: 3px solid var(--border);
+            background-color: #06040c;
+            border: 2px solid var(--border);
             border-radius: 14px;
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.6);
+            box-shadow: 0 25px 60px rgba(0,0,0,0.8);
+            cursor: pointer;
         }
 
-        .hud-bottom {
-            width: 1100px;
+        .controls-info {
+            width: 1000px;
             margin-top: 10px;
-            background: var(--surface);
-            padding: 12px 20px;
-            border-radius: 10px;
-            border: 1px solid var(--border);
-            font-size: 13px;
+            font-size: 12px;
+            color: #4e4475;
+            font-family: monospace;
             text-align: center;
-            box-sizing: border-box;
-            color: #94a3b8;
+            line-height: 1.5;
         }
-        .hud-bottom strong { color: var(--accent); }
+        .controls-info strong { color: var(--accent); }
     </style>
 </head>
 <body>
 
     <div class="hud-top">
-        <h2>BLOCK HUNT // AI VS HUMAN</h2>
-        <div class="timer-card" id="match-timer-label">Hiding Phase: 15s</div>
+        <h1>NEON SWING // OVERDRIVE</h1>
+        <div class="stats-wrap">
+            <div class="hud-card score-card">RINGS GATHERED: <span id="rings-lbl">0</span></div>
+            <div class="hud-card distance-card">DISTANCE: <span id="dist-lbl">0</span>m</div>
+        </div>
     </div>
 
-    <!-- Full-Size Single Player Viewport Canvas -->
-    <canvas id="game-canvas" width="1100" height="520"></canvas>
+    <!-- Main High-Performance Arcade Viewport Canvas -->
+    <canvas id="game-canvas" width="1000" height="500"></canvas>
     
-    <div class="hud-bottom">
-        <strong>CONTROLS:</strong> [W, A, S, D] or [Arrows] to Move & Jump | 
-        <strong>MORPH DISGUISES:</strong> Press Keys [1 = Grass] [2 = Stone] [3 = Wood] [4 = Brick] [5 = Leaves] [0 = Human Shape]
+    <div class="controls-info">
+        <strong>GRAVITY GRAPPLER SYSTEM CONNECTED:</strong> [Click & Hold Left Mouse Button] on Green Anchors to attach tether wire and swing! <br>
+        Release mouse to break line and launch yourself forward. Boost through <strong>Cyan Speed Rings</strong> to gain momentum. Avoid falling into the grid void!
     </div>
 
 <script>
     const canvas = document.getElementById('game-canvas');
     const ctx = canvas.getContext('2d');
 
-    const BLOCK_SIZE = 40; 
-    const LEVEL_COLS = 50; 
-    const LEVEL_ROWS = canvas.height / BLOCK_SIZE;
+    // Global Physics Settings
+    const GRAVITY = 0.28;
+    const FRICTION = 0.992;
 
-    // Standard Minecraft Textures Palette
-    const BLOCK_TYPES = {
-        0: { name: 'Air', color: 'transparent' },
-        1: { name: 'Grass', color: '#34d399' },
-        2: { name: 'Stone', color: '#64748b' },
-        3: { name: 'Wood', color: '#b45309' },
-        4: { name: 'Brick', color: '#ef4444' },
-        5: { name: 'Leaves', color: '#16a34a' }
+    // Game Core States
+    let distanceTraveled = 0;
+    let ringsCollected = 0;
+    let gameOver = false;
+    let frameCount = 0;
+    let screenShake = 0;
+    let cameraX = 0;
+
+    // Player Object Node
+    let player = {
+        x: 150, y: 250,
+        vx: 6, vy: 0,
+        radius: 12,
+        color: '#ff0055',
+        trail: []
     };
 
-    // Static World Environment Matrix Setup
-    let worldMap = {};
-    for (let c = 0; c < LEVEL_COLS; c++) {
-        let groundLevel = LEVEL_ROWS - 3;
-        // Hills and architectural structures
-        if (c > 12 && c < 18) groundLevel = LEVEL_ROWS - 5;
-        if (c > 30 && c < 36) groundLevel = LEVEL_ROWS - 6;
+    // Hook Attachment Properties
+    let hook = {
+        x: 0, y: 0,
+        attached: false,
+        length: 0,
+        targetAnchor: null
+    };
 
-        for (let r = 0; r < LEVEL_ROWS; r++) {
-            if (r === groundLevel) {
-                worldMap[`${c},${r}`] = 1; 
-            } else if (r > groundLevel) {
-                worldMap[`${c},${r}`] = 2; 
-            }
-        }
-    }
+    // Dynamic Entity Collections
+    let anchors = [];
+    let speedRings = [];
+    let buildings = [];
+    let particles = [];
 
-    // Spawn environment blocks to blend with
-    worldMap["6," + (LEVEL_ROWS-4)] = 3; worldMap["6," + (LEVEL_ROWS-5)] = 5; 
-    worldMap["22," + (LEVEL_ROWS-4)] = 4; worldMap["23," + (LEVEL_ROWS-4)] = 4; 
-    worldMap["42," + (LEVEL_ROWS-4)] = 3; worldMap["42," + (LEVEL_ROWS-5)] = 5; 
+    // Mouse Tracking Mechanics
+    let isMouseDown = false;
+    let mouseX = 0;
+    let mouseY = 0;
 
-    // Character Entities
-    let hider = { x: 120, y: 200, w: 24, h: 38, vx: 0, vy: 0, currentMorph: 0, color: '#38bdf8' };
-    let aiSeeker = { x: 1800, y: 200, w: 24, h: 38, vx: 0, vy: 0, color: '#f43f5e', state: 'idle', targetX: 1800, actionCooldown: 0 };
-    
-    let speed = 4.5;
-    let gravity = 0.5;
-    let keys = {};
-    
-    // Match Timer Logic
-    let timeRemaining = 15; 
-    let hiderPhase = true;
-    let matchOver = false;
-    let matchResultText = "";
-
-    let countdownInterval = setInterval(() => {
-        if (matchOver) return;
-        timeRemaining--;
-        
-        const label = document.getElementById('match-timer-label');
-        if (hiderPhase) {
-            label.textContent = `Hiding Phase: ${timeRemaining}s`;
-            if (timeRemaining <= 0) {
-                hiderPhase = false;
-                timeRemaining = 45; 
-                label.style.color = 'var(--danger)';
-                aiSeeker.state = 'patrol';
-            }
-        } else {
-            label.textContent = `AI Hunting Time: ${timeRemaining}s`;
-            if (timeRemaining <= 0) {
-                matchOver = true;
-                matchResultText = "YOU WIN! YOU FOOLED THE AI 🏆";
-                label.textContent = "MATCH CONCLUDED";
-                clearInterval(countdownInterval);
-            }
-        }
-    }, 1000);
-
-    window.addEventListener('keydown', (e) => { 
-        keys[e.key.toLowerCase()] = true; 
-        keys[e.code] = true;
-
-        if (matchOver) return;
-
-        // Player 1 Morph Triggers (Keys 1-5)
-        if (e.key === '1') hider.currentMorph = 1;
-        if (e.key === '2') hider.currentMorph = 2;
-        if (e.key === '3') hider.currentMorph = 3;
-        if (e.key === '4') hider.currentMorph = 4;
-        if (e.key === '5') hider.currentMorph = 5;
-        if (e.key === '0') hider.currentMorph = 0; 
+    canvas.addEventListener('mousedown', (e) => {
+        if (gameOver) { resetGame(); return; }
+        isMouseDown = true;
+        attemptGrapple();
     });
 
-    window.addEventListener('keyup', (e) => { 
-        keys[e.key.toLowerCase()] = false; 
-        keys[e.code] = false;
+    canvas.addEventListener('mouseup', () => {
+        isMouseDown = false;
+        hook.attached = false;
+        hook.targetAnchor = null;
     });
 
-    function checkLevelCollision(x, y) {
-        let col = Math.floor(x / BLOCK_SIZE);
-        let row = Math.floor(y / BLOCK_SIZE);
-        return worldMap[`${col},${row}`] ? true : false;
-    }
+    canvas.addEventListener('mousemove', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        mouseX = e.clientX - rect.left + cameraX;
+        mouseY = e.clientY - rect.top;
+    });
 
-    function movePlayer() {
-        hider.vx = 0;
-        if (keys['a'] || keys['arrowleft']) hider.vx = -speed;
-        if (keys['d'] || keys['arrowright']) hider.vx = speed;
-
-        hider.vy += gravity;
-        hider.x += hider.vx;
-
-        if (hider.x < 0) hider.x = 0;
-        if (hider.x + hider.w > LEVEL_COLS * BLOCK_SIZE) hider.x = (LEVEL_COLS * BLOCK_SIZE) - hider.w;
-
-        hider.y += hider.vy;
-        let grounded = false;
-        let footY = hider.y + hider.h;
-
-        if (checkLevelCollision(hider.x, footY) || checkLevelCollision(hider.x + hider.w, footY)) {
-            let snappedRow = Math.floor(footY / BLOCK_SIZE);
-            hider.y = (snappedRow * BLOCK_SIZE) - hider.h;
-            hider.vy = 0;
-            grounded = true;
-        }
-
-        if ((keys[' '] || keys['w'] || keys['arrowup']) && grounded) {
-            hider.vy = -10;
-        }
-    }
-
-    function processAIIntelligence() {
-        if (hiderPhase || matchOver) return;
-
-        aiSeeker.vy += gravity;
-        let distanceToHider = Math.abs(aiSeeker.x - hider.x);
+    function resetGame() {
+        distanceTraveled = 0;
+        ringsCollected = 0;
+        gameOver = false;
+        cameraX = 0;
+        player.x = 150; player.y = 250;
+        player.vx = 6; player.vy = 0;
+        player.trail = [];
+        hook.attached = false;
+        hook.targetAnchor = null;
+        anchors = [];
+        speedRings = [];
+        buildings = [];
+        particles = [];
         
-        // AI Radar Vision parameters (Disguises vastly lower detection range)
-        let visionRange = hider.currentMorph === 0 ? 550 : 90; 
+        // Populate initial terrain chunks
+        for(let i=0; i<3; i++) generateNextTerrainChunk(i * 400);
+        document.getElementById('rings-lbl').textContent = 0;
+    }
 
-        if (distanceToHider < visionRange) {
-            aiSeeker.state = 'chase';
-            aiSeeker.targetX = hider.x;
-        } else if (aiSeeker.state === 'chase' || aiSeeker.state === 'idle') {
-            aiSeeker.state = 'patrol';
-            aiSeeker.targetX = Math.random() * (LEVEL_COLS * BLOCK_SIZE - 200) + 100;
-        }
+    function attemptGrapple() {
+        let closestAnchor = null;
+        let minDist = 180; // Maximum wire attachment tether distance
 
-        let aiMovementSpeed = aiSeeker.state === 'chase' ? 3.8 : 2.2;
-        if (aiSeeker.x < aiSeeker.targetX - 5) {
-            aiSeeker.vx = aiMovementSpeed;
-        } else if (aiSeeker.x > aiSeeker.targetX + 5) {
-            aiSeeker.vx = -aiMovementSpeed;
-        } else {
-            aiSeeker.vx = 0;
-            if (aiSeeker.state === 'patrol') {
-                aiSeeker.targetX = Math.random() * (LEVEL_COLS * BLOCK_SIZE - 200) + 100;
+        anchors.forEach(a => {
+            let dist = Math.hypot(mouseX - a.x, mouseY - a.y);
+            if (dist < minDist) {
+                minDist = dist;
+                closestAnchor = a;
             }
-        }
+        });
 
-        aiSeeker.x += aiSeeker.vx;
-
-        // Auto Obstacle Jump Climbing
-        let checkX = aiSeeker.vx > 0 ? aiSeeker.x + aiSeeker.w + 5 : aiSeeker.x - 5;
-        let isBlockedAhead = checkLevelCollision(checkX, aiSeeker.y + aiSeeker.h - 10);
-
-        let grounded = false;
-        let footY = aiSeeker.y + aiSeeker.h;
-        aiSeeker.y += aiSeeker.vy;
-
-        if (checkLevelCollision(aiSeeker.x, footY) || checkLevelCollision(aiSeeker.x + aiSeeker.w, footY)) {
-            let snappedRow = Math.floor(footY / BLOCK_SIZE);
-            aiSeeker.y = (snappedRow * BLOCK_SIZE) - aiSeeker.h;
-            aiSeeker.vy = 0;
-            grounded = true;
-        }
-
-        if (isBlockedAhead && grounded) {
-            aiSeeker.vy = -10.5; 
-        }
-
-        // Catch Verification
-        let actualDist = Math.hypot((aiSeeker.x + aiSeeker.w/2) - (hider.x + hider.w/2), (aiSeeker.y + aiSeeker.h/2) - (hider.y + hider.h/2));
-        if (actualDist < 35) {
-            matchOver = true;
-            matchResultText = "AI CAUGHT YOU! GAME OVER 🎯";
-            clearInterval(countdownInterval);
+        if (closestAnchor) {
+            hook.x = closestAnchor.x;
+            hook.y = closestAnchor.y;
+            hook.attached = true;
+            hook.length = Math.hypot(player.x - hook.x, player.y - hook.y);
+            hook.targetAnchor = closestAnchor;
+            screenShake = 3;
         }
     }
 
-    function mainEngineLoop() {
-        if (!matchOver) {
-            movePlayer();
-            processAIIntelligence();
+    function generateNextTerrainChunk(startX) {
+        // Generate procedural background cyberpunk structures
+        buildings.push({
+            x: startX,
+            w: Math.random() * 150 + 120,
+            h: Math.random() * 200 + 150,
+            color: '#0d0a21'
+        });
+
+        // Generate green anchor nodes
+        anchors.push({
+            x: startX + Math.random() * 200 + 100,
+            y: Math.random() * 120 + 60
+        });
+
+        // Generate cyan boost loop points
+        if (Math.random() > 0.3) {
+            speedRings.push({
+                x: startX + Math.random() * 200 + 100,
+                y: Math.random() * 150 + 200,
+                radius: 24,
+                active: true
+            });
+        }
+    }
+
+    function createBurstEffect(x, y, color) {
+        for (let i = 0; i < 10; i++) {
+            particles.push({
+                x, y,
+                vx: (Math.random() * 2 - 1) * 5,
+                vy: (Math.random() * 2 - 1) * 5,
+                radius: Math.random() * 3 + 1,
+                alpha: 1,
+                color
+            });
+        }
+    }
+
+    function updatePhysics() {
+        if (gameOver) return;
+        frameCount++;
+
+        // Decay screen shake
+        if (screenShake > 0) screenShake *= 0.9;
+
+        // Apply background scrolling acceleration parameters
+        if (player.x > cameraX + 300) {
+            cameraX = player.x - 300;
         }
 
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        // Keep distance score synchronized
+        distanceTraveled = Math.max(distanceTraveled, Math.floor(player.x / 10));
+        document.getElementById('dist-lbl').textContent = distanceTraveled;
 
-        ctx.save();
-        let camX = hider.x - canvas.width / 2;
-        camX = Math.max(0, Math.min((LEVEL_COLS * BLOCK_SIZE) - canvas.width, camX));
-        ctx.translate(-camX, 0);
+        // Generate endless content ahead of the camera tracking window
+        if (buildings.length === 0 || buildings[buildings.length - 1].x < cameraX + canvas.width + 400) {
+            let nextX = buildings.length > 0 ? buildings[buildings.length - 1].x + 350 : 0;
+            generateNextTerrainChunk(nextX);
+        }
 
-        // 1. Draw World Matrix blocks
-        for (let col = 0; col < LEVEL_COLS; col++) {
-            for (let row = 0; row < LEVEL_ROWS; row++) {
-                let blockId = worldMap[`${col},${row}`];
-                if (blockId) {
+        // Clean up out of bound objects behind the scene camera viewport
+        buildings = buildings.filter(b => b.x + b.w > cameraX - 200);
+        anchors = anchors.filter(a => a.x > cameraX - 200);
+        speedRings = speedRings.filter(s => s.x > cameraX - 200);
+
+        // --- PENDULUM CONSTRAINTS MECHANICS ENGINE ---
+        if (hook.attached) {
+            // Apply pendulum rope gravity swings calculations
+            player.vy += GRAVITY;
+            player.x += player.vx;
+            player.y += player.vy;
+
+            let dx = player.x - hook.x;
+            let dy = player.y - hook.y;
+            let currentDist = Math.hypot(dx, dy);
+
+            if (currentDist > hook.length) {
+                // Constraint projection normalization vectors
+                let angle = Math.atan2(dy, dx);
+                player.x = hook.x + Math.cos(angle) * hook.length;
+                player.y = hook.y + Math.sin(angle) * hook.length;
+
+                // Calculate angular tension forces pulling normal relative speeds
+                let velDotRope = (player.vx * dx + player.vy * dy) / currentDist;
+                player.vx -= (velDotRope * dx) / currentDist;
+                player.vy -= (velDotRope * dy) / currentDist;
+            }
+        } else {
+            // Standard parabolic free-fall flight routing path mapping
+            player.vy += GRAVITY;
+            player.vx *= FRICTION;
+            player.vy *= FRICTION;
+            
+            // Maintain absolute fallback constant velocity speeds
+            if (player.vx < 3) player.vx = 3;
+
+            player.x += player.vx;
+            player.y += player.vy;
+        }
+
+        // Generate trailing paths for motion blur speed effects
+        player.trail.push({ x: player.x, y: player.y });
+        if (player.trail.length > 8) player.trail.shift();
+
+        // --- SPEED BOOSTERS INTERSECTION MANAGEMENT ---
+        speedRings.forEach(ring => {
+            if (ring.active) {
+                let distToRing = Math.hypot(player.x - ring.x, player.y - ring.y);
+                if (distToRing < player.radius + ring.radius) {
+                    ring.active = false;
