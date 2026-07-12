@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tower Defense Tycoon & Clicker</title>
+    <title>blank tab</title>
     <style>
         body {
             margin: 0;
@@ -20,28 +20,69 @@
         #game-container {
             display: flex;
             flex-direction: column;
-            gap: 10px;
-        }
-        canvas {
-            background-color: #121820;
-            border: 2px solid #233043;
-            border-radius: 8px;
-            cursor: default;
+            gap: 15px;
+            width: 450px;
+            align-items: center;
         }
         #stats-panel {
+            width: 100%;
             background: #161f2c;
             padding: 15px;
             border-radius: 8px;
             display: flex;
-            justify-content: space-around;
+            flex-direction: column;
+            gap: 8px;
             font-size: 1.1em;
             font-weight: bold;
             border: 1px solid #233043;
+            box-sizing: border-box;
         }
-        .stat { color: #00bcd4; }
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+        }
+        .stat-label { color: #b0bec5; font-size: 0.9em; }
         .stat-money { color: #ffd700; }
-        .stat-hp { color: #f44336; }
+        .stat-val { color: #00bcd4; }
         
+        #click-zone {
+            width: 100%;
+            height: 380px;
+            background: #121820;
+            border: 2px solid #233043;
+            border-radius: 8px;
+            position: relative;
+            cursor: pointer;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #reactor-core {
+            width: 160px;
+            height: 160px;
+            background: radial-gradient(circle, #00f0ff 0%, #0044ff 70%, #121820 100%);
+            border-radius: 50%;
+            box-shadow: 0 0 30px #0055ff;
+            transition: transform 0.05s, box-shadow 0.05s;
+        }
+        #reactor-core:active {
+            transform: scale(0.92);
+            box-shadow: 0 0 50px #00ffff;
+        }
+        .click-float {
+            position: absolute;
+            color: #ffd700;
+            font-weight: bold;
+            font-size: 1.3em;
+            pointer-events: none;
+            animation: floatUp 0.8s ease-out forwards;
+        }
+        @keyframes floatUp {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-80px); opacity: 0; }
+        }
+
         #tycoon-panel {
             flex: 1;
             background: #161f2c;
@@ -60,11 +101,13 @@
             font-size: 1.4em;
         }
         .category-title {
-            font-size: 1.1em;
+            font-size: 1.05em;
             color: #00bcd4;
-            margin: 15px 0 5px 0;
+            margin: 15px 0 6px 0;
             text-transform: uppercase;
             letter-spacing: 1px;
+            border-left: 3px solid #00bcd4;
+            padding-left: 6px;
         }
         .upgrade-grid {
             display: grid;
@@ -90,19 +133,10 @@
             flex-direction: column;
             gap: 2px;
         }
-        .upgrade-name {
-            font-weight: bold;
-            font-size: 0.95em;
-        }
-        .upgrade-desc {
-            font-size: 0.8em;
-            color: #b0bec5;
-        }
-        .upgrade-level {
-            font-size: 0.8em;
-            color: #4caf50;
-            font-weight: bold;
-        }
+        .upgrade-name { font-weight: bold; font-size: 0.95em; }
+        .upgrade-desc { font-size: 0.8em; color: #b0bec5; }
+        .upgrade-level { font-size: 0.8em; color: #4caf50; font-weight: bold; }
+        
         .upgrade-btn {
             background: #4caf50;
             color: white;
@@ -112,7 +146,7 @@
             cursor: pointer;
             font-weight: bold;
             font-size: 0.9em;
-            min-width: 80px;
+            min-width: 90px;
             text-align: center;
         }
         .upgrade-btn:disabled {
@@ -120,118 +154,74 @@
             color: #888;
             cursor: not-allowed;
         }
-        .build-selector {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 5px;
-        }
-        .build-btn {
-            flex: 1;
-            padding: 8px;
-            background: #233043;
-            border: 1px solid #34495e;
-            color: white;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        .build-btn.active {
-            background: #00bcd4;
-            border-color: #ffffff;
-        }
     </style>
 </head>
 <body>
 
     <div id="game-container">
         <div id="stats-panel">
-            <div>Wave: <span id="wave-txt" class="stat">1</span></div>
-            <div>Cash: $<span id="cash-txt" class="stat-money">500</span></div>
-            <div>Income: $<span id="income-txt" class="stat-money">10</span>/s</div>
-            <div>Base HP: <span id="hp-txt" class="stat-hp">100</span></div>
+            <div class="stat-row">
+                <span class="stat-label">TOTAL CAPITAL:</span>
+                <span class="stat-money">$<span id="cash-txt">0</span></span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">AUTO-GENERATION:</span>
+                <span class="stat-val">$<span id="income-txt">0</span>/s</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">CLICK COEFFICIENT:</span>
+                <span class="stat-val">+$<span id="click-txt">1</span></span>
+            </div>
         </div>
-        <div class="build-selector">
-            <button class="build-btn active" id="btn-t1" onclick="setBuildType(1)">Basic Gun ($100)</button>
-            <button class="build-btn" id="btn-t2" onclick="setBuildType(2)">Plasma Beam ($250)</button>
+        
+        <div id="click-zone">
+            <div id="reactor-core"></div>
         </div>
-        <canvas id="gameCanvas" width="640" height="480"></canvas>
     </div>
 
     <div id="tycoon-panel">
-        <h2>Tycoon Core Upgrades (30 Protocols)</h2>
+        <h2>Quantum Core Matrix Upgrades (30 Protocols)</h2>
         <div id="upgrades-container"></div>
     </div>
 
     <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
+        // Core Currencies
+        let cash = 0;
+        let passiveIncome = 0;
+        let clickValue = 1;
 
-        // Game Grid Configuration (40x40 px tiles)
-        const TILE_SIZE = 40;
-        const GRID_COLS = 16;
-        const GRID_ROWS = 12;
-
-        // Core Game Variables
-        let cash = 550;
-        let baseHp = 100;
-        let maxBaseHp = 100;
-        let passiveIncome = 10;
-        let clickValue = 5;
-        let wave = 1;
-        let waveTimer = 0;
-        let selectedBuildType = 1;
-
-        // Upgrade Modifiers
-        let globalDamageMult = 1.0;
-        let globalRangeMult = 1.0;
-        let globalSpeedMult = 1.0;
-        let killRewardMult = 1.0;
-        let sellReturnRate = 0.5;
-        let goldPerHit = 0;
-        let interestRate = 0;
+        // Modifiers scaled by upgrades
+        let globalPassiveMult = 1.0;
+        let globalClickMult = 1.0;
         let criticalChance = 0;
-        let plasmaSlowAmount = 0;
+        let interestRate = 0;
+        let clickCombo = 0;
+        let comboTimeout = null;
 
-        // Clicker visual feedback floats
-        let clickFloats = [];
+        const container = document.getElementById('upgrades-container');
+        const clickZone = document.getElementById('click-zone');
+        const reactorCore = document.getElementById('reactor-core');
 
-        // Exact grid tile definitions for path blocking
-        const mapGrid = Array(GRID_ROWS).fill().map(() => Array(GRID_COLS).fill(0));
-        
-        // Define path tiles (Row, Col) to block placement and draw path precisely
-        const pathTiles = [
-            {r:3, c:0}, {r:3, c:1}, {r:3, c:2}, {r:3, c:3}, {r:3, c:4}, {r:3, c:5},
-            {r:4, c:5}, {r:5, c:5}, {r:6, c:5}, {r:7, c:5}, {r:8, c:5}, {r:9, c:5},
-            {r:9, c:6}, {r:9, c:7}, {r:9, c:8}, {r:9, c:9}, {r:9, c:10}, {r:9, c:11},
-            {r:8, c:11}, {r:7, c:11}, {r:6, c:11}, {r:5, c:11},
-            {r:5, c:12}, {r:5, c:13}, {r:5, c:14}, {r:5, c:15}
-        ];
-        pathTiles.forEach(t => mapGrid[t.r][t.c] = 1); // 1 = Path
-
-        // Define Clicker Core bounding area (bottom left corner space)
-        const clickerCore = { x: 40, y: 380, w: 100, h: 80, pulse: 0 };
-
-        let towers = [];
-        let enemies = [];
-        let projectiles = [];
-
-        // Definition of the 30 unique upgrades
+        // Definition of the 30 unique, progressive tycoon upgrades
         const upgradesConfig = [
-            // CATEGORY 1: ECONOMY BOOSTER (1-8)
-            { id: 1, cat: "Economy", name: "Solar Generators", desc: "Increases passive income generation rate.", lvl: 0, max: 10, cost: 80, scale: 1.5, effect: () => { passiveIncome += 6; } },
-            { id: 2, cat: "Economy", name: "Kinetic Capacitors", desc: "Increases your manual click generator value significantly.", lvl: 0, max: 10, cost: 60, scale: 1.4, effect: () => { clickValue += 8; } },
-            { id: 3, cat: "Economy", name: "Bounty Contracts", desc: "Earn extra money from every enemy eliminated.", lvl: 0, max: 10, cost: 150, scale: 1.6, effect: () => { killRewardMult += 0.25; } },
-            { id: 4, cat: "Economy", name: "Corporate Interest", desc: "Earn 2% of your cash reserves back at end of cycles.", lvl: 0, max: 5, cost: 300, scale: 2.0, effect: () => { interestRate += 0.02; } },
-            { id: 5, cat: "Economy", name: "Siphon Rounds", desc: "Gain pocket money when projectiles strike hostiles.", lvl: 0, max: 5, cost: 400, scale: 1.8, effect: () => { goldPerHit += 1; } },
-            { id: 6, cat: "Economy", name: "Liquidation Policy", desc: "Improves refund money recovered when removing towers.", lvl: 0, max: 3, cost: 200, scale: 2.2, effect: () => { sellReturnRate += 0.15; } },
-            { id: 7, cat: "Economy", name: "Wholesale Permits", desc: "Reduces original building layout unit prices.", lvl: 0, max: 5, cost: 500, scale: 1.6, effect: () => {} },
-            { id: 8, cat: "Economy", name: "Hyper Inflation Engine", desc: "Boosts overall passive generation power globally by 30%.", lvl: 0, max: 3, cost: 1200, scale: 2.5, effect: () => { passiveIncome *= 1.3; } },
+            // BRANCH 1: ACTIVE CAPACITATION (Manual Clicking)
+            { id: 1, cat: "Active Capacitation", name: "Copper Contact Points", desc: "Adds flat raw generation value to each click.", lvl: 0, max: 10, cost: 15, scale: 1.4, effect: () => { clickValue += 1; } },
+            { id: 2, cat: "Active Capacitation", name: "Inductor Coils", desc: "Increases baseline tap values further.", lvl: 0, max: 10, cost: 120, scale: 1.45, effect: () => { clickValue += 5; } },
+            { id: 3, cat: "Active Capacitation", name: "Kinetic Amplifiers", desc: "Substantial click value injection increments.", lvl: 0, max: 10, cost: 500, scale: 1.5, effect: () => { clickValue += 25; } },
+            { id: 4, cat: "Active Capacitation", name: "Static Accumulators", desc: "Massive scale manual output adjustment points.", lvl: 0, max: 8, cost: 2500, scale: 1.6, effect: () => { clickValue += 120; } },
+            { id: 5, cat: "Active Capacitation", name: "Critical Discharge Grid", desc: "Grants a 5% chance to hit critical 3x damage clicks.", lvl: 0, max: 6, cost: 1000, scale: 1.8, effect: () => { criticalChance += 0.05; } },
+            { id: 6, cat: "Active Capacitation", name: "Thermal Friction Pipes", desc: "Boosts overall click values by 20% globally.", lvl: 0, max: 5, cost: 4000, scale: 2.2, effect: () => { globalClickMult += 0.20; } },
+            { id: 7, cat: "Active Capacitation", name: "Synaptic Capacitors", desc: "Provides high-tier raw click values.", lvl: 0, max: 5, cost: 15000, scale: 2.0, effect: () => { clickValue += 800; } },
+            { id: 8, cat: "Active Capacitation", name: "Impact Overdrive Engine", desc: "Doubles total global manual tap power values.", lvl: 0, max: 1, cost: 100000, scale: 1.0, effect: () => { globalClickMult *= 2; } },
 
-            // CATEGORY 2: COMBAT MATRIX (9-16)
-            { id: 9, cat: "Combat", name: "Caliber Overhaul", desc: "Augments baseline impact output damage points directly.", lvl: 0, max: 10, cost: 100, scale: 1.5, effect: () => { globalDamageMult += 0.2; } },
-            { id: 10, cat: "Combat", name: "Polished Lenses", desc: "Widens target validation tracking range.", lvl: 0, max: 10, cost: 120, scale: 1.4, effect: () => { globalRangeMult += 0.1; } },
-            { id: 11, cat: "Combat", name: "Overclocked Rotors", desc: "Enables modules to fire rapid munitions configurations.", lvl: 0, max: 8, cost: 200, scale: 1.6, effect: () => { globalSpeedMult += 0.15; } },
-            { id: 12, cat: "Combat", name: "Weakspot Protocols", desc: "Grants a chance to land double damage critical hits.", lvl: 0, max: 5, cost: 350, scale: 1.8, effect: () => { criticalChance += 0.08; } },
-            { id: 13, cat: "Combat", name: "Dense Alloys", desc: "Speeds up projectile tracking velocities.", lvl: 0, max: 5, cost: 150, scale: 1.4, effect: () => { } },
-            { id: 14, cat: "Combat", name: "Cryo Cores", desc: "Plasma beams lower enemy movement parameters upon impact.", lvl: 0, max: 5, cost: 400, scale: 1.7, effect: () => { plasmaSlowAmount += 0.12; } },
-            { id: 15, cat: "Combat", name: "Uranium Coating", desc: "Adds large toxic auxiliary damage modifiers.", lvl: 0, max: 5, cost: 500, scale: 1.9, effect: () => { globalDamageMult += 0.3; } },
+            // BRANCH 2: PASSIVE FRAMEWORKS (Automated Production)
+            { id: 9, cat: "Passive Frameworks", name: "Substation Generators", desc: "Generates $1/sec automatically.", lvl: 0, max: 15, cost: 50, scale: 1.35, effect: () => { passiveIncome += 1; } },
+            { id: 10, cat: "Passive Frameworks", name: "Turbine Relays", desc: "Generates $8/sec passively.", lvl: 0, max: 12, cost: 350, scale: 1.4, effect: () => { passiveIncome += 8; } },
+            { id: 11, cat: "Passive Frameworks", name: "Fossil Fuel Arrays", desc: "Generates $45/sec passively.", lvl: 0, max: 10, cost: 1800, scale: 1.45, effect: () => { passiveIncome += 45; } },
+            { id: 12, cat: "Passive Frameworks", name: "Hydroelectric Dams", desc: "Generates $260/sec passively.", lvl: 0, max: 10, cost: 9500, scale: 1.5, effect: () => { passiveIncome += 260; } },
+            { id: 13, cat: "Passive Frameworks", name: "Geothermal Drills", desc: "Generates $1,400/sec passively.", lvl: 0, max: 8, cost: 48000, scale: 1.55, effect: () => { passiveIncome += 1400; } },
+            { id: 14, cat: "Passive Frameworks", name: "Fission Reactors", desc: "Generates $8,500/sec passively.", lvl: 0, max: 5, cost: 220000, scale: 1.6, effect: () => { passiveIncome += 8500; } },
+            { id: 15, cat: "Passive Frameworks", name: "Efficiency Insulation", desc: "Augments global auto-generation metrics by 15%.", lvl: 0, max: 5, cost: 12000, scale: 1.9, effect: () => { globalPassiveMult += 0.15; } },
+            { id: 16, cat: "Passive Frameworks", name: "Dyson Swarm Blueprint", desc: "Doubles entire cumulative passive output rates.", lvl: 0, max: 1, cost: 1500000, scale: 1.0, effect: () => { globalPassiveMult *= 2; } },
+
+            // BRANCH 3: ECONOMY SPECULATION (Investment & Reserves)
