@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CommsStation: Automatic P2P Text Radio</title>
-    <!-- Imports the PeerJS network engine library automatically -->
+    <!-- Imports the standard PeerJS network engine library package -->
     <script src="https://unpkg.com"></script>
     <style>
         :root {
@@ -105,7 +105,6 @@
             box-shadow: 0 0 10px rgba(127, 255, 0, 0.3);
         }
 
-        /* Messaging Text Row Layout styles */
         .transmit-box {
             display: flex;
             gap: 8px;
@@ -158,7 +157,6 @@
             <div class="indicator">COMMS: <div class="dot" id="commsDot"></div> <span id="commsTxt">STANDBY</span></div>
         </div>
 
-        <!-- Room Selector Board Layer -->
         <div class="deck">
             <h2>Select Station Frequency Room</h2>
             <div class="channel-selector-row">
@@ -168,7 +166,6 @@
             </div>
         </div>
 
-        <!-- Text Input Transmission Panel Frame replaces old circular button -->
         <div class="deck">
             <h2>Transmit Signal Payload</h2>
             <div class="transmit-box">
@@ -177,13 +174,15 @@
             </div>
         </div>
 
-        <!-- Chat Stream Console Logger Display -->
         <div class="terminal" id="activityBox">
             <div class="log" style="color: var(--txt-muted);">[SYS] Standing by. Select an active frequency option above to sync data channels.</div>
         </div>
     </div>
 
     <script>
+        // Unique string sequence generated to namespace the shared rooms uniquely for your project repository
+        const UNIQUE_NAMESPACE_KEY = "radio_project_secure_v1_";
+
         let peerInstance = null;
         let dataConnectionRef = null;
 
@@ -224,34 +223,32 @@
             }
         }
 
-        async function selectAndConnectChannel(selectedRoomId, buttonElement) {
+        async function selectAndConnectChannel(baseRoomId, buttonElement) {
             disconnectExistingPeerSession();
 
             document.querySelectorAll('.channel-btn').forEach(btn => btn.classList.remove('selected-channel'));
             buttonElement.classList.add('selected-channel');
 
-            writeLog('NET', `Auto-contacting signaling room space: [${selectedRoomId}]...`);
+            // Combines your room name choice with the unique token prefix to insulate against global network collisions
+            const namespacedMasterRoomId = UNIQUE_NAMESPACE_KEY + baseRoomId;
+
+            writeLog('NET', `Auto-contacting signaling room space: [${baseRoomId.toUpperCase()}]...`);
             
-            // Connect to direct room string targeting standard STUN parameters
-            peerInstance = new Peer(selectedRoomId, {
+            // Connect to specific namespaced room using standard open STUN address configurations
+            peerInstance = new Peer(namespacedMasterRoomId, {
                 config: { iceServers: [{ urls: 'stun:://google.com' }] }
             });
 
             peerInstance.on('open', (id) => {
-                writeLog('SYS', `Channel active. Listening as Master Hub: ${id}`);
+                writeLog('SYS', `Channel active. Listening on clean line spectrum frequency.`);
                 linkDot.classList.add('active');
                 linkTxt.textContent = "LISTENING ON CHANNEL";
                 
-                // Probe to verify if another client node is online inside the network cluster
-                attemptDataConnection(selectedRoomId + "-client");
+                // Scan to verify if another matching client endpoint node is listening in this specific sub-frequency slot
+                attemptDataConnection(namespacedMasterRoomId + "-client");
             });
 
             peerInstance.on('error', (err) => {
                 if (err.type === 'unavailable-id') {
-                    writeLog('SYS', 'Primary slot occupied. Routing as secondary station client...');
-                    peerInstance = new Peer(selectedRoomId + "-client", {
-                        config: { iceServers: [{ urls: 'stun:://google.com' }] }
-                    });
-                    
-                    peerInstance.on('open', () => {
-                        writeLog('SYS', 'Secondary line ready. Intersecting with host node configuration...');
+                    writeLog('SYS', 'Primary slot occupied. Routing as secondary station client terminal...');
+                    peerInstance = new Peer(namespacedMasterRoomId + "-client", {
