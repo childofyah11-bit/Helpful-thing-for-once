@@ -3,223 +3,247 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Retro Pixel Art Studio</title>
+    <title>Neo-City Chronicles: Text RPG</title>
     <style>
+        :root {
+            --term-bg: #0a0a0f;
+            --neon-green: #39ff14;
+            --neon-blue: #00f0ff;
+            --neon-amber: #ffb703;
+            --text-main: #d1d5db;
+        }
+
         body {
-            background-color: #1a1a24;
-            color: #e2e8f0;
+            background-color: var(--term-bg);
+            color: var(--text-main);
             font-family: 'Courier New', Courier, monospace;
             margin: 0;
+            padding: 20px;
             display: flex;
-            flex-direction: column;
-            align-items: center;
             justify-content: center;
+            align-items: center;
             min-height: 100vh;
-            padding: 20px;
+            box-sizing: border-box;
         }
 
-        h1 {
-            color: #ff007f;
-            text-shadow: 2px 2px #00f0ff;
-            margin-bottom: 5px;
-            font-size: 2rem;
+        .terminal-container {
+            width: 100%;
+            max-width: 750px;
+            background: #12121a;
+            border: 2px solid var(--neon-blue);
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.2);
+            box-sizing: border-box;
         }
 
-        .subtitle {
-            color: #a0aec0;
-            margin-bottom: 25px;
+        /* Status Parameters HUD Bar Layout */
+        .hud-bar {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 2px dashed #2a2a3a;
+            padding-bottom: 12px;
+            margin-bottom: 20px;
+            color: var(--neon-blue);
             font-size: 0.9rem;
+            font-weight: bold;
         }
 
-        .studio-container {
+        .hud-item span {
+            color: var(--neon-amber);
+        }
+
+        /* Dynamic Main Console Messaging Frame */
+        .story-display {
+            min-height: 180px;
+            line-height: 1.6;
+            font-size: 1.05rem;
+            margin-bottom: 25px;
+            white-space: pre-line;
+        }
+
+        .system-alert {
+            color: var(--neon-amber);
+            font-weight: bold;
+        }
+
+        /* Interactive Decisions Layout Setup */
+        .options-container {
             display: flex;
             flex-direction: column;
-            align-items: center;
-            background: #2d2d3a;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            border: 3px solid #3f3f56;
-        }
-
-        /* Color Palette Layout */
-        .palette {
-            display: flex;
             gap: 12px;
-            margin-bottom: 20px;
-            background: #1a1a24;
-            padding: 10px 15px;
-            border-radius: 8px;
         }
 
-        .color-swatch {
-            width: 32px;
-            height: 32px;
-            border-radius: 6px;
+        .choice-btn {
+            background: #1a1a26;
+            color: var(--neon-green);
+            border: 1px solid var(--neon-green);
+            padding: 14px 18px;
+            border-radius: 4px;
             cursor: pointer;
-            border: 2px solid transparent;
-            transition: transform 0.1s, border-color 0.1s;
-        }
-
-        .color-swatch:hover {
-            transform: scale(1.1);
-        }
-
-        .color-swatch.active {
-            border-color: #ffffff;
-            transform: scale(1.05);
-            box-shadow: 0 0 8px rgba(255,255,255,0.5);
-        }
-
-        /* Art Canvas Pixel Grid Layout */
-        .canvas-grid {
-            display: grid;
-            grid-template-columns: repeat(16, 22px);
-            grid-template-rows: repeat(16, 22px);
-            gap: 1px;
-            background-color: #3f3f56;
-            border: 4px solid #ff007f;
-            box-shadow: 0 0 15px rgba(255, 0, 127, 0.3);
-        }
-
-        .pixel {
-            background-color: #ffffff;
-            cursor: crosshair;
-            transition: background-color 0.05s;
-        }
-
-        .pixel:hover {
-            filter: brightness(0.9);
-        }
-
-        /* Control Panel Operations */
-        .controls {
-            margin-top: 20px;
-            display: flex;
-            gap: 15px;
-            width: 100%;
-        }
-
-        .btn {
-            flex: 1;
-            background-color: #1a1a24;
-            color: #ffffff;
-            border: 2px solid #00f0ff;
-            padding: 12px;
             font-family: inherit;
-            font-weight: bold;
-            cursor: pointer;
-            border-radius: 6px;
+            font-size: 0.95rem;
+            text-align: left;
             transition: all 0.2s;
         }
 
-        .btn:hover {
-            background-color: #00f0ff;
-            color: #1a1a24;
-            box-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+        .choice-btn:hover {
+            background: rgba(57, 255, 20, 0.1);
+            box-shadow: 0 0 10px rgba(57, 255, 20, 0.3);
+            transform: translateX(4px);
         }
 
-        .btn-clear {
-            border-color: #ff007f;
+        /* Inventory Panel Tags */
+        .inventory-box {
+            margin-top: 25px;
+            padding-top: 15px;
+            border-top: 2px dashed #2a2a3a;
+            font-size: 0.85rem;
+            color: #8a8a9a;
         }
 
-        .btn-clear:hover {
-            background-color: #ff007f;
-            color: #ffffff;
-            box-shadow: 0 0 10px rgba(255, 0, 127, 0.5);
+        .inventory-list {
+            display: inline-flex;
+            gap: 8px;
+            color: var(--text-main);
+            margin-left: 5px;
+        }
+
+        .inv-tag {
+            background: #222233;
+            padding: 2px 8px;
+            border-radius: 4px;
+            border: 1px solid #3d3d5c;
         }
     </style>
 </head>
 <body>
 
-    <h1>PIXEL CRAFT</h1>
-    <div class="subtitle">Click and drag cursor across grid spaces to paint</div>
-
-    <div class="studio-container">
-        <!-- Palette Colors Picker selection board -->
-        <div class="palette" id="colorPalette">
-            <div class="color-swatch active" style="background-color: #ff007f;" data-color="#ff007f"></div>
-            <div class="color-swatch" style="background-color: #00f0ff;" data-color="#00f0ff"></div>
-            <div class="color-swatch" style="background-color: #ffbe0b;" data-color="#ffbe0b"></div>
-            <div class="color-swatch" style="background-color: #00ff66;" data-color="#00ff66"></div>
-            <div class="color-swatch" style="background-color: #7000ff;" data-color="#7000ff"></div>
-            <div class="color-swatch" style="background-color: #1a1a24;" data-color="#1a1a24"></div>
-            <div class="color-swatch" style="background-color: #ffffff;" data-color="#ffffff"></div>
+    <div class="terminal-container">
+        <!-- Dashboard Live Status Metrics -->
+        <div class="hud-bar">
+            <div class="hud-item">LOC: <span id="hudLoc">NEO-CITY GRID 0</span></div>
+            <div class="hud-item">CREDITS: <span id="hudCash">100</span></div>
+            <div class="hud-item">REPUTATION: <span id="hudRep">NEUTRAL</span></div>
         </div>
 
-        <!-- The Paint Canvas Matrix Grid Area -->
-        <div class="canvas-grid" id="pixelCanvas"></div>
+        <!-- System Narrative Delivery Screen Module -->
+        <div class="story-display" id="storyText">Loading mainframe...</div>
 
-        <!-- System Reset Cleansing Commands Row -->
-        <div class="controls">
-            <button class="btn btn-clear" onclick="clearCanvas()">Reset Grid</button>
-            <button class="btn" onclick="fillCanvas()">Fill Grid</button>
+        <!-- Choice Navigation Buttons Block -->
+        <div class="options-container" id="choicesBox"></div>
+
+        <!-- Databank Items Tracking Footnotes -->
+        <div class="inventory-box">
+            💾 DATABANK INVENTORY: <span id="invList" class="inventory-list">Empty</span>
         </div>
     </div>
 
     <script>
-        const canvas = document.getElementById('pixelCanvas');
-        const palette = document.getElementById('colorPalette');
-        
-        let currentSelectedColor = '#ff007f';
-        let isMouseDownGlobalState = false;
+        // --- LIVE METRIC MONITOR VARS ---
+        let gameState = {
+            credits: 100,
+            reputation: "Neutral",
+            inventory: [],
+            currentScene: "start"
+        };
 
-        // Initialize Global Drag Event Tracking Listeners 
-        document.body.onmousedown = () => (isMouseDownGlobalState = true);
-        document.body.onmouseup = () => (isMouseDownGlobalState = false);
-
-        // Render Canvas Grid Matrix Map (16x16 Node Elements)
-        function createGridElements() {
-            for (let i = 0; i < 256; i++) {
-                const pixelNode = document.createElement('div');
-                pixelNode.classList.add('pixel');
-                
-                // Mouse Trigger Application Functions
-                pixelNode.addEventListener('mousedown', (e) => {
-                    e.preventDefault();
-                    pixelNode.style.backgroundColor = currentSelectedColor;
-                });
-                
-                pixelNode.addEventListener('mouseenter', () => {
-                    if (isMouseDownGlobalState) {
-                        pixelNode.style.backgroundColor = currentSelectedColor;
-                    }
-                });
-
-                canvas.appendChild(pixelNode);
+        // --- SCENARIO NODE DATABASES ---
+        const storyNodes = {
+            start: {
+                location: "DISTRICT 9 - DOCKING BAY",
+                text: "You awaken in a neon-drenched alleyway. Rain drips from glowing advertisements above. Your data-jack is buzzing.\n\nA local fixer named Kael stands under an umbrella nearby, tossing a cryptographic data-chip in his hand. 'Got a job for you, runner. Pays well, but it's dangerous.'",
+                choices: [
+                    { text: "Accept the data-chip job from Kael.", next: "accept_job" },
+                    { text: "Hack Kael's private cyberware rig instead.", next: "hack_kael" },
+                    { text: "Ignore him and head straight into the Net-Bar.", next: "net_bar" }
+                ]
+            },
+            accept_job: {
+                location: "DOWNTOWN - CORPORATE PLAZA",
+                text: "Kael hands you the chip. 'Deliver this to the bartender at the Tech-Noire Club.'\n\nAs you walk down Corporate Plaza, an armored corporate drone drops down, flashing red warning lights: <span class='system-alert'>[HALT SECURE SCAN IN PROGRESS]</span>. Do you run or stay?",
+                action: () => { 
+                    gameState.inventory.push("Data-Chip"); 
+                    gameState.credits += 50;
+                },
+                choices: [
+                    { text: "Bribe the drone data ports using 50 credits.", next: "bribe_drone", condition: () => gameState.credits >= 50 },
+                    { text: "Sprint down into the subterranean maintenance tunnels.", next: "subway_run" }
+                ]
+            },
+            hack_kael: {
+                location: "DISTRICT 9 - ALLEY",
+                text: "Your neural interface spikes into his system. Success! You siphon 200 credits into your accounts, but your rig overheats.\n\nKael realizes what you did, draws a plasma shock-pistol, and alerts local street gangs.",
+                action: () => { 
+                    gameState.credits += 200; 
+                    gameState.reputation = "Wanted";
+                },
+                choices: [
+                    { text: "Dive through the glass window into the Net-Bar.", next: "net_bar" },
+                    { text: "Surrender and offer to pay back double.", next: "surrender_kael" }
+                ]
+            },
+            net_bar: {
+                location: "THE REBOOT BAR",
+                text: "The bar smells of ozone and synthetic gin. Net-runners are floating in deep sensory tanks. The bartender looks you over.\n\n'Looking for clean hardware or dirty data, stranger?'",
+                choices: [
+                    { text: "Ask if anyone needs a mercenary data specialist.", next: "find_work" },
+                    { text: "Leave the bar before trouble arrives.", next: "start" }
+                ]
+            },
+            bribe_drone: {
+                location: "TECH-NOIRE CLUB",
+                text: "The drone accepts the encrypted payment protocol, resets its pathing vectors, and flies off. You safely deliver the Data-Chip to the bartender!\n\n<span class='system-alert'>[MISSION COMPLETE]</span> Kael wires your bonus rewards. You are safe... for tonight.",
+                action: () => { 
+                    gameState.credits += 300; 
+                    gameState.reputation = "Legendary";
+                    gameState.inventory = gameState.inventory.filter(i => i !== "Data-Chip");
+                },
+                choices: [
+                    { text: "Restart Simulation", next: "start", reset: true }
+                ]
+            },
+            subway_run: {
+                location: "SUBTERRANEAN TUNNELS",
+                text: "You slide down a ventilation shaft. The drone loses lock coordinates but tracking dogs are barking nearby.\n\nYou stumble across a black-market cyber-clinic hidden in the dark.",
+                choices: [
+                    { text: "Trade information for safe passage out.", next: "find_work" }
+                ]
+            },
+            surrender_kael: {
+                location: "DISTRICT 9 - DETENTION CELL",
+                text: "Kael laughs, strips your data deck, and throws you to the corporate police enforcers.\n\nYour cybernetic run has come to an early end.",
+                action: () => { 
+                    gameState.credits = 0; 
+                    gameState.reputation = "Incarcerated";
+                },
+                choices: [
+                    { text: "Reboot Cyberdeck (Restart)", next: "start", reset: true }
+                ]
+            },
+            find_work: {
+                location: "THE NET-BAR COUCHES",
+                text: "A mysterious operative in a long trench coat sits across from you. 'I hear you're fast with terminal matrices. Let's see what you can do.'\n\nTo be continued in Chapter II...",
+                choices: [
+                    { text: "Restart Matrix", next: "start", reset: true }
+                ]
             }
-        }
+        };
 
-        // Palette Activation Selection Processing Event Routing 
-        palette.addEventListener('click', (event) => {
-            if (event.target.classList.contains('color-swatch')) {
-                // Clear active styling indicators globally across element lists
-                document.querySelectorAll('.color-swatch').forEach(swatchItem => {
-                    swatchItem.classList.remove('active');
-                });
-                
-                // Establish current workspace paint assignments
-                event.target.classList.add('active');
-                currentSelectedColor = event.target.getAttribute('data-color');
+        // --- SCENE ROUTER PROCESSOR ---
+        function renderActiveScene(nodeKey) {
+            const node = storyNodes[nodeKey];
+            if (!node) return;
+
+            gameState.currentScene = nodeKey;
+
+            // Execute scene setup calculations if present
+            if (node.action) {
+                node.action();
             }
-        });
 
-        // Clear Canvas Matrix Nodes back to initial base structural assignments
-        function clearCanvas() {
-            document.querySelectorAll('.pixel').forEach(pixelNode => {
-                pixelNode.style.backgroundColor = '#ffffff';
-            });
-        }
+            // Sync structural component data properties to GUI outputs
+            document.getElementById('hudLoc').textContent = node.location;
+            document.getElementById('hudCash').textContent = gameState.credits;
+            document.getElementById('hudRep').textContent = gameState.reputation.toUpperCase();
 
-        // Fill complete active canvas grid layout using target selection context
-        function fillCanvas() {
-            document.querySelectorAll('.pixel').forEach(pixelNode => {
-                pixelNode.style.backgroundColor = currentSelectedColor;
-            });
-        }
-
-        // Run structural composition initialization processes
-        createGridElements();
-    </script>
-</body>
-</html>
