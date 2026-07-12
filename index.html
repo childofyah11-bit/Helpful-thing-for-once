@@ -6,6 +6,15 @@
     <title>CommsStation: Automatic P2P Walkie-Talkie</title>
     <!-- FIX 1: Corrected full library source path -->
     <script src="https://unpkg.com"></script>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CommsStation: Automatic P2P Walkie-Talkie</title>
+    <!-- FIX 1: Corrected full library source path -->
+    <script src="https://unpkg.com"></script>
     <style>
         :root {
             --bg-base: #11140f;
@@ -130,6 +139,7 @@
             <div class="indicator">MIC: <div class="dot" id="micDot"></div> <span id="micTxt">MUTED</span></div>
         </div>
 
+        <!-- AUTOMATIC JOIN CONFIGURATION PANEL -->
         <div class="deck">
             <h2>Enter Shared Secret Frequency Room Code</h2>
             <div class="input-row">
@@ -138,6 +148,7 @@
             </div>
         </div>
 
+        <!-- PUSH TO TALK COMMS INTERFACE -->
         <div class="deck ptt-container">
             <button class="ptt-button" id="pttBtn" disabled>HOLD TO<br>TALK</button>
             <div style="margin-top: 15px; font-size: 0.7rem; color: var(--txt-muted); text-align: center; line-height: 1.3;">
@@ -145,11 +156,13 @@
             </div>
         </div>
 
+        <!-- RUNTIME LOGGER -->
         <div class="terminal" id="activityBox">
             <div class="log">[SYS] Standing by. Enter a frequency code to initialize hardware channels.</div>
         </div>
     </div>
 
+    <!-- Receiver Voice Audio Destination Node -->
     <audio id="remoteAudioPlayer" autoplay></audio>
 
     <script>
@@ -175,11 +188,12 @@
             logTerminal.scrollTop = logTerminal.scrollHeight;
         }
 
+        // Initialize local microphone stream permissions
         async function getMicrophoneAccess() {
             try {
                 localMicStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
                 microphoneAudioTrack = localMicStream.getAudioTracks()[0];
-                microphoneAudioTrack.enabled = false;
+                microphoneAudioTrack.enabled = false; // Keep muted until push-to-talk triggers
                 writeLog('HARDWARE', 'Microphone connection confirmed and armed.');
                 return true;
             } catch (err) {
@@ -207,9 +221,12 @@
                 writeLog('SYS', `Channel active. Listening as Master Station Node: ${id}`);
                 linkDot.classList.add('active');
                 linkTxt.textContent = "LISTENING ON CHANNEL";
+                
+                // Proactively attempt connection to see if another device is already in the room
                 attemptCallToRemotePeer(secretRoomId + "-client");
             });
 
+            // If the room name is already taken, switch to a client role automatically to hook up with the host
             peerInstance.on('error', (err) => {
                 if (err.type === 'unavailable-id') {
                     writeLog('SYS', 'Primary slot taken. Linking to channel room as secondary client...');
@@ -227,18 +244,4 @@
                 }
             });
 
-            peerInstance.on('call', (incomingCall) => {
-                writeLog('COMMS', 'Incoming link handshake detected. Hooking streaming tracks...');
-                incomingCall.answer(localMicStream);
-                handleAudioStreamWiring(incomingCall);
-            });
-        }
-
-        function attemptCallToRemotePeer(targetId) {
-            const outgoingCall = peerInstance.call(targetId, localMicStream);
-            if (outgoingCall) {
-                handleAudioStreamWiring(outgoingCall);
-            }
-        }
-
-        function handleAudioStreamWiring(callInstance) {
+            // Intercept incoming audio stream calls automatically
