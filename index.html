@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>blank tab</title>
+    <title> index.html</title>
     <style>
         body {
             margin: 0;
@@ -185,12 +185,10 @@
     </div>
 
     <script>
-        // Core Currencies
         let cash = 0;
         let passiveIncome = 0;
         let clickValue = 1;
 
-        // Modifiers scaled by upgrades
         let globalPassiveMult = 1.0;
         let globalClickMult = 1.0;
         let criticalChance = 0;
@@ -202,9 +200,8 @@
         const clickZone = document.getElementById('click-zone');
         const reactorCore = document.getElementById('reactor-core');
 
-        // Definition of the 30 unique, progressive tycoon upgrades
         const upgradesConfig = [
-            // BRANCH 1: ACTIVE CAPACITATION (Manual Clicking)
+            // BRANCH 1: ACTIVE CAPACITATION
             { id: 1, cat: "Active Capacitation", name: "Copper Contact Points", desc: "Adds flat raw generation value to each click.", lvl: 0, max: 10, cost: 15, scale: 1.4, effect: () => { clickValue += 1; } },
             { id: 2, cat: "Active Capacitation", name: "Inductor Coils", desc: "Increases baseline tap values further.", lvl: 0, max: 10, cost: 120, scale: 1.45, effect: () => { clickValue += 5; } },
             { id: 3, cat: "Active Capacitation", name: "Kinetic Amplifiers", desc: "Substantial click value injection increments.", lvl: 0, max: 10, cost: 500, scale: 1.5, effect: () => { clickValue += 25; } },
@@ -214,7 +211,7 @@
             { id: 7, cat: "Active Capacitation", name: "Synaptic Capacitors", desc: "Provides high-tier raw click values.", lvl: 0, max: 5, cost: 15000, scale: 2.0, effect: () => { clickValue += 800; } },
             { id: 8, cat: "Active Capacitation", name: "Impact Overdrive Engine", desc: "Doubles total global manual tap power values.", lvl: 0, max: 1, cost: 100000, scale: 1.0, effect: () => { globalClickMult *= 2; } },
 
-            // BRANCH 2: PASSIVE FRAMEWORKS (Automated Production)
+            // BRANCH 2: PASSIVE FRAMEWORKS
             { id: 9, cat: "Passive Frameworks", name: "Substation Generators", desc: "Generates $1/sec automatically.", lvl: 0, max: 15, cost: 50, scale: 1.35, effect: () => { passiveIncome += 1; } },
             { id: 10, cat: "Passive Frameworks", name: "Turbine Relays", desc: "Generates $8/sec passively.", lvl: 0, max: 12, cost: 350, scale: 1.4, effect: () => { passiveIncome += 8; } },
             { id: 11, cat: "Passive Frameworks", name: "Fossil Fuel Arrays", desc: "Generates $45/sec passively.", lvl: 0, max: 10, cost: 1800, scale: 1.45, effect: () => { passiveIncome += 45; } },
@@ -224,4 +221,5 @@
             { id: 15, cat: "Passive Frameworks", name: "Efficiency Insulation", desc: "Augments global auto-generation metrics by 15%.", lvl: 0, max: 5, cost: 12000, scale: 1.9, effect: () => { globalPassiveMult += 0.15; } },
             { id: 16, cat: "Passive Frameworks", name: "Dyson Swarm Blueprint", desc: "Doubles entire cumulative passive output rates.", lvl: 0, max: 1, cost: 1500000, scale: 1.0, effect: () => { globalPassiveMult *= 2; } },
 
-            // BRANCH 3: ECONOMY SPECULATION (Investment & Reserves)
+            // BRANCH 3: ECONOMY SPECULATION
+            { id: 17, cat: "Economy Speculation", name: "Venture Grants", desc: "Injects an immediate $250 flat lump sum.", lvl: 0, max: 20, cost: 100, scale: 1.5, effect: () => { cash += 250; } },
