@@ -3,254 +3,221 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tower Defense Tycoon Nexus</title>
+    <title>Tower Defense Tycoon</title>
     <style>
-        :root {
-            --bg: #05070f;
-            --panel: #0d1122;
-            --panel-light: #161e38;
-            --accent: #38bdf8;
-            --success: #10b981;
-            --danger: #ef4444;
-            --gold: #eab308;
-            --purple: #a855f7;
-            --border: #1e294b;
-        }
-
         body {
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            background-color: var(--bg);
-            color: #f8fafc;
             margin: 0;
+            padding: 20px;
+            background-color: #0b1016;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            gap: 20px;
+            height: 95vh;
+            overflow: hidden;
+        }
+        #game-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        canvas {
+            background-color: #121820;
+            border: 2px solid #233043;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        #stats-panel {
+            background: #161f2c;
+            padding: 15px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-around;
+            font-size: 1.1em;
+            font-weight: bold;
+            border: 1px solid #233043;
+        }
+        .stat { color: #4caf50; }
+        .stat-money { color: #ffd700; }
+        .stat-hp { color: #f44336; }
+        
+        #tycoon-panel {
+            flex: 1;
+            background: #161f2c;
+            border: 2px solid #233043;
+            border-radius: 8px;
             padding: 15px;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            user-select: none;
-            overflow-x: hidden;
+            overflow-y: auto;
         }
-
-        .header-layout {
-            display: flex;
-            justify-content: space-between;
-            width: 1050px;
-            align-items: center;
-            margin-bottom: 8px;
+        h2 {
+            margin-top: 0;
+            color: #ffd700;
+            border-bottom: 2px solid #233043;
+            padding-bottom: 5px;
+            font-size: 1.4em;
         }
-
-        h2 { margin: 0; color: var(--accent); font-size: 24px; font-weight: 800; letter-spacing: 0.5px; }
-        
-        .dashboard { display: flex; gap: 10px; }
-        .hud-card {
-            background: var(--panel);
-            padding: 8px 16px;
-            border-radius: 8px;
-            border: 1px solid var(--border);
-            font-weight: 700;
-            font-size: 14px;
+        .category-title {
+            font-size: 1.1em;
+            color: #00bcd4;
+            margin: 15px 0 5px 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
-        .gold-card { border-color: var(--gold); color: var(--gold); }
-        .hp-card { border-color: var(--danger); color: var(--danger); }
-
-        /* Massive Tycoon Upgrade Grid Matrix */
-        .upgrade-matrix-grid {
+        .upgrade-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-            width: 1050px;
-            margin-bottom: 12px;
+            grid-template-columns: 1fr;
+            gap: 8px;
         }
-
-        .upgrade-section {
-            background: var(--panel);
-            border: 2px solid var(--border);
-            border-radius: 12px;
+        .upgrade-card {
+            background: #233043;
+            border: 1px solid #34495e;
+            border-radius: 6px;
             padding: 10px;
             display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .section-title {
-            font-size: 12px;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            padding-bottom: 4px;
-            border-bottom: 1px solid var(--border);
-            margin-bottom: 2px;
-        }
-
-        .up-node-btn {
-            background: var(--panel-light);
-            border: 1px solid var(--border);
-            color: #f8fafc;
-            padding: 8px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 12px;
-            font-weight: bold;
-            display: flex;
             justify-content: space-between;
             align-items: center;
-            transition: all 0.15s ease;
+            transition: 0.2s;
         }
-        .up-node-btn:hover { background: var(--border); border-color: var(--accent); }
-        .up-node-btn span { color: var(--gold); }
-        .up-node-btn em { font-style: normal; color: #94a3b8; }
-
-        #game-canvas {
-            background-color: #030408;
-            border: 3px solid var(--border);
-            border-radius: 16px;
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.8);
+        .upgrade-card:hover {
+            border-color: #00bcd4;
+            background: #2c3e50;
         }
-
-        .footer-hud {
-            width: 1050px;
-            margin-top: 8px;
-            font-size: 11px;
-            color: #4b526d;
-            font-family: monospace;
+        .upgrade-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .upgrade-name {
+            font-weight: bold;
+            font-size: 0.95em;
+        }
+        .upgrade-desc {
+            font-size: 0.8em;
+            color: #b0bec5;
+        }
+        .upgrade-level {
+            font-size: 0.8em;
+            color: #4caf50;
+            font-weight: bold;
+        }
+        .upgrade-btn {
+            background: #4caf50;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.9em;
+            min-width: 80px;
             text-align: center;
+        }
+        .upgrade-btn:disabled {
+            background: #555;
+            color: #888;
+            cursor: not-allowed;
+        }
+        .build-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 5px;
+        }
+        .build-btn {
+            flex: 1;
+            padding: 8px;
+            background: #233043;
+            border: 1px solid #34495e;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .build-btn.active {
+            background: #00bcd4;
+            border-color: #ffffff;
         }
     </style>
 </head>
 <body>
 
-    <div class="header-layout">
-        <h2>DEFENSE MATRIX TYCOON // TIER PHASES</h2>
-        <div class="dashboard">
-            <div class="hud-card" style="border-color: var(--purple); color: var(--purple);">WAVE: <span id="wave-lbl">1</span></div>
-            <div class="hud-card gold-card">GOLD REVENUE: $<span id="gold-lbl">150</span></div>
-            <div class="hud-card hp-card">CORE SHIELD: <span id="hp-lbl">100</span>%</div>
+    <div id="game-container">
+        <div id="stats-panel">
+            <div>Wave: <span id="wave-txt" class="stat">1</span></div>
+            <div>Cash: $<span id="cash-txt" class="stat-money">500</span></div>
+            <div>Income: $<span id="income-txt" class="stat-money">10</span>/s</div>
+            <div>Base HP: <span id="hp-txt" class="stat-hp">100</span></div>
         </div>
+        <div class="build-selector">
+            <button class="build-btn active" id="btn-t1" onclick="setBuildType(1)">Basic Gun ($100)</button>
+            <button class="build-btn" id="btn-t2" onclick="setBuildType(2)">Plasma Beam ($250)</button>
+        </div>
+        <canvas id="gameCanvas" width="640" height="480"></canvas>
     </div>
 
-    <!-- Massive 100+ Total Combination Tier Upgrade Matrix Panel Grid -->
-    <div class="upgrade-matrix-grid">
-        
-        <!-- SECTION 1: TYCOON INDUSTRIAL SYSTEM -->
-        <div class="upgrade-section" style="border-left: 4px solid var(--gold);">
-            <div class="section-title" style="color: var(--gold);">🏭 Industrial Automated Generator</div>
-            <button class="up-node-btn" onclick="purchaseNode('mineRate')">Mine Drill Yield (Lvl <em id="mineRate-lvl">1</em>) <span id="mineRate-cost">$50</span></button>
-            <button class="up-node-btn" onclick="purchaseNode('mineSpeed')">Drill Processing Speed (Lvl <em id="mineSpeed-lvl">1</em>) <span id="mineSpeed-cost">$75</span></button>
-            <button class="up-node-btn" onclick="purchaseNode('interest')">Crypto Investment Bonds (Lvl <em id="interest-lvl">1</em>) <span id="interest-cost">$150</span></button>
-        </div>
-
-        <!-- SECTION 2: DEFENSE WEAPONS PLATFORMS -->
-        <div class="upgrade-section" style="border-left: 4px solid var(--accent);">
-            <div class="section-title" style="color: var(--accent);">⚔️ Anti-Creep Gun Batteries</div>
-            <button class="up-node-btn" onclick="purchaseNode('gunDmg')">Laser Core Power (Lvl <em id="gunDmg-lvl">1</em>) <span id="gunDmg-cost">$60</span></button>
-            <button class="up-node-btn" onclick="purchaseNode('gunFr')">Weapon Cycle Speed (Lvl <em id="gunFr-lvl">1</em>) <span id="gunFr-cost">$90</span></button>
-            <button class="up-node-btn" onclick="purchaseNode('gunRange')">Radar Scanner Range (Lvl <em id="gunRange-lvl">1</em>) <span id="gunRange-cost">$120</span></button>
-        </div>
-
-        <!-- SECTION 3: ADVANCED MATRIX CORE MODS -->
-        <div class="upgrade-section" style="border-left: 4px solid var(--purple);">
-            <div class="section-title" style="color: var(--purple);">🔮 Quantum Core Modifiers</div>
-            <button class="up-node-btn" onclick="purchaseNode('bulletArray')">Multi-Shot Spread Count (Lvl <em id="bulletArray-lvl">1</em>) <span id="bulletArray-cost">$250</span></button>
-            <button class="up-node-btn" onclick="purchaseNode('coreRepair')">Automated Nanite Repair <span id="coreRepair-cost">$100</span></button>
-            <button class="up-node-btn" onclick="purchaseNode('bounty')">Scrap Scrap Value Bonus (Lvl <em id="bounty-lvl">1</em>) <span id="bounty-cost">$80</span></button>
-        </div>
-
+    <div id="tycoon-panel">
+        <h2>Tycoon Core Upgrades (30 Protocols)</h2>
+        <div id="upgrades-container"></div>
     </div>
 
-    <!-- Main Strategy Defense Viewport Field -->
-    <canvas id="game-canvas" width="1050" height="400"></canvas>
-    
-    <div class="footer-hud">
-        UPGRADE ENGINE METRICS STACK EXPONENTIALLY // AUTOMATED GENERATORS TICK IN BACKGROUND LOOPS CONTINUOUSLY
-    </div>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
 
-<script>
-    const canvas = document.getElementById('game-canvas');
-    const ctx = canvas.getContext('2d');
+        // Core Game Variables
+        let cash = 500;
+        let baseHp = 100;
+        let maxBaseHp = 100;
+        let passiveIncome = 10;
+        let wave = 1;
+        let waveTimer = 0;
+        let selectedBuildType = 1;
 
-    // Progression Tycoon variables
-    let gold = 150;
-    let baseHp = 100;
-    let wave = 1;
-    let gameOver = false;
-    let frameCount = 0;
+        // Configuration Modifiers (Affected by upgrades)
+        let globalDamageMult = 1.0;
+        let globalRangeMult = 1.0;
+        let globalSpeedMult = 1.0;
+        let killRewardMult = 1.0;
+        let sellReturnRate = 0.5;
+        let goldPerHit = 0;
+        let interestRate = 0;
+        let criticalChance = 0;
+        let plasmaSlowAmount = 0;
 
-    // Defense turret asset states
-    let turret = { x: 950, y: 200, radius: 24, color: '#38bdf8', lastShot: 0 };
+        // Path configurations
+        const path = [
+            {x: 0, y: 120}, {x: 200, y: 120}, {x: 200, y: 360},
+            {x: 440, y: 360}, {x: 440, y: 200}, {x: 640, y: 200}
+        ];
 
-    // Upgrade configuration database dictionaries
-    let upgradeLevels = {
-        mineRate: 1, mineSpeed: 1, interest: 1,
-        gunDmg: 1, gunFr: 1, gunRange: 1,
-        bulletArray: 1, bounty: 1
-    };
+        let towers = [];
+        let enemies = [];
+        let projectiles = [];
 
-    let upgradeCosts = {
-        mineRate: 50, mineSpeed: 75, interest: 150,
-        gunDmg: 60, gunFr: 90, gunRange: 120,
-        bulletArray: 250, bounty: 80
-    };
+        // Definition of the 30 unique multi-level tycoon upgrades
+        const upgradesConfig = [
+            // CATEGORY 1: ECONOMY BOOSTER (1-8)
+            { id: 1, cat: "Economy", name: "Solar Generators", desc: "Increases passive income generation rate.", lvl: 0, max: 90, cost: 80, scale: 1.5, effect: () => { passiveIncome += 5; } },
+            { id: 2, cat: "Economy", name: "Bounty Contracts", desc: "Earn extra money from every enemy eliminated.", lvl: 0, max: 70, cost: 150, scale: 1.6, effect: () => { killRewardMult += 0.2; } },
+            { id: 3, cat: "Economy", name: "Corporate Interest", desc: "Earn 2% of your current cash at the end of each wave.", lvl: 0, max: 5, cost: 300, scale: 2.0, effect: () => { interestRate += 0.02; } },
+            { id: 4, cat: "Economy", name: "Siphon rounds", desc: "Gain pocket money every single time a projectile strikes an enemy.", lvl: 0, max: 5, cost: 400, scale: 1.8, effect: () => { goldPerHit += 1; } },
+            { id: 5, cat: "Economy", name: "Liquidation Policy", desc: "Improves refund money recovered when removing towers.", lvl: 0, max: 3, cost: 200, scale: 2.2, effect: () => { sellReturnRate += 0.15; } },
+            { id: 6, cat: "Economy", name: "Crypto Mining Rig", desc: "Provides a flat mega lump sum injection instantly.", lvl: 0, max: 10, cost: 500, scale: 1.7, effect: () => { cash += 400; } },
+            { id: 7, cat: "Economy", name: "Wholesale Permits", desc: "Reduces original placement costs of all defense layout units.", lvl: 0, max: 5, cost: 600, scale: 1.6, effect: () => { /* Calculated dynamically */ } },
+            { id: 8, cat: "Economy", name: "Hyper Inflation Engine", desc: "Boosts overall passive generation power levels globally.", lvl: 0, max: 3, cost: 1200, scale: 2.5, effect: () => { passiveIncome *= 1.3; } },
 
-    // Tracking arrays
-    let enemies = [];
-    let lasers = [];
-    let floatingTexts = [];
+            // CATEGORY 2: COMBAT MATRIX (9-16)
+            { id: 9, cat: "Combat", name: "Caliber Overhaul", desc: "Augments baseline impact output damage points directly.", lvl: 0, max: 10, cost: 100, scale: 1.5, effect: () => { globalDamageMult += 0.15; } },
+            { id: 10, cat: "Combat", name: "Polished Focal Lenses", desc: "Widens target validation tracking grid footprint scopes.", lvl: 0, max: 10, cost: 120, scale: 1.4, effect: () => { globalRangeMult += 0.08; } },
+            { id: 11, cat: "Combat", name: "Overclocked Rotors", desc: "Enables modules to fire rapid munitions configurations.", lvl: 0, max: 8, cost: 200, scale: 1.6, effect: () => { globalSpeedMult += 0.12; } },
+            { id: 12, cat: "Combat", name: "Weakspot Protocols", desc: "Grants a chance to land double damage critical hits.", lvl: 0, max: 5, cost: 350, scale: 1.8, effect: () => { criticalChance += 0.06; } },
+            { id: 13, cat: "Combat", name: "Dense Alloys", desc: "Increases basic gun projectile speeds.", lvl: 0, max: 5, cost: 150, scale: 1.4, effect: () => { } },
+            { id: 14, cat: "Combat", name: "Cryo Cores", desc: "Plasma beams lower enemy movement parameters upon impact.", lvl: 0, max: 5, cost: 400, scale: 1.7, effect: () => { plasmaSlowAmount += 0.1; } },
+            { id: 15, cat: "Combat", name: "Uranium Coating", desc: "Adds tiny passive damage ticks over time.", lvl: 0, max: 5, cost: 500, scale: 1.9, effect: () => { globalDamageMult += 0.25; } },
+            { id: 16, cat: "Combat", name: "Singularity Drive", desc: "Massive final scale execution damage threshold modifier.", lvl: 0, max: 2, cost: 2000, scale: 3.0, effect: () => { globalDamageMult *= 1.5; } },
 
-    function spawnFloatingText(x, y, str, color) {
-        floatingTexts.push({ x, y, str, color, alpha: 1 });
-    }
-
-    // --- TYCOON REVENUE ENGINE (Click/Auto tick integrations) ---
-    function triggerAutomatedTycoonPayout() {
-        if (gameOver) return;
-        
-        let baselinePayout = 5 + (upgradeLevels.mineRate * 8);
-        let bonusMultiplier = 1 + (upgradeLevels.interest * 0.15);
-        let finalPayout = Math.floor(baselinePayout * bonusMultiplier);
-
-        gold += finalPayout;
-        document.getElementById('gold-lbl').textContent = gold;
-        spawnFloatingText(turret.x, turret.y - 30, `+$${finalPayout}`, 'var(--gold)');
-        
-        // Queue next variable idle payout cycle sequence loop
-        let delay = Math.max(200, 2000 - (upgradeLevels.mineSpeed * 150));
-        setTimeout(triggerAutomatedTycoonPayout, delay);
-    }
-
-    // --- PURCHASE HANDLER ---
-    window.purchaseNode = function(type) {
-        if (gameOver) return;
-
-        if (type === 'coreRepair') {
-            if (gold >= 100) {
-                gold -= 100;
-                baseHp = Math.min(100, baseHp + 25);
-                document.getElementById('hp-lbl').textContent = baseHp;
-                document.getElementById('gold-lbl').textContent = gold;
-                spawnFloatingText(turret.x, turret.y - 30, `+25 Core Armor`, 'var(--success)');
-            }
-            return;
-        }
-
-        let cost = upgradeCosts[type];
-        if (gold >= cost) {
-            gold -= cost;
-            upgradeLevels[type]++;
-            
-            // Adjust scaling factors exponentially
-            upgradeCosts[type] = Math.floor(cost * 1.6);
-            
-            // Re-render display labels
-            document.getElementById(`${type}-lvl`).textContent = upgradeLevels[type];
-            document.getElementById(`${type}-cost`).textContent = `$${upgradeCosts[type]}`;
-            document.getElementById('gold-lbl').textContent = gold;
-            
-            spawnFloatingText(turret.x, turret.y - 30, `UPGRADED`, 'var(--accent)');
-        }
-    };
-
-    function handleWeaponFireSystem() {
-        let delay = Math.max(6, 40 - (upgradeLevels.gunFr * 3));
-        if (frameCount - turret.lastShot > delay) {
-            
-            // Look for closest creeping enemy in range limits
-            let target = null;
+            // CATEGORY 3: FORTRESS INFRASTRUCTURE (17-24)
+            { id: 17, cat: "Fortress", name: "Titanium Bulkheads", desc: "Increases maximum health pool cap threshold limits.", lvl: 0, max: 10, cost: 100, scale: 1.4, effect: () => { maxBaseHp += 50; baseHp += 50; } },
+            { id: 18, cat: "Fortress", name: "Nanite Restoration", desc: "Instantly fixes structure integrity stress values.", lvl: 0, max: 20, cost: 75, scale: 1.3, effect: () => { baseHp = Math.min(maxBaseHp, baseHp + 30); } },
+            { id: 19, cat: "Fortress", name: "Reactive Spikes", desc: "Damages close range hostiles who strike defensive grids.", lvl: 0, max: 5, cost: 250, scale: 1.6, effect: () => { } },
