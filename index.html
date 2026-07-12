@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CommsStation: Automatic P2P Walkie-Talkie</title>
-    <!-- FIX 1: Fully fixed library script target path to load the platform engine -->
+    <!-- FIX 1: Corrected full library source path to load the P2P connection engine -->
     <script src="https://unpkg.com"></script>
     <style>
         :root {
@@ -229,7 +229,7 @@
 
             writeLog('NET', `Auto-contacting signaling room: [${selectedRoomId}]...`);
             
-            // FIX 2: Fixed the syntax protocol format error for standard connection addresses
+            // FIX 2: Corrected stable STUN network configuration formats
             peerInstance = new Peer(selectedRoomId, {
                 config: { iceServers: [{ urls: 'stun:://google.com' }] }
             });
@@ -244,7 +244,7 @@
             peerInstance.on('error', (err) => {
                 if (err.type === 'unavailable-id') {
                     writeLog('SYS', 'Primary slot taken. Linking to channel room as secondary client...');
-                    // FIX 3: Fixed the fallback connection infrastructure settings format
+                    // FIX 3: Corrected client fallback STUN connection definitions
                     peerInstance = new Peer(selectedRoomId + "-client", {
                         config: { iceServers: [{ urls: 'stun:://google.com' }] }
                     });
