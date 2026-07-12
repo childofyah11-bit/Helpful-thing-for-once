@@ -1,212 +1,105 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RadioNet: Autonomous Cross-Window Radio</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Dodger</title>
+    <link href="https://googleapis.com" rel="stylesheet">
     <style>
-        :root {
-            --bg-base: #0a0c10;
-            --panel-card: #121620;
-            --border-glow: #1f293d;
-            --accent-cyan: #00f0ff;
-            --accent-green: #39ff14;
-            --alert-red: #ff3333;
-            --txt-bright: #ffffff;
-            --txt-muted: #64748b;
-        }
-
-        body {
-            margin: 0;
-            padding: 20px;
-            background-color: var(--bg-base);
-            color: var(--txt-bright);
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            box-sizing: border-box;
-        }
-
-        .station-container {
-            width: 100%;
-            max-width: 550px;
-            background: var(--panel-card);
-            border-radius: 12px;
-            padding: 30px;
-            border: 1px solid var(--border-glow);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-        }
-
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border-glow);
-            padding-bottom: 15px;
-            margin-bottom: 25px;
-        }
-
-        h1 { margin: 0; font-size: 1.25rem; font-weight: 800; letter-spacing: 0.5px; color: var(--accent-cyan); text-transform: uppercase; }
-
-        .status-pill {
-            background: rgba(57, 255, 20, 0.1);
-            color: var(--accent-green);
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            border: 1px solid rgba(57, 255, 20, 0.2);
-            text-transform: uppercase;
-        }
-
-        .deck {
-            background: rgba(0, 0, 0, 0.2);
-            border: 1px solid var(--border-glow);
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-
-        h2 { margin: 0 0 12px 0; font-size: 0.8rem; font-weight: 700; color: var(--txt-muted); text-transform: uppercase; letter-spacing: 1px; }
-
-        .setup-instruction-box {
-            font-size: 0.85rem;
-            color: #94a3b8;
-            line-height: 1.5;
-            border-left: 3px solid var(--accent-cyan);
-            padding-left: 12px;
-        }
-
-        .input-row { display: flex; gap: 10px; }
-
-        input[type="text"] {
-            flex: 1;
-            background: #06080c;
-            color: #fff;
-            border: 1px solid var(--border-glow);
-            border-radius: 6px;
-            padding: 12px;
-            font-family: inherit;
-            font-size: 0.95rem;
-        }
-        input[type="text"]:focus { outline: 1px solid var(--accent-cyan); border-color: var(--accent-cyan); }
-
-        .btn {
-            background: var(--accent-green);
-            color: #000;
-            font-weight: 700;
-            border: none;
-            padding: 0 25px;
-            border-radius: 6px;
-            font-size: 0.9rem;
-            transition: opacity 0.15s ease;
-            cursor: pointer;
-        }
-        .btn:hover { opacity: 0.85; }
-
-        .terminal {
-            background: #06080c;
-            border: 1px solid var(--border-glow);
-            height: 200px;
-            border-radius: 6px;
-            padding: 15px;
-            overflow-y: auto;
-            font-family: monospace;
-            font-size: 0.85rem;
-            color: #e2e8f0;
-            line-height: 1.5;
-        }
-        .log-row { margin-bottom: 8px; border-bottom: 1px solid #0f131a; padding-bottom: 6px; word-break: break-all; }
-        .log-time { color: var(--txt-muted); margin-right: 8px; }
-        .log-tag { font-weight: bold; margin-right: 6px; }
+        :root{--bg:#04040a;--panel:#0f1222;--accent:#ff4081;--accent2:#00e6b8;--muted:#9aa3b2;--gold:#ffd700;--cyber:#00ffff;--neon-pink:#ff00ff}
+        html,body{height:100%;margin:0;background:linear-gradient(180deg,#02020a 0%, #05112a 60%, #071026 100%);font-family:'Orbitron',sans-serif;color:var(--accent2);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+        #game-box{width:100%;max-width:980px;margin:18px auto;padding:18px;border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(0,0,0,0.06));box-shadow:0 6px 30px rgba(1,1,6,0.5);border:1px solid rgba(0,230,184,0.08)}
+        header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+        h1#title{cursor:pointer;margin:0;color:var(--accent2);font-size:22px;display:flex;align-items:center;gap:8px;transition:all 0.3s;user-select:none}
+        h1#title:hover{color:var(--accent);text-shadow:0 0 10px var(--accent)}
+        .controls-top{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+        .icon-btn{background:transparent;border:1px solid rgba(255,255,255,0.04);padding:6px 8px;border-radius:8px;color:var(--muted);cursor:pointer;font-weight:700;transition:all 0.2s}
+        .icon-btn:hover{background:rgba(255,64,129,0.1);color:var(--accent);box-shadow:0 0 8px rgba(255,64,129,0.2)}
+        .icon-btn.active{color:var(--cyber);box-shadow:0 0 12px var(--cyber)}
+        .hud{display:flex;justify-content:space-between;align-items:center;margin-top:8px;flex-wrap:wrap;gap:8px}
+        .hud .left,.hud .center,.hud .right{flex:1;min-width:120px}
+        .hud .center{text-align:center;font-size:13px;color:var(--gold);font-weight:700;animation:pulse 1.5s infinite}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.7}}
+        .hud .left{font-size:12px;color:var(--accent2)}
+        .hud .right{font-size:12px;color:#ff7bd6;text-align:right}
+        canvas{display:block;margin:12px auto;border-radius:10px;background:transparent;box-shadow:0 6px 18px rgba(0,0,0,0.6),0 0 20px rgba(0,230,184,0.1);outline:none;border:2px solid rgba(255,64,129,0.08)}
+        .sub{color:var(--muted);font-size:11px;margin-top:6px;line-height:1.4}
+        .overlay{position:fixed;left:0;right:0;top:0;bottom:0;display:flex;align-items:center;justify-content:center;pointer-events:none;background:rgba(0,0,0,0.7);z-index:1000}
+        .panel{pointer-events:auto;background:linear-gradient(135deg,rgba(15,18,34,.99),rgba(4,4,10,.98));padding:20px;border-radius:14px;color:#fff;box-shadow:0 0 30px rgba(0,230,184,0.2),inset 0 1px 0 rgba(255,255,255,0.1);min-width:280px;max-height:75vh;overflow-y:auto;border:1px solid rgba(0,230,184,0.2)}
+        .panel h2{margin:0 0 12px 0;font-size:20px;color:var(--accent);text-shadow:0 0 10px rgba(255,64,129,0.3)}
+        .panel h3{margin:8px 0 4px 0;font-size:14px;color:var(--cyber)}
+        .btn{background:linear-gradient(90deg,var(--accent),#ffea00);border:none;padding:10px 16px;border-radius:8px;font-weight:700;color:#05060a;cursor:pointer;margin-top:8px;transition:all 0.2s;box-shadow:0 4px 12px rgba(255,64,129,0.2)}
+        .btn:hover{transform:scale(1.08);box-shadow:0 6px 20px rgba(255,64,129,0.4)}
+        .btn:active{transform:scale(0.96)}
+        .btn.secondary{background:linear-gradient(90deg,var(--cyber),#00ffaa);color:#000}
+        .btn.disabled{opacity:0.5;cursor:not-allowed}
+        .btn.disabled:hover{transform:none}
+        .small{font-size:11px;color:var(--muted);margin-top:6px}
+        .stat-bar{width:100%;height:8px;background:rgba(0,0,0,0.5);border-radius:4px;margin:6px 0;overflow:hidden;border:1px solid rgba(0,230,184,0.2)}
+        .stat-fill{height:100%;background:linear-gradient(90deg,var(--cyber),var(--accent2));transition:width 0.3s}
+        @media (max-width:700px){canvas{width:92vw;height:92vw;max-height:92vh}.controls{display:flex;gap:4px;justify-content:space-between}.touch-btn{flex:1;padding:12px;border-radius:10px;background:rgba(255,64,129,0.2);border:2px solid rgba(255,64,129,0.4);color:var(--accent2);font-weight:700;cursor:pointer;font-size:20px;transition:all 0.2s}.touch-btn:active{background:rgba(255,64,129,0.5);transform:scale(0.95)}}
+        .floating{position:absolute;pointer-events:none;transform:translate(-50%,-50%);white-space:nowrap;font-weight:700;text-shadow:0 0 4px rgba(0,0,0,0.8)}
+        .achievement{position:fixed;left:20px;top:20px;background:rgba(0,0,0,0.85);padding:12px 16px;border-radius:10px;color:var(--cyber);border:2px solid var(--cyber);animation:slideInOut 4.2s ease-in-out;font-weight:700;box-shadow:0 0 15px var(--cyber)}
+        @keyframes slideInOut{0%{transform:translateX(-150%);opacity:0}5%{transform:translateX(0);opacity:1}95%{transform:translateX(0);opacity:1}100%{transform:translateX(-150%);opacity:0}}
+        .shop-grid{display:flex;flex-direction:column;gap:10px}
+        .shop-item{display:flex;justify-content:space-between;align-items:center;background:rgba(0,230,184,0.05);padding:10px;border-radius:8px;border:1px solid rgba(0,230,184,0.1);transition:all 0.2s}
+        .shop-item:hover{background:rgba(0,230,184,0.1);border-color:rgba(0,230,184,0.3)}
+        .shop-item.owned{background:rgba(0,230,184,0.08);opacity:0.7}
+        .shop-item .details{flex:1}
+        .shop-item strong{color:var(--accent);display:block;margin-bottom:3px}
+        .leaderboard{max-height:300px;overflow-y:auto}
+        .lb-row{display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid rgba(255,255,255,0.05);font-size:12px;transition:all 0.2s}
+        .lb-row:hover{background:rgba(0,230,184,0.05)}
+        .lb-row.top3{background:rgba(255,215,0,0.1);border-left:3px solid var(--gold)}
+        .lb-rank{color:var(--gold);font-weight:700;min-width:40px}
+        .lb-name{flex:1;color:var(--accent2);margin-left:8px}
+        .lb-score{color:var(--cyber);text-align:right;font-weight:700}
+        .perk-badge{display:inline-block;background:rgba(0,255,255,0.2);color:var(--cyber);padding:2px 6px;border-radius:4px;font-size:10px;margin:2px;border:1px solid rgba(0,255,255,0.4)}
+        .energy-bar{display:flex;gap:2px;margin-top:4px}
+        .energy-dot{width:6px;height:6px;background:var(--cyber);border-radius:50%;opacity:0.6}
+        .energy-dot.active{opacity:1;box-shadow:0 0 4px var(--cyber)}
     </style>
 </head>
 <body>
-
-    <div class="station-container">
+    <div id="game-box">
         <header>
-            <h1>📡 Autonomous Radio</h1>
-            <div class="status-pill">Active Spectrum</div>
+            <h1 id="title"><span class="logo">🌌</span> Cosmic Dodger — Premium</h1>
+            <div class="controls-top">
+                <button id="muteBtn" class="icon-btn">🔊</button>
+                <button id="fsBtn" class="icon-btn">⤢</button>
+                <button id="statsBtn" class="icon-btn">📈 Stats</button>
+                <button id="shopBtn" class="icon-btn">🏪 Shop</button>
+                <button id="lbBtn" class="icon-btn">🏆 Scores</button>
+            </div>
         </header>
-
-        <!-- OPERATIONAL TESTING DIAGNOSTICS DECK -->
-        <div class="deck">
-            <h2>Multi-Instance Tracking Link Instructions</h2>
-            <div class="setup-instruction-box">
-                To broadcast text instantly without network dependencies, copy the URL of this window and open it in a <strong>second browser tab or window</strong> side-by-side. Type a text packet into either panel and hit Beam to watch them update simultaneously.
-            </div>
+        <div class="hud">
+            <div class="left" id="player-hud">LIVES: 3 | LVL 1</div>
+            <div class="center" id="score-hud">SCORE: 0  ×1.00</div>
+            <div class="right" id="ai-hud">DRONES: 0 | WAVE: 1</div>
         </div>
-
-        <!-- BROADCAST EMISSION CONTROLS -->
-        <div class="deck">
-            <h2>Transmit Text Packet Stream</h2>
-            <div class="input-row">
-                <input type="text" id="payloadInput" placeholder="Type data stream payload packet..." onkeydown="if(event.key==='Enter') executeBroadcastTransmission()">
-                <button class="btn" id="sendBtn" onclick="executeBroadcastTransmission()">Beam</button>
-            </div>
+        <div style="position:relative">
+            <canvas id="canvas" width="900" height="900" tabindex="1"></canvas>
+            <div id="overlay" class="overlay" style="display:none"><div class="panel" id="panel"></div></div>
         </div>
-
-        <!-- RADIONET TERMINAL OUTPUT BOX LOGS -->
-        <div class="terminal" id="terminalFeedBox">
-            <div class="log-row" style="color: var(--txt-muted);">[SYSTEM] Autonomous local signal bridge locked active. Awaiting data stream transmission...</div>
+        <div class="sub">⌨️ Arrow Keys to move • SPACE to shoot • Shift+Click title 3x for hidden features</div>
+        <div class="controls" id="touch-controls" style="display:none">
+            <button class="touch-btn" id="btn-left">◀</button>
+            <button class="touch-btn" id="btn-fire">●</button>
+            <button class="touch-btn" id="btn-right">▶</button>
         </div>
     </div>
-
+    <div id="achievementBox" class="achievement" style="display:none"></div>
     <script>
-        // Creates an isolated data channel loop strictly inside the browser sandbox engine layout context
-        const SECURE_LOCAL_SPECTRUM_BUS = new BroadcastChannel('autonomous_local_radio_bus');
-        
-        const textPayloadInputNode = document.getElementById('payloadInput');
-        const feedTerminalBoxNode = document.getElementById('terminalFeedBox');
-
-        function appendFeedLog(labelTag, bodyText, colorHex = '#e2e8f0') {
-            const rowElement = document.createElement('div');
-            rowElement.classList.add('log-row');
-            rowElement.style.color = colorHex;
-
-            const currentTimeStamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-
-            rowElement.innerHTML = `
-                <span class="log-time">[${currentTimeStamp}]</span>
-                <span class="log-tag" style="color: ${colorHex === '#e2e8f0' ? 'var(--txt-muted)' : 'inherit'}">${labelTag}:</span>
-                <span>${bodyText}</span>
-            `;
-
-            feedTerminalBoxNode.appendChild(rowElement);
-            feedTerminalBoxNode.scrollTop = feedTerminalBoxNode.scrollHeight;
-        }
-
-        // --- OUTBOUND SIGNAL BEAM EMISSION ---
-        function executeBroadcastTransmission() {
-            const textValue = textPayloadInputNode.value.trim();
-            if (!textValue) return;
-
-            // Model raw structural message payload data bundle packaging parameters array maps
-            const packetBundle = {
-                originTabId: 'Station-Node-' + window.name,
-                payloadBody: textValue
-            };
-
-            // Post configuration bundle directly onto local internal browser channel loop instantly
-            SECURE_LOCAL_SPECTRUM_BUS.postMessage(packetBundle);
-
-            // Log output tracking verification variables events inside current interface workspace locally
-            appendFeedLog('TX_BEAM', textValue, '#ffffff');
-            
-            textPayloadInputNode.value = '';
-            textPayloadInputNode.focus();
-        }
-
-        // --- INBOUND CARRIER SIGNAL CAPTURE HOOK ---
-        // Intercept all data transmission loops generated from secondary local window tabs automatically
-        SECURE_LOCAL_SPECTRUM_BUS.onmessage = function(transmissionEvent) {
-            const packetReceived = transmissionEvent.data;
-            
-            // Route structural text parameters out to reader logs terminal feed windows
-            appendFeedLog('RX_SIGNAL', packetReceived.payloadBody, 'var(--accent-cyan)');
-        };
-    </script>
-</body>
-</html>
+        // ======================== HIGH-TECH PERKS SYSTEM ========================
+        const PERKS = {
+            rapid_fire: { name: 'Rapid Fire', cost: 1500, desc: '↑30% fire rate permanently', category: 'weapon', effect: ()=>{ player.rate *= 0.7; } },
+            spread_shot: { name: 'Spread Shot', cost: 5000, desc: 'Fire 3 projectiles at once', category: 'weapon', tempDuration: 12000 },
+            shield_gen: { name: 'Shield Generator', cost: 120, desc: 'Absorb 3 hits', category: 'defense', effect: ()=>{ player.shield = 3; } },
+            laser_cannon: { name: 'Laser Cannon', cost: 2000, desc: '↑Damage output by 50%', category: 'weapon', effect: ()=>{ player.dmg = 1.5; } },
+            time_slow: { name: 'Chrono Matrix', cost: 1800, desc: 'Slow time for 8 sec', category: 'utility', tempDuration: 8000, effect: ()=>{ timeSlowActive = true; } },
+            emp_burst: { name: 'Burst', cost: 1600, desc: 'Stun enemies for 3 sec', category: 'utility', tempDuration: 3000 },
+            auto_shield: { name: 'Auto-Shield', cost: 1400, desc: 'Auto-regen 1 shield/5 sec', category: 'defense', passive: true },
+            overdrive: { name: 'Overdrive', cost: 1090, desc: '↑Speed & fire rate +40%', category: 'combat', tempDuration: 15000, effect: ()=>{ player.speed *= 1.4; player.rate *= 0.6; } },
+            quantum_split: { name: 'Quantum Split', cost: 2190, desc: 'Clone projectiles in flight', category: 'weapon' },
+            targeting_ai: { name: 'Targeting A.I.', cost: 1790, desc: 'Auto-aim + ↑accuracy 300%', category: 'support', passive: true },
+            energy_shield: { name: 'Energy Shield', cost: 1595, desc: 'Reflect 50% of incoming fire', category: 'defense', passive: true },
