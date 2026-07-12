@@ -103,7 +103,7 @@
             targeting_ai: { name: 'Targeting A.I.', cost: 1790, desc: 'Auto-aim + ↑accuracy 300%', category: 'support', passive: true },
             energy_shield: { name: 'Energy Shield', cost: 1595, desc: 'Reflect 50% of incoming fire', category: 'defense', passive: true },
             phase_shift: { name: 'Phase Shift', cost: 1805, desc: 'Become invulnerable for 6 sec', category: 'defense', tempDuration: 6000, effect: ()=>{ player.invul = 360; } },
-```javascript
+
         const cvs = document.getElementById('canvas'); const ctx = cvs.getContext('2d');
         resizeCanvas(); window.addEventListener('resize', resizeCanvas);
         function resizeCanvas(){ const ratio = window.devicePixelRatio || 1; const size = Math.min(1100, Math.max(640, Math.floor(Math.min(window.innerWidth*0.9, 980)))); cvs.width = size * ratio; cvs.height = size * ratio; ctx.scale(ratio, ratio); }
