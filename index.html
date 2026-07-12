@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CommsStation: Automatic P2P Walkie-Talkie</title>
-    <!-- FIX 1: Corrected full library source path to load the P2P connection engine -->
+    <title>CommsStation: Automatic P2P Text Radio</title>
+    <!-- Imports the PeerJS network engine library automatically -->
     <script src="https://unpkg.com"></script>
     <style>
         :root {
@@ -105,46 +105,60 @@
             box-shadow: 0 0 10px rgba(127, 255, 0, 0.3);
         }
 
-        .ptt-container { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px 0; }
-
-        .ptt-button {
-            width: 130px; height: 130px; border-radius: 50%;
-            background: linear-gradient(135deg, #a62b2b, #591313);
-            border: 5px solid #3d0d0d; color: white;
-            font-family: inherit; font-size: 1rem; font-weight: bold; text-transform: uppercase;
-            cursor: pointer; box-shadow: 0 8px 0 #2b0909, 0 15px 20px rgba(0,0,0,0.5);
-            transition: all 0.05s ease; user-select: none; -webkit-user-select: none;
+        /* Messaging Text Row Layout styles */
+        .transmit-box {
+            display: flex;
+            gap: 8px;
         }
 
-        .ptt-button:active, .ptt-button.transmitting {
-            transform: translateY(6px);
-            box-shadow: 0 2px 0 #2b0909, 0 5px 10px rgba(0,0,0,0.5);
-            background: linear-gradient(135deg, #ff3b3b, #991c1c);
+        .transmit-box input {
+            flex: 1;
+            background: #050704;
+            color: var(--neon-glow);
+            border: 1px solid var(--army-green);
+            border-radius: 4px;
+            padding: 12px;
+            font-family: inherit;
+            font-size: 0.9rem;
         }
+        .transmit-box input:focus { outline: none; border-color: var(--neon-glow); }
+        .transmit-box input:disabled { background: #131710; cursor: not-allowed; border-color: #2b3324; color: #3b4532; }
 
-        .ptt-button:disabled {
-            background: #2c2f29; border-color: #1a1c18; color: #555; cursor: not-allowed; box-shadow: none; transform: none;
+        .transmit-btn {
+            background: var(--army-green);
+            color: var(--txt-bright);
+            font-weight: bold;
+            border: 1px solid #637751;
+            padding: 0 20px;
+            cursor: pointer;
+            text-transform: uppercase;
+            font-family: inherit;
+            border-radius: 4px;
         }
+        .transmit-btn:hover:not(:disabled) { background: #5c704a; }
+        .transmit-btn:disabled { background: #2c2f29; color: #555; border-color: #1a1c18; cursor: not-allowed; }
 
         .terminal {
-            background: #050704; border: 1px solid var(--army-green); height: 100px;
-            border-radius: 4px; padding: 10px; overflow-y: auto; font-size: 0.75rem; color: #a4bfa3;
+            background: #050704; border: 1px solid var(--army-green); height: 160px;
+            border-radius: 4px; padding: 10px; overflow-y: auto; font-size: 0.8rem; color: #a4bfa3;
+            line-height: 1.4;
         }
-        .log { margin-bottom: 5px; }
+        .log { margin-bottom: 6px; word-break: break-all; }
     </style>
 </head>
 <body>
 
     <div class="station-container">
         <header>
-            <h1>📡 AUTOMATIC WALKIE-TALKIE</h1>
+            <h1>📡 AUTOMATIC TEXT RADIO</h1>
         </header>
 
         <div class="status-panel">
             <div class="indicator">NET: <div class="dot" id="linkDot"></div> <span id="linkTxt">OFFLINE</span></div>
-            <div class="indicator">MIC: <div class="dot" id="micDot"></div> <span id="micTxt">MUTED</span></div>
+            <div class="indicator">COMMS: <div class="dot" id="commsDot"></div> <span id="commsTxt">STANDBY</span></div>
         </div>
 
+        <!-- Room Selector Board Layer -->
         <div class="deck">
             <h2>Select Station Frequency Room</h2>
             <div class="channel-selector-row">
@@ -154,67 +168,59 @@
             </div>
         </div>
 
-        <div class="deck ptt-container">
-            <button class="ptt-button" id="pttBtn" disabled>HOLD TO<br>TALK</button>
-            <div style="margin-top: 15px; font-size: 0.7rem; color: var(--txt-muted); text-align: center; line-height: 1.3;">
-                Select the same room on both devices to auto-join. Once linked, hold the button or Spacebar to transmit.
+        <!-- Text Input Transmission Panel Frame replaces old circular button -->
+        <div class="deck">
+            <h2>Transmit Signal Payload</h2>
+            <div class="transmit-box">
+                <input type="text" id="textPayloadInput" placeholder="Type transmission packet..." disabled onkeydown="if(event.key==='Enter') sendTextPayload()">
+                <button class="transmit-btn" id="sendBtn" disabled onclick="sendTextPayload()">Beam</button>
             </div>
         </div>
 
+        <!-- Chat Stream Console Logger Display -->
         <div class="terminal" id="activityBox">
-            <div class="log">[SYS] Standing by. Select an active frequency option above to connect.</div>
+            <div class="log" style="color: var(--txt-muted);">[SYS] Standing by. Select an active frequency option above to sync data channels.</div>
         </div>
     </div>
 
-    <audio id="remoteAudioPlayer" autoplay></audio>
-
     <script>
         let peerInstance = null;
-        let localMicStream = null;
-        let microphoneAudioTrack = null;
-        let incomingAudioCallRef = null;
+        let dataConnectionRef = null;
 
-        const pttButton = document.getElementById('pttBtn');
+        const textInputNode = document.getElementById('textPayloadInput');
+        const sendButtonNode = document.getElementById('sendBtn');
         const logTerminal = document.getElementById('activityBox');
         
         const linkDot = document.getElementById('linkDot');
         const linkTxt = document.getElementById('linkTxt');
-        const micDot = document.getElementById('micDot');
-        const micTxt = document.getElementById('micTxt');
+        const commsDot = document.getElementById('commsDot');
+        const commsTxt = document.getElementById('commsTxt');
 
-        function writeLog(tag, info) {
+        function writeLog(tag, info, textHexColor = '#a4bfa3') {
             const line = document.createElement('div');
             line.classList.add('log');
+            line.style.color = textHexColor;
             line.innerHTML = `[${tag}] ${info}`;
             logTerminal.appendChild(line);
             logTerminal.scrollTop = logTerminal.scrollHeight;
         }
 
-        async function getMicrophoneAccess() {
-            try {
-                if (!localMicStream) {
-                    localMicStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-                    microphoneAudioTrack = localMicStream.getAudioTracks()[0];
-                    writeLog('HARDWARE', 'Microphone connection confirmed and armed.');
-                }
-                microphoneAudioTrack.enabled = false;
-                return true;
-            } catch (err) {
-                writeLog('ERROR', 'Mic Access Denied: ' + err.message);
-                alert("Microphone permission is strictly required for walkie-talkie mode!");
-                return false;
-            }
-        }
-
         function disconnectExistingPeerSession() {
-            pttButton.disabled = true;
+            textInputNode.disabled = true;
+            sendButtonNode.disabled = true;
             linkDot.classList.remove('active');
+            commsDot.classList.remove('active');
             linkTxt.textContent = "OFFLINE";
+            commsTxt.textContent = "STANDBY";
             
+            if (dataConnectionRef) {
+                dataConnectionRef.close();
+                dataConnectionRef = null;
+            }
             if (peerInstance) {
                 peerInstance.destroy();
                 peerInstance = null;
-                writeLog('SYS', 'Closed previous session context pipeline.');
+                writeLog('SYS', 'Closed previous radio session context pipelines.', 'var(--txt-muted)');
             }
         }
 
@@ -224,29 +230,28 @@
             document.querySelectorAll('.channel-btn').forEach(btn => btn.classList.remove('selected-channel'));
             buttonElement.classList.add('selected-channel');
 
-            const micArmed = await getMicrophoneAccess();
-            if (!micArmed) return;
-
-            writeLog('NET', `Auto-contacting signaling room: [${selectedRoomId}]...`);
+            writeLog('NET', `Auto-contacting signaling room space: [${selectedRoomId}]...`);
             
-            // FIX 2: Corrected stable STUN network configuration formats
+            // Connect to direct room string targeting standard STUN parameters
             peerInstance = new Peer(selectedRoomId, {
                 config: { iceServers: [{ urls: 'stun:://google.com' }] }
             });
 
             peerInstance.on('open', (id) => {
-                writeLog('SYS', `Channel active. Listening as Master Station Node: ${id}`);
+                writeLog('SYS', `Channel active. Listening as Master Hub: ${id}`);
                 linkDot.classList.add('active');
                 linkTxt.textContent = "LISTENING ON CHANNEL";
-                attemptCallToRemotePeer(selectedRoomId + "-client");
+                
+                // Probe to verify if another client node is online inside the network cluster
+                attemptDataConnection(selectedRoomId + "-client");
             });
 
             peerInstance.on('error', (err) => {
                 if (err.type === 'unavailable-id') {
-                    writeLog('SYS', 'Primary slot taken. Linking to channel room as secondary client...');
-                    // FIX 3: Corrected client fallback STUN connection definitions
+                    writeLog('SYS', 'Primary slot occupied. Routing as secondary station client...');
                     peerInstance = new Peer(selectedRoomId + "-client", {
                         config: { iceServers: [{ urls: 'stun:://google.com' }] }
                     });
                     
                     peerInstance.on('open', () => {
+                        writeLog('SYS', 'Secondary line ready. Intersecting with host node configuration...');
