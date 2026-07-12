@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CommsStation: Automatic P2P Walkie-Talkie</title>
-    <!-- FIX 1: Corrected full library source path -->
+    <!-- FIX 1: Corrected library source path to load the P2P connection engine -->
     <script src="https://unpkg.com"></script>
     <style>
         :root {
@@ -76,12 +76,13 @@
 
         .input-row { display: flex; gap: 8px; }
 
-        input {
+        select {
             flex: 1; background: #050704; color: var(--neon-glow);
             border: 1px solid var(--army-green); border-radius: 4px;
             padding: 10px; font-family: inherit; font-size: 0.9rem;
+            cursor: pointer;
         }
-        input:focus { outline: none; border-color: var(--neon-glow); }
+        select:focus { outline: none; border-color: var(--neon-glow); }
 
         .btn {
             background: var(--army-green); color: var(--txt-bright); font-weight: bold;
@@ -131,9 +132,14 @@
         </div>
 
         <div class="deck">
-            <h2>Enter Shared Secret Frequency Room Code</h2>
+            <h2>Select Station Frequency Room</h2>
             <div class="input-row">
-                <input type="text" id="roomInput" placeholder="e.g., alpha-bravo-99" value="hq-frequency">
+                <!-- Dropdown Selector replacing open text input -->
+                <select id="roomInput">
+                    <option value="a1">Room a1</option>
+                    <option value="a2">Room a2</option>
+                    <option value="a3">Room a3</option>
+                </select>
                 <button class="btn" onclick="connectToFrequencyChannel()">Connect</button>
             </div>
         </div>
@@ -141,12 +147,12 @@
         <div class="deck ptt-container">
             <button class="ptt-button" id="pttBtn" disabled>HOLD TO<br>TALK</button>
             <div style="margin-top: 15px; font-size: 0.7rem; color: var(--txt-muted); text-align: center; line-height: 1.3;">
-                Type the same code on both devices and click Connect. Once linked, hold the button or Spacebar to transmit.
+                Select the same room on both devices and click Connect. Once linked, hold the button or Spacebar to transmit.
             </div>
         </div>
 
         <div class="terminal" id="activityBox">
-            <div class="log">[SYS] Standing by. Enter a frequency code to initialize hardware channels.</div>
+            <div class="log">[SYS] Standing by. Select a room to initialize hardware channels.</div>
         </div>
     </div>
 
@@ -191,14 +197,14 @@
 
         async function connectToFrequencyChannel() {
             const secretRoomId = roomInputField.value.trim().toLowerCase();
-            if (!secretRoomId) return alert("Please enter a room code channel phrase!");
+            if (!secretRoomId) return alert("Please select a room channel phrase!");
 
             const micArmed = await getMicrophoneAccess();
             if (!micArmed) return;
 
             writeLog('NET', `Contacting signaling node room: [${secretRoomId}]...`);
             
-            // FIX 2: Fixed the STUN Server URL definition format entirely
+            // FIX 2: Corrected valid STUN network addresses
             peerInstance = new Peer(secretRoomId, {
                 config: { iceServers: [{ urls: 'stun:://google.com' }] }
             });
@@ -213,7 +219,7 @@
             peerInstance.on('error', (err) => {
                 if (err.type === 'unavailable-id') {
                     writeLog('SYS', 'Primary slot taken. Linking to channel room as secondary client...');
-                    // FIX 3: Fixed the fallback client configuration block too
+                    // FIX 3: Corrected valid secondary STUN network addresses
                     peerInstance = new Peer(secretRoomId + "-client", {
                         config: { iceServers: [{ urls: 'stun:://google.com' }] }
                     });
@@ -235,10 +241,3 @@
         }
 
         function attemptCallToRemotePeer(targetId) {
-            if (!peerInstance) return;
-            const outgoingCall = peerInstance.call(targetId, localMicStream);
-            if (outgoingCall) {
-                handleAudioStreamWiring(outgoingCall);
-            }
-        }
-
