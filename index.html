@@ -3,234 +3,223 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Productivity Dashboard</title>
+    <title>Retro Pixel Art Studio</title>
     <style>
-        :root {
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
-            --accent-color: #38bdf8;
-            --text-color: #f8fafc;
-            --text-muted: #94a3b8;
-        }
-
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
+            background-color: #1a1a24;
+            color: #e2e8f0;
+            font-family: 'Courier New', Courier, monospace;
             margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-
-        .dashboard {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            width: 100%;
-            max-width: 1000px;
-        }
-
-        .card {
-            background-color: var(--card-bg);
-            border-radius: 12px;
-            padding: 24px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
         }
 
-        h2 {
-            margin-top: 0;
-            color: var(--accent-color);
-            font-size: 1.5rem;
-            border-bottom: 2px solid #334155;
-            padding-bottom: 10px;
+        h1 {
+            color: #ff007f;
+            text-shadow: 2px 2px #00f0ff;
+            margin-bottom: 5px;
+            font-size: 2rem;
         }
 
-        /* Timer Styles */
-        .timer-display {
-            font-size: 3.5rem;
-            font-weight: bold;
-            text-align: center;
-            margin: 20px 0;
-            font-family: monospace;
+        .subtitle {
+            color: #a0aec0;
+            margin-bottom: 25px;
+            font-size: 0.9rem;
         }
 
-        .btn-group {
+        .studio-container {
             display: flex;
-            gap: 10px;
+            flex-direction: column;
+            align-items: center;
+            background: #2d2d3a;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border: 3px solid #3f3f56;
         }
 
-        button {
-            flex: 1;
-            background-color: #334155;
-            color: white;
-            border: none;
-            padding: 12px;
+        /* Color Palette Layout */
+        .palette {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            background: #1a1a24;
+            padding: 10px 15px;
+            border-radius: 8px;
+        }
+
+        .color-swatch {
+            width: 32px;
+            height: 32px;
             border-radius: 6px;
             cursor: pointer;
-            font-weight: 600;
-            transition: background 0.2s;
+            border: 2px solid transparent;
+            transition: transform 0.1s, border-color 0.1s;
         }
 
-        button:hover {
-            background-color: #475569;
+        .color-swatch:hover {
+            transform: scale(1.1);
         }
 
-        button.primary {
-            background-color: var(--accent-color);
-            color: #0f172a;
+        .color-swatch.active {
+            border-color: #ffffff;
+            transform: scale(1.05);
+            box-shadow: 0 0 8px rgba(255,255,255,0.5);
         }
 
-        button.primary:hover {
-            background-color: #7dd3fc;
+        /* Art Canvas Pixel Grid Layout */
+        .canvas-grid {
+            display: grid;
+            grid-template-columns: repeat(16, 22px);
+            grid-template-rows: repeat(16, 22px);
+            gap: 1px;
+            background-color: #3f3f56;
+            border: 4px solid #ff007f;
+            box-shadow: 0 0 15px rgba(255, 0, 127, 0.3);
         }
 
-        /* Notes Styles */
-        textarea {
+        .pixel {
+            background-color: #ffffff;
+            cursor: crosshair;
+            transition: background-color 0.05s;
+        }
+
+        .pixel:hover {
+            filter: brightness(0.9);
+        }
+
+        /* Control Panel Operations */
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
             width: 100%;
-            height: 120px;
-            background-color: #0f172a;
-            color: white;
-            border: 1px solid #334155;
+        }
+
+        .btn {
+            flex: 1;
+            background-color: #1a1a24;
+            color: #ffffff;
+            border: 2px solid #00f0ff;
+            padding: 12px;
+            font-family: inherit;
+            font-weight: bold;
+            cursor: pointer;
             border-radius: 6px;
-            padding: 10px;
-            resize: none;
-            box-sizing: border-box;
-            font-size: 0.95rem;
+            transition: all 0.2s;
         }
 
-        textarea:focus {
-            outline: 2px solid var(--accent-color);
+        .btn:hover {
+            background-color: #00f0ff;
+            color: #1a1a24;
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
         }
 
-        /* Quote Styles */
-        .quote-text {
-            font-style: italic;
-            font-size: 1.1rem;
-            line-height: 1.5;
-            margin-bottom: 10px;
+        .btn-clear {
+            border-color: #ff007f;
         }
 
-        .quote-author {
-            color: var(--text-muted);
-            text-align: right;
-            font-weight: 600;
+        .btn-clear:hover {
+            background-color: #ff007f;
+            color: #ffffff;
+            box-shadow: 0 0 10px rgba(255, 0, 127, 0.5);
         }
     </style>
 </head>
 <body>
 
-    <div class="dashboard">
-        <!-- Card 1: Pomodoro Timer -->
-        <div class="card">
-            <h2>⏱️ Focus Timer</h2>
-            <div class="timer-display" id="timer">25:00</div>
-            <div class="btn-group">
-                <button class="primary" id="startBtn" onclick="toggleTimer()">Start</button>
-                <button onclick="resetTimer()">Reset</button>
-            </div>
+    <h1>PIXEL CRAFT</h1>
+    <div class="subtitle">Click and drag cursor across grid spaces to paint</div>
+
+    <div class="studio-container">
+        <!-- Palette Colors Picker selection board -->
+        <div class="palette" id="colorPalette">
+            <div class="color-swatch active" style="background-color: #ff007f;" data-color="#ff007f"></div>
+            <div class="color-swatch" style="background-color: #00f0ff;" data-color="#00f0ff"></div>
+            <div class="color-swatch" style="background-color: #ffbe0b;" data-color="#ffbe0b"></div>
+            <div class="color-swatch" style="background-color: #00ff66;" data-color="#00ff66"></div>
+            <div class="color-swatch" style="background-color: #7000ff;" data-color="#7000ff"></div>
+            <div class="color-swatch" style="background-color: #1a1a24;" data-color="#1a1a24"></div>
+            <div class="color-swatch" style="background-color: #ffffff;" data-color="#ffffff"></div>
         </div>
 
-        <!-- Card 2: Quick Scratchpad -->
-        <div class="card">
-            <h2>📝 Quick Notes</h2>
-            <textarea id="notesArea" placeholder="Type your thoughts here... They automatically save!" oninput="saveNotes()"></textarea>
-        </div>
+        <!-- The Paint Canvas Matrix Grid Area -->
+        <div class="canvas-grid" id="pixelCanvas"></div>
 
-        <!-- Card 3: Motivation Engine -->
-        <div class="card">
-            <h2>💡 Daily Motivation</h2>
-            <div>
-                <div class="quote-text" id="quote">"The best way to predict the future is to create it."</div>
-                <div class="quote-author" id="author">- Peter Drucker</div>
-            </div>
-            <button style="margin-top: 20px;" onclick="generateQuote()">New Quote</button>
+        <!-- System Reset Cleansing Commands Row -->
+        <div class="controls">
+            <button class="btn btn-clear" onclick="clearCanvas()">Reset Grid</button>
+            <button class="btn" onclick="fillCanvas()">Fill Grid</button>
         </div>
     </div>
 
     <script>
-        // --- TIMER LOGIC ---
-        let timeLeft = 25 * 60;
-        let timerId = null;
+        const canvas = document.getElementById('pixelCanvas');
+        const palette = document.getElementById('colorPalette');
+        
+        let currentSelectedColor = '#ff007f';
+        let isMouseDownGlobalState = false;
 
-        function updateTimerDisplay() {
-            const minutes = Math.floor(timeLeft / 60);
-            const seconds = timeLeft % 60;
-            document.getElementById('timer').textContent = 
-                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-        }
+        // Initialize Global Drag Event Tracking Listeners 
+        document.body.onmousedown = () => (isMouseDownGlobalState = true);
+        document.body.onmouseup = () => (isMouseDownGlobalState = false);
 
-        function toggleTimer() {
-            const startBtn = document.getElementById('startBtn');
-            if (timerId === null) {
-                timerId = setInterval(() => {
-                    if (timeLeft > 0) {
-                        timeLeft--;
-                        updateTimerDisplay();
-                    } else {
-                        clearInterval(timerId);
-                        timerId = null;
-                        alert("Time's up! Take a short break.");
-                        timeLeft = 25 * 60;
-                        updateTimerDisplay();
-                        startBtn.textContent = 'Start';
+        // Render Canvas Grid Matrix Map (16x16 Node Elements)
+        function createGridElements() {
+            for (let i = 0; i < 256; i++) {
+                const pixelNode = document.createElement('div');
+                pixelNode.classList.add('pixel');
+                
+                // Mouse Trigger Application Functions
+                pixelNode.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    pixelNode.style.backgroundColor = currentSelectedColor;
+                });
+                
+                pixelNode.addEventListener('mouseenter', () => {
+                    if (isMouseDownGlobalState) {
+                        pixelNode.style.backgroundColor = currentSelectedColor;
                     }
-                }, 1000);
-                startBtn.textContent = 'Pause';
-                startBtn.style.backgroundColor = '#f43f5e';
-                startBtn.style.color = 'white';
-            } else {
-                clearInterval(timerId);
-                timerId = null;
-                startBtn.textContent = 'Start';
-                startBtn.style.backgroundColor = 'var(--accent-color)';
-                startBtn.style.color = '#0f172a';
+                });
+
+                canvas.appendChild(pixelNode);
             }
         }
 
-        function resetTimer() {
-            clearInterval(timerId);
-            timerId = null;
-            timeLeft = 25 * 60;
-            updateTimerDisplay();
-            const startBtn = document.getElementById('startBtn');
-            startBtn.textContent = 'Start';
-            startBtn.style.backgroundColor = 'var(--accent-color)';
-            startBtn.style.color = '#0f172a';
-        }
-
-        // --- LOCAL STORAGE NOTES LOGIC ---
-        window.onload = function() {
-            const savedNotes = localStorage.getItem('dashboard_notes');
-            if (savedNotes) {
-                document.getElementById('notesArea').value = savedNotes;
+        // Palette Activation Selection Processing Event Routing 
+        palette.addEventListener('click', (event) => {
+            if (event.target.classList.contains('color-swatch')) {
+                // Clear active styling indicators globally across element lists
+                document.querySelectorAll('.color-swatch').forEach(swatchItem => {
+                    swatchItem.classList.remove('active');
+                });
+                
+                // Establish current workspace paint assignments
+                event.target.classList.add('active');
+                currentSelectedColor = event.target.getAttribute('data-color');
             }
-        };
+        });
 
-        function saveNotes() {
-            const notesText = document.getElementById('notesArea').value;
-            localStorage.setItem('dashboard_notes', notesText);
+        // Clear Canvas Matrix Nodes back to initial base structural assignments
+        function clearCanvas() {
+            document.querySelectorAll('.pixel').forEach(pixelNode => {
+                pixelNode.style.backgroundColor = '#ffffff';
+            });
         }
 
-        // --- RANDOM QUOTE LOGIC ---
-        const quotes = [
-            { text: "The best way to predict the future is to create it.", author: "Peter Drucker" },
-            { text: "Small daily improvements over time lead to stunning results.", author: "Robin Sharma" },
-            { text: "Your talent determines what you can do. Your motivation determines how much you are willing to do.", author: "Lou Holtz" },
-            { text: "Simplicity is the ultimate sophistication.", author: "Leonardo da Vinci" },
-            { text: "Action is the foundational key to all success.", author: "Pablo Picasso" }
-        ];
-
-        function generateQuote() {
-            const randomIndex = Math.floor(Math.random() * quotes.length);
-            document.getElementById('quote').textContent = `"${quotes[randomIndex].text}"`;
-            document.getElementById('author').textContent = `- ${quotes[randomIndex].author}`;
+        // Fill complete active canvas grid layout using target selection context
+        function fillCanvas() {
+            document.querySelectorAll('.pixel').forEach(pixelNode => {
+                pixelNode.style.backgroundColor = currentSelectedColor;
+            });
         }
+
+        // Run structural composition initialization processes
+        createGridElements();
     </script>
 </body>
 </html>
