@@ -3,311 +3,254 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neon Swing: Overdrive</title>
+    <title>Tower Defense Tycoon Nexus</title>
     <style>
         :root {
-            --bg: #040209;
-            --surface: #0c0817;
-            --accent: #00f0ff;
-            --magenta: #ff0055;
-            --gold: #ffb700;
-            --success: #00ff66;
-            --border: #1a1235;
+            --bg: #05070f;
+            --panel: #0d1122;
+            --panel-light: #161e38;
+            --accent: #38bdf8;
+            --success: #10b981;
+            --danger: #ef4444;
+            --gold: #eab308;
+            --purple: #a855f7;
+            --border: #1e294b;
         }
 
         body {
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            font-family: 'Segoe UI', system-ui, sans-serif;
             background-color: var(--bg);
-            color: #f0f3ff;
+            color: #f8fafc;
             margin: 0;
             padding: 15px;
             display: flex;
             flex-direction: column;
             align-items: center;
             user-select: none;
-            overflow: hidden;
+            overflow-x: hidden;
         }
 
-        .hud-top {
+        .header-layout {
             display: flex;
             justify-content: space-between;
-            width: 1000px;
+            width: 1050px;
             align-items: center;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
 
-        h1 { 
-            margin: 0; 
-            font-size: 26px; 
-            font-weight: 900; 
-            color: var(--magenta); 
-            letter-spacing: 2px;
-            text-shadow: 0 0 12px rgba(255, 0, 85, 0.6);
-        }
-
-        .stats-wrap { display: flex; gap: 10px; }
+        h2 { margin: 0; color: var(--accent); font-size: 24px; font-weight: 800; letter-spacing: 0.5px; }
+        
+        .dashboard { display: flex; gap: 10px; }
         .hud-card {
-            background: var(--surface);
+            background: var(--panel);
             padding: 8px 16px;
             border-radius: 8px;
             border: 1px solid var(--border);
             font-weight: 700;
-            font-size: 15px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            font-size: 14px;
         }
-        .distance-card { border-color: var(--accent); color: var(--accent); }
-        .score-card { border-color: var(--gold); color: var(--gold); }
+        .gold-card { border-color: var(--gold); color: var(--gold); }
+        .hp-card { border-color: var(--danger); color: var(--danger); }
+
+        /* Massive Tycoon Upgrade Grid Matrix */
+        .upgrade-matrix-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            width: 1050px;
+            margin-bottom: 12px;
+        }
+
+        .upgrade-section {
+            background: var(--panel);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .section-title {
+            font-size: 12px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding-bottom: 4px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 2px;
+        }
+
+        .up-node-btn {
+            background: var(--panel-light);
+            border: 1px solid var(--border);
+            color: #f8fafc;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.15s ease;
+        }
+        .up-node-btn:hover { background: var(--border); border-color: var(--accent); }
+        .up-node-btn span { color: var(--gold); }
+        .up-node-btn em { font-style: normal; color: #94a3b8; }
 
         #game-canvas {
-            background-color: #06040c;
-            border: 2px solid var(--border);
-            border-radius: 14px;
-            box-shadow: 0 25px 60px rgba(0,0,0,0.8);
-            cursor: pointer;
+            background-color: #030408;
+            border: 3px solid var(--border);
+            border-radius: 16px;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.8);
         }
 
-        .controls-info {
-            width: 1000px;
-            margin-top: 10px;
-            font-size: 12px;
-            color: #4e4475;
+        .footer-hud {
+            width: 1050px;
+            margin-top: 8px;
+            font-size: 11px;
+            color: #4b526d;
             font-family: monospace;
             text-align: center;
-            line-height: 1.5;
         }
-        .controls-info strong { color: var(--accent); }
     </style>
 </head>
 <body>
 
-    <div class="hud-top">
-        <h1>NEON SWING // OVERDRIVE</h1>
-        <div class="stats-wrap">
-            <div class="hud-card score-card">RINGS GATHERED: <span id="rings-lbl">0</span></div>
-            <div class="hud-card distance-card">DISTANCE: <span id="dist-lbl">0</span>m</div>
+    <div class="header-layout">
+        <h2>DEFENSE MATRIX TYCOON // TIER PHASES</h2>
+        <div class="dashboard">
+            <div class="hud-card" style="border-color: var(--purple); color: var(--purple);">WAVE: <span id="wave-lbl">1</span></div>
+            <div class="hud-card gold-card">GOLD REVENUE: $<span id="gold-lbl">150</span></div>
+            <div class="hud-card hp-card">CORE SHIELD: <span id="hp-lbl">100</span>%</div>
         </div>
     </div>
 
-    <!-- Main High-Performance Arcade Viewport Canvas -->
-    <canvas id="game-canvas" width="1000" height="500"></canvas>
+    <!-- Massive 100+ Total Combination Tier Upgrade Matrix Panel Grid -->
+    <div class="upgrade-matrix-grid">
+        
+        <!-- SECTION 1: TYCOON INDUSTRIAL SYSTEM -->
+        <div class="upgrade-section" style="border-left: 4px solid var(--gold);">
+            <div class="section-title" style="color: var(--gold);">🏭 Industrial Automated Generator</div>
+            <button class="up-node-btn" onclick="purchaseNode('mineRate')">Mine Drill Yield (Lvl <em id="mineRate-lvl">1</em>) <span id="mineRate-cost">$50</span></button>
+            <button class="up-node-btn" onclick="purchaseNode('mineSpeed')">Drill Processing Speed (Lvl <em id="mineSpeed-lvl">1</em>) <span id="mineSpeed-cost">$75</span></button>
+            <button class="up-node-btn" onclick="purchaseNode('interest')">Crypto Investment Bonds (Lvl <em id="interest-lvl">1</em>) <span id="interest-cost">$150</span></button>
+        </div>
+
+        <!-- SECTION 2: DEFENSE WEAPONS PLATFORMS -->
+        <div class="upgrade-section" style="border-left: 4px solid var(--accent);">
+            <div class="section-title" style="color: var(--accent);">⚔️ Anti-Creep Gun Batteries</div>
+            <button class="up-node-btn" onclick="purchaseNode('gunDmg')">Laser Core Power (Lvl <em id="gunDmg-lvl">1</em>) <span id="gunDmg-cost">$60</span></button>
+            <button class="up-node-btn" onclick="purchaseNode('gunFr')">Weapon Cycle Speed (Lvl <em id="gunFr-lvl">1</em>) <span id="gunFr-cost">$90</span></button>
+            <button class="up-node-btn" onclick="purchaseNode('gunRange')">Radar Scanner Range (Lvl <em id="gunRange-lvl">1</em>) <span id="gunRange-cost">$120</span></button>
+        </div>
+
+        <!-- SECTION 3: ADVANCED MATRIX CORE MODS -->
+        <div class="upgrade-section" style="border-left: 4px solid var(--purple);">
+            <div class="section-title" style="color: var(--purple);">🔮 Quantum Core Modifiers</div>
+            <button class="up-node-btn" onclick="purchaseNode('bulletArray')">Multi-Shot Spread Count (Lvl <em id="bulletArray-lvl">1</em>) <span id="bulletArray-cost">$250</span></button>
+            <button class="up-node-btn" onclick="purchaseNode('coreRepair')">Automated Nanite Repair <span id="coreRepair-cost">$100</span></button>
+            <button class="up-node-btn" onclick="purchaseNode('bounty')">Scrap Scrap Value Bonus (Lvl <em id="bounty-lvl">1</em>) <span id="bounty-cost">$80</span></button>
+        </div>
+
+    </div>
+
+    <!-- Main Strategy Defense Viewport Field -->
+    <canvas id="game-canvas" width="1050" height="400"></canvas>
     
-    <div class="controls-info">
-        <strong>GRAVITY GRAPPLER SYSTEM CONNECTED:</strong> [Click & Hold Left Mouse Button] on Green Anchors to attach tether wire and swing! <br>
-        Release mouse to break line and launch yourself forward. Boost through <strong>Cyan Speed Rings</strong> to gain momentum. Avoid falling into the grid void!
+    <div class="footer-hud">
+        UPGRADE ENGINE METRICS STACK EXPONENTIALLY // AUTOMATED GENERATORS TICK IN BACKGROUND LOOPS CONTINUOUSLY
     </div>
 
 <script>
     const canvas = document.getElementById('game-canvas');
     const ctx = canvas.getContext('2d');
 
-    // Global Physics Settings
-    const GRAVITY = 0.28;
-    const FRICTION = 0.992;
-
-    // Game Core States
-    let distanceTraveled = 0;
-    let ringsCollected = 0;
+    // Progression Tycoon variables
+    let gold = 150;
+    let baseHp = 100;
+    let wave = 1;
     let gameOver = false;
     let frameCount = 0;
-    let screenShake = 0;
-    let cameraX = 0;
 
-    // Player Object Node
-    let player = {
-        x: 150, y: 250,
-        vx: 6, vy: 0,
-        radius: 12,
-        color: '#ff0055',
-        trail: []
+    // Defense turret asset states
+    let turret = { x: 950, y: 200, radius: 24, color: '#38bdf8', lastShot: 0 };
+
+    // Upgrade configuration database dictionaries
+    let upgradeLevels = {
+        mineRate: 1, mineSpeed: 1, interest: 1,
+        gunDmg: 1, gunFr: 1, gunRange: 1,
+        bulletArray: 1, bounty: 1
     };
 
-    // Hook Attachment Properties
-    let hook = {
-        x: 0, y: 0,
-        attached: false,
-        length: 0,
-        targetAnchor: null
+    let upgradeCosts = {
+        mineRate: 50, mineSpeed: 75, interest: 150,
+        gunDmg: 60, gunFr: 90, gunRange: 120,
+        bulletArray: 250, bounty: 80
     };
 
-    // Dynamic Entity Collections
-    let anchors = [];
-    let speedRings = [];
-    let buildings = [];
-    let particles = [];
+    // Tracking arrays
+    let enemies = [];
+    let lasers = [];
+    let floatingTexts = [];
 
-    // Mouse Tracking Mechanics
-    let isMouseDown = false;
-    let mouseX = 0;
-    let mouseY = 0;
-
-    canvas.addEventListener('mousedown', (e) => {
-        if (gameOver) { resetGame(); return; }
-        isMouseDown = true;
-        attemptGrapple();
-    });
-
-    canvas.addEventListener('mouseup', () => {
-        isMouseDown = false;
-        hook.attached = false;
-        hook.targetAnchor = null;
-    });
-
-    canvas.addEventListener('mousemove', (e) => {
-        const rect = canvas.getBoundingClientRect();
-        mouseX = e.clientX - rect.left + cameraX;
-        mouseY = e.clientY - rect.top;
-    });
-
-    function resetGame() {
-        distanceTraveled = 0;
-        ringsCollected = 0;
-        gameOver = false;
-        cameraX = 0;
-        player.x = 150; player.y = 250;
-        player.vx = 6; player.vy = 0;
-        player.trail = [];
-        hook.attached = false;
-        hook.targetAnchor = null;
-        anchors = [];
-        speedRings = [];
-        buildings = [];
-        particles = [];
-        
-        // Populate initial terrain chunks
-        for(let i=0; i<3; i++) generateNextTerrainChunk(i * 400);
-        document.getElementById('rings-lbl').textContent = 0;
+    function spawnFloatingText(x, y, str, color) {
+        floatingTexts.push({ x, y, str, color, alpha: 1 });
     }
 
-    function attemptGrapple() {
-        let closestAnchor = null;
-        let minDist = 180; // Maximum wire attachment tether distance
-
-        anchors.forEach(a => {
-            let dist = Math.hypot(mouseX - a.x, mouseY - a.y);
-            if (dist < minDist) {
-                minDist = dist;
-                closestAnchor = a;
-            }
-        });
-
-        if (closestAnchor) {
-            hook.x = closestAnchor.x;
-            hook.y = closestAnchor.y;
-            hook.attached = true;
-            hook.length = Math.hypot(player.x - hook.x, player.y - hook.y);
-            hook.targetAnchor = closestAnchor;
-            screenShake = 3;
-        }
-    }
-
-    function generateNextTerrainChunk(startX) {
-        // Generate procedural background cyberpunk structures
-        buildings.push({
-            x: startX,
-            w: Math.random() * 150 + 120,
-            h: Math.random() * 200 + 150,
-            color: '#0d0a21'
-        });
-
-        // Generate green anchor nodes
-        anchors.push({
-            x: startX + Math.random() * 200 + 100,
-            y: Math.random() * 120 + 60
-        });
-
-        // Generate cyan boost loop points
-        if (Math.random() > 0.3) {
-            speedRings.push({
-                x: startX + Math.random() * 200 + 100,
-                y: Math.random() * 150 + 200,
-                radius: 24,
-                active: true
-            });
-        }
-    }
-
-    function createBurstEffect(x, y, color) {
-        for (let i = 0; i < 10; i++) {
-            particles.push({
-                x, y,
-                vx: (Math.random() * 2 - 1) * 5,
-                vy: (Math.random() * 2 - 1) * 5,
-                radius: Math.random() * 3 + 1,
-                alpha: 1,
-                color
-            });
-        }
-    }
-
-    function updatePhysics() {
+    // --- TYCOON REVENUE ENGINE (Click/Auto tick integrations) ---
+    function triggerAutomatedTycoonPayout() {
         if (gameOver) return;
-        frameCount++;
+        
+        let baselinePayout = 5 + (upgradeLevels.mineRate * 8);
+        let bonusMultiplier = 1 + (upgradeLevels.interest * 0.15);
+        let finalPayout = Math.floor(baselinePayout * bonusMultiplier);
 
-        // Decay screen shake
-        if (screenShake > 0) screenShake *= 0.9;
+        gold += finalPayout;
+        document.getElementById('gold-lbl').textContent = gold;
+        spawnFloatingText(turret.x, turret.y - 30, `+$${finalPayout}`, 'var(--gold)');
+        
+        // Queue next variable idle payout cycle sequence loop
+        let delay = Math.max(200, 2000 - (upgradeLevels.mineSpeed * 150));
+        setTimeout(triggerAutomatedTycoonPayout, delay);
+    }
 
-        // Apply background scrolling acceleration parameters
-        if (player.x > cameraX + 300) {
-            cameraX = player.x - 300;
-        }
+    // --- PURCHASE HANDLER ---
+    window.purchaseNode = function(type) {
+        if (gameOver) return;
 
-        // Keep distance score synchronized
-        distanceTraveled = Math.max(distanceTraveled, Math.floor(player.x / 10));
-        document.getElementById('dist-lbl').textContent = distanceTraveled;
-
-        // Generate endless content ahead of the camera tracking window
-        if (buildings.length === 0 || buildings[buildings.length - 1].x < cameraX + canvas.width + 400) {
-            let nextX = buildings.length > 0 ? buildings[buildings.length - 1].x + 350 : 0;
-            generateNextTerrainChunk(nextX);
-        }
-
-        // Clean up out of bound objects behind the scene camera viewport
-        buildings = buildings.filter(b => b.x + b.w > cameraX - 200);
-        anchors = anchors.filter(a => a.x > cameraX - 200);
-        speedRings = speedRings.filter(s => s.x > cameraX - 200);
-
-        // --- PENDULUM CONSTRAINTS MECHANICS ENGINE ---
-        if (hook.attached) {
-            // Apply pendulum rope gravity swings calculations
-            player.vy += GRAVITY;
-            player.x += player.vx;
-            player.y += player.vy;
-
-            let dx = player.x - hook.x;
-            let dy = player.y - hook.y;
-            let currentDist = Math.hypot(dx, dy);
-
-            if (currentDist > hook.length) {
-                // Constraint projection normalization vectors
-                let angle = Math.atan2(dy, dx);
-                player.x = hook.x + Math.cos(angle) * hook.length;
-                player.y = hook.y + Math.sin(angle) * hook.length;
-
-                // Calculate angular tension forces pulling normal relative speeds
-                let velDotRope = (player.vx * dx + player.vy * dy) / currentDist;
-                player.vx -= (velDotRope * dx) / currentDist;
-                player.vy -= (velDotRope * dy) / currentDist;
+        if (type === 'coreRepair') {
+            if (gold >= 100) {
+                gold -= 100;
+                baseHp = Math.min(100, baseHp + 25);
+                document.getElementById('hp-lbl').textContent = baseHp;
+                document.getElementById('gold-lbl').textContent = gold;
+                spawnFloatingText(turret.x, turret.y - 30, `+25 Core Armor`, 'var(--success)');
             }
-        } else {
-            // Standard parabolic free-fall flight routing path mapping
-            player.vy += GRAVITY;
-            player.vx *= FRICTION;
-            player.vy *= FRICTION;
-            
-            // Maintain absolute fallback constant velocity speeds
-            if (player.vx < 3) player.vx = 3;
-
-            player.x += player.vx;
-            player.y += player.vy;
+            return;
         }
 
-        // Generate trailing paths for motion blur speed effects
-        player.trail.push({ x: player.x, y: player.y });
-        if (player.trail.length > 8) player.trail.shift();
+        let cost = upgradeCosts[type];
+        if (gold >= cost) {
+            gold -= cost;
+            upgradeLevels[type]++;
+            
+            // Adjust scaling factors exponentially
+            upgradeCosts[type] = Math.floor(cost * 1.6);
+            
+            // Re-render display labels
+            document.getElementById(`${type}-lvl`).textContent = upgradeLevels[type];
+            document.getElementById(`${type}-cost`).textContent = `$${upgradeCosts[type]}`;
+            document.getElementById('gold-lbl').textContent = gold;
+            
+            spawnFloatingText(turret.x, turret.y - 30, `UPGRADED`, 'var(--accent)');
+        }
+    };
 
-        // --- SPEED BOOSTERS INTERSECTION MANAGEMENT ---
-        speedRings.forEach(ring => {
-            if (ring.active) {
-                let distToRing = Math.hypot(player.x - ring.x, player.y - ring.y);
-                if (distToRing < player.radius + ring.radius) {
-                    ring.active = false;
+    function handleWeaponFireSystem() {
+        let delay = Math.max(6, 40 - (upgradeLevels.gunFr * 3));
+        if (frameCount - turret.lastShot > delay) {
+            
+            // Look for closest creeping enemy in range limits
+            let target = null;
