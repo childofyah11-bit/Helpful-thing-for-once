@@ -3,241 +3,288 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cosmic Gravity Sandbox</title>
+    <title>SignalStream: Morse Audio Academy</title>
     <style>
+        :root {
+            --bg-dark: #070a13;
+            --panel-bg: #111625;
+            --accent-neon: #00ffcc;
+            --accent-orange: #ff9f43;
+            --text-main: #e1e6f0;
+            --text-dim: #6272a4;
+        }
+
         body {
             margin: 0;
-            overflow: hidden;
-            background-color: #03030c;
-            color: #eceff1;
+            padding: 20px;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
             font-family: 'Segoe UI', system-ui, sans-serif;
-            user-select: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
         }
 
-        #canvas {
-            display: block;
-            width: 100vw;
-            height: 100vh;
-            cursor: crosshair;
+        .academy-container {
+            width: 100%;
+            max-width: 800px;
+            background: var(--panel-bg);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+            border: 1px solid #1e2538;
         }
 
-        /* Information overlay setup container HUD panel */
-        .hud-overlay {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background: rgba(13, 13, 25, 0.85);
-            padding: 18px;
-            border-radius: 8px;
-            border: 1px solid #2a2b45;
-            pointer-events: none;
-            max-width: 280px;
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 1px solid #1e2538;
+            padding-bottom: 20px;
         }
 
         h1 {
-            margin: 0 0 6px 0;
-            font-size: 1.15rem;
-            letter-spacing: 1px;
-            color: #4fc3f7;
+            margin: 0;
+            font-size: 1.8rem;
+            letter-spacing: 2px;
+            color: var(--accent-neon);
             text-transform: uppercase;
         }
 
-        .instruction {
-            font-size: 0.8rem;
-            color: #90a4ae;
-            line-height: 1.4;
-            margin-bottom: 12px;
+        .subtitle {
+            color: var(--text-dim);
+            font-size: 0.9rem;
+            margin-top: 5px;
         }
 
-        .metric {
-            font-size: 0.85rem;
+        .grid-layout {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+        }
+
+        .panel {
+            background: rgba(7, 10, 19, 0.5);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #1a2136;
+        }
+
+        h2 {
+            margin-top: 0;
+            font-size: 1.1rem;
+            color: var(--accent-orange);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Translator Styles */
+        textarea {
+            width: 100%;
+            height: 80px;
+            background: #070a13;
+            color: #fff;
+            border: 1px solid #25304e;
+            border-radius: 6px;
+            padding: 12px;
+            box-sizing: border-box;
+            resize: none;
+            font-family: inherit;
+            font-size: 1rem;
+        }
+
+        textarea:focus {
+            outline: 1px solid var(--accent-neon);
+        }
+
+        .output-box {
+            background: #04060c;
+            min-height: 50px;
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 15px;
             font-family: monospace;
-            color: #00e676;
-            margin-top: 4px;
+            font-size: 1.3rem;
+            letter-spacing: 3px;
+            color: var(--accent-neon);
+            word-wrap: break-word;
         }
 
-        /* Configuration utility modifier trigger container */
-        .control-shelf {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
+        /* Signal Key Styles */
+        .tap-zone {
+            height: 120px;
+            background: #1a2136;
+            border: 2px dashed var(--accent-neon);
+            border-radius: 8px;
             display: flex;
-            gap: 10px;
-        }
-
-        .btn {
-            background: #1c1c30;
-            color: white;
-            border: 1px solid #4fc3f7;
-            padding: 8px 16px;
-            border-radius: 4px;
+            justify-content: center;
+            align-items: center;
             cursor: pointer;
-            font-size: 0.8rem;
+            user-select: none;
             font-weight: bold;
-            transition: all 0.2s;
-            pointer-events: auto;
+            color: var(--accent-neon);
+            transition: background 0.1s;
         }
 
-        .btn:hover {
-            background: #4fc3f7;
-            color: #03030c;
-            box-shadow: 0 0 12px rgba(79, 195, 247, 0.4);
+        .tap-zone:active, .tap-zone.active {
+            background: rgba(0, 255, 204, 0.15);
+        }
+
+        /* Interactive Buttons */
+        .action-btn {
+            width: 100%;
+            background: var(--accent-neon);
+            color: #070a13;
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: opacity 0.2s;
+        }
+
+        .action-btn:hover {
+            opacity: 0.9;
+        }
+
+        .live-stream-signal {
+            font-family: monospace;
+            font-size: 1.5rem;
+            text-align: center;
+            margin-top: 15px;
+            color: #fff;
+            min-height: 30px;
         }
     </style>
 </head>
 <body>
 
-    <!-- Target Engine Context Node Matrix Canvas Viewport Frame Layer -->
-    <canvas id="canvas"></canvas>
+    <div class="academy-container">
+        <header>
+            <h1>🎚️ SignalStream</h1>
+            <div class="subtitle">Audio Frequency Morse Code Encoder & Tap Trainer</div>
+        </header>
 
-    <!-- Information Layer Monitoring Viewport -->
-    <div class="hud-overlay">
-        <h1>Gravity Sandbox</h1>
-        <div class="instruction">Click and drag cursor across empty space to aim and launch custom orbital masses.</div>
-        <div class="metric">Active Planetesimals: <span id="planetCount">0</span></div>
-    </div>
+        <div class="grid-layout">
+            <!-- Mode 1: Text-to-Audio Morse Encoder -->
+            <div class="panel">
+                <h2>Text-to-Signal Generator</h2>
+                <textarea id="textInput" placeholder="Type a message to generate audio signals..."></textarea>
+                <div class="output-box" id="morseOutput">... --- ...</div>
+                <button class="action-btn" onclick="playCurrentMorseSequence()">🔊 Broadcast Audio Signal</button>
+            </div>
 
-    <!-- Interface operations reset bar block -->
-    <div class="control-shelf">
-        <button class="btn" onclick="clearPlanets()">Collapse Universe</button>
+            <!-- Mode 2: Manual Hardware Oscillator Keyer -->
+            <div class="panel">
+                <h2>Live Signal Keyer Academy</h2>
+                <div class="subtitle" style="margin-bottom: 10px;">Tap the pad below or press/hold your Spacebar to generate live audio tones.</div>
+                <div class="tap-zone" id="tapKeyNode">CLICK / HOLD OR SPACEBAR</div>
+                <div class="live-stream-signal" id="liveStreamText"></div>
+            </div>
+        </div>
     </div>
 
     <script>
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
-        const countMetricDisplayNode = document.getElementById('planetCount');
-
-        // Physics constants Configuration parameters
-        const G_GRAVITATIONAL_CONSTANT = 0.15;
-        const TIME_STEP_FACTOR = 1;
-
-        let canvasWidth = canvas.width = window.innerWidth;
-        let canvasHeight = canvas.height = window.innerHeight;
-
-        let cosmicBodiesList = [];
-        let interactionState = { isDragging: false, startX: 0, startY: 0, currentX: 0, currentY: 0 };
-
-        // Central Anchor Massive Node Body Structure Definition Properties
-        const StarSunAnchorNode = {
-            x: canvasWidth / 2,
-            y: canvasHeight / 2,
-            mass: 12000,
-            radius: 24,
-            color: '#ffb300'
+        // Universal Morse Matrix Mapping
+        const MORSE_DICTIONARY = {
+            'A': '.-',    'B': '-...',  'C': '-.-.',  'D': '-..',   'E': '.',
+            'F': '..-.',  'G': '--.',   'H': '....',  'I': '..',    'J': '.---',
+            'K': '-.-',   'L': '.-..',  'M': '--',    'N': '-.',    'O': '---',
+            'P': '.--.',  'Q': '--.-',  'R': '.-.',   'S': '...',   'T': '-',
+            'U': '..-',   'V': '...-',  'W': '.--',   'X': '-..-',  'Y': '-.--',
+            'Z': '--..',  '1': '.----', '2': '..---', '3': '...--', '4': '....-',
+            '5': '.....', '6': '-....', '7': '--...', '8': '---..', '9': '----.',
+            '0': '-----', ' ': '/'
         };
 
-        // Screen geometry window adjustments tracking loop operations routing handles
-        window.addEventListener('resize', () => {
-            canvasWidth = canvas.width = window.innerWidth;
-            canvasHeight = canvas.height = window.innerHeight;
-            StarSunAnchorNode.x = canvasWidth / 2;
-            StarSunAnchorNode.y = canvasHeight / 2;
-        });
+        // Web Audio Browser Hardware Audio Node Management Engine
+        let webAudioContextInstance = null;
+        let activeOscillatorNode = null;
+        let activeGainControlNode = null;
 
-        // Interactive Viewport Mouse Handling Event Trigger Actions Listener Methods
-        canvas.addEventListener('mousedown', (e) => {
-            interactionState.startX = e.clientX;
-            interactionState.startY = e.clientY;
-            interactionState.currentX = e.clientX;
-            interactionState.currentY = e.clientY;
-            interactionState.isDragging = true;
-        });
-
-        canvas.addEventListener('mousemove', (e) => {
-            if (interactionState.isDragging) {
-                interactionState.currentX = e.clientX;
-                interactionState.currentY = e.clientY;
+        function initializeAudioHardwareContext() {
+            if (!webAudioContextInstance) {
+                webAudioContextInstance = new (window.AudioContext || window.webkitAudioContext)();
             }
-        });
-
-        canvas.addEventListener('mouseup', (e) => {
-            if (interactionState.isDragging) {
-                interactionState.isDragging = false;
-
-                // Slingshot physics calculation vector velocity metrics definition
-                const deltaX = interactionState.startX - e.clientX;
-                const deltaY = interactionState.startY - e.clientY;
-                const launchingVelocityScaleFactor = 0.08;
-
-                // Generate structural planet mass parameters instantiation data package array structure mapping
-                cosmicBodiesList.push({
-                    x: interactionState.startX,
-                    y: interactionState.startY,
-                    vx: deltaX * launchingVelocityScaleFactor,
-                    vy: deltaY * launchingVelocityScaleFactor,
-                    mass: 10 + Math.random() * 40,
-                    radius: 4 + Math.random() * 5,
-                    color: `hsl(${Math.random() * 360}, 85%, 65%)`,
-                    pathHistoryTraceLogs: []
-                });
-            }
-        });
-
-        // Wipe collection array properties reset values parameters configuration data references
-        function clearPlanets() {
-            cosmicBodiesList = [];
         }
 
-        // Processing mathematical calculations logic tick framing sequence loops runtime operations execution handler
-        function enginePhysicsLoopUpdateFrameSequence() {
-            // Draw background viewport trace shadows layers frame clear adjustments masking
-            ctx.fillStyle = 'rgba(3, 3, 12, 0.25)';
-            ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+        function triggerToneStart() {
+            initializeAudioHardwareContext();
+            if (activeOscillatorNode) return; // Tone is already running
 
-            // Render Central Star Core Node structural details asset parameters map
-            ctx.beginPath();
-            ctx.arc(StarSunAnchorNode.x, StarSunAnchorNode.y, StarSunAnchorNode.radius, 0, Math.PI * 2);
-            ctx.fillStyle = StarSunAnchorNode.color;
-            ctx.shadowBlur = 30;
-            ctx.shadowColor = '#ff8000';
-            ctx.fill();
-            ctx.shadowBlur = 0; // Clear structural shadow properties maps arrays configurations profiles definitions
+            activeOscillatorNode = webAudioContextInstance.createOscillator();
+            activeGainControlNode = webAudioContextInstance.createGain();
 
-            // Process dynamic calculation matrices properties mappings looping iterations variables transformations updates
-            for (let i = cosmicBodiesList.length - 1; i >= 0; i--) {
-                const planet = cosmicBodiesList[i];
+            // Set retro sine-wave audio pitch settings
+            activeOscillatorNode.type = 'sine';
+            activeOscillatorNode.frequency.setValueAtTime(650, webAudioContextInstance.currentTime); // 650Hz pitch
 
-                // Calculate vector coordinates spatial delta relative points coordinates variables metrics mappings
-                const dx = StarSunAnchorNode.x - planet.x;
-                const dy = StarSunAnchorNode.y - planet.y;
-                const planarDistanceCoordinatesValue = Math.sqrt(dx * dx + dy * dy);
+            activeGainControlNode.gain.setValueAtTime(0.2, webAudioContextInstance.currentTime); // Volume cap
 
-                // Safe range boundary validation loop verification routing parameters configurations criteria mapping bounds
-                if (planarDistanceCoordinatesValue < StarSunAnchorNode.radius + planet.radius) {
-                    cosmicBodiesList.splice(i, 1);
-                    continue;
+            activeOscillatorNode.connect(activeGainControlNode);
+            activeGainControlNode.connect(webAudioContextInstance.destination);
+            activeOscillatorNode.start();
+        }
+
+        function triggerToneStop() {
+            if (activeOscillatorNode) {
+                activeOscillatorNode.stop();
+                activeOscillatorNode.disconnect();
+                activeOscillatorNode = null;
+                activeGainControlNode = null;
+            }
+        }
+
+        // --- ENCODER LOGIC MODULE ---
+        const inputTextAreaNode = document.getElementById('textInput');
+        const morseOutputDisplayNode = document.getElementById('morseOutput');
+
+        inputTextAreaNode.addEventListener('input', () => {
+            const rawTextValue = inputTextAreaNode.value.toUpperCase();
+            let encodedMorseResultString = '';
+
+            for (let char of rawTextValue) {
+                if (MORSE_DICTIONARY[char]) {
+                    encodedMorseResultString += MORSE_DICTIONARY[char] + ' ';
                 }
+            }
+            morseOutputDisplayNode.textContent = encodedMorseResultString.trim() || '... --- ...';
+        });
 
-                // Standard universal Newtonian gravitational physics acceleration calculations math modeling matrix formula 
-                const gravityPullForceMagnitudeMetricValue = (G_GRAVITATIONAL_CONSTANT * StarSunAnchorNode.mass) / (planarDistanceCoordinatesValue * planarDistanceCoordinatesValue);
-                
-                // Track directional acceleration coordinate modifications updates profiles components variables properties
-                planet.vx += (dx / planarDistanceCoordinatesValue) * gravityPullForceMagnitudeMetricValue * TIME_STEP_FACTOR;
-                planet.vy += (dy / planarDistanceCoordinatesValue) * gravityPullForceMagnitudeMetricValue * TIME_STEP_FACTOR;
+        // Async audio streaming sequencer helper
+        function executeAudioTimeDelay(msDuration) {
+            return new Promise(resolve => setTimeout(resolve, msDuration));
+        }
 
-                // Sync positional adjustments translation vectors transformations mappings parameters values elements tracking arrays
-                planet.x += planet.vx * TIME_STEP_FACTOR;
-                planet.y += planet.vy * TIME_STEP_FACTOR;
-
-                // Log trajectory paths coordinate plots tracing history logs collections lists map index parameters details elements
-                planet.pathHistoryTraceLogs.push({ x: planet.x, y: planet.y });
-                if (planet.pathHistoryTraceLogs.length > 45) {
-                    planet.pathHistoryTraceLogs.shift();
+        async function playCurrentMorseSequence() {
+            initializeAudioHardwareContext();
+            const targetSignalString = morseOutputDisplayNode.textContent;
+            
+            const dotUnitDuration = 80; // Base timing interval speed multiplier
+            
+            for (let pulseElement of targetSignalString) {
+                if (pulseElement === '.') {
+                    triggerToneStart();
+                    await executeAudioTimeDelay(dotUnitDuration);
+                    triggerToneStop();
+                } else if (pulseElement === '-') {
+                    triggerToneStart();
+                    await executeAudioTimeDelay(dotUnitDuration * 3);
+                    triggerToneStop();
+                } else if (pulseElement === ' ') {
+                    await executeAudioTimeDelay(dotUnitDuration * 2);
+                } else if (pulseElement === '/') {
+                    await executeAudioTimeDelay(dotUnitDuration * 4);
                 }
+                await executeAudioTimeDelay(dotUnitDuration); // Space tracking gaps between elements
+            }
+        }
 
-                // Render orbital tracer trail paths lines canvas paths elements parameters data layout rendering properties map configurations
-                ctx.beginPath();
-                if (planet.pathHistoryTraceLogs.length > 0) {
-                    ctx.moveTo(planet.pathHistoryTraceLogs[0].x, planet.pathHistoryTraceLogs[0].y);
-                    for (let point of planet.pathHistoryTraceLogs) {
-                        ctx.lineTo(point.x, point.y);
-                    }
-                }
-                ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
-                ctx.lineWidth = 1.5;
-                ctx.stroke();
-
-                // Draw planet rendering parameters profile structure geometry dimensions circles coordinates objects array configuration nodes map details
-                ctx.beginPath();
-                ctx.arc(planet.x, planet.y, planet.radius, 0, Math.PI * 2);
-                ctx.fillStyle = planet.color;
+        // --- LIVE INCOMING OSCILLATOR OSCILLATION TIMING KEYER ENGINE ---
+        const manualTapKeyPadNode = document.getElementById('tapKeyNode');
+        const liveOutputSignalingTextNode = document.getElementById('liveStreamText');
+        
+        let keydownTrackingTimestamp = 0;
