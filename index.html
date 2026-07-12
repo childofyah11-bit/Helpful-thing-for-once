@@ -3,22 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Block Builder</title>
+    <title>Minecraft Block Hunt: AI Hunter Edition</title>
     <style>
         :root {
-            --bg: #0f172a;
+            --bg: #0b0f19;
             --surface: #1e293b;
-            --accent: #10b981;
+            --accent: #38bdf8;
+            --danger: #ef4444;
             --border: #334155;
             --text: #f8fafc;
         }
 
         body {
-            font-family: system-ui, -apple-system, sans-serif;
+            font-family: 'Segoe UI', system-ui, sans-serif;
             background-color: var(--bg);
             color: var(--text);
             margin: 0;
-            padding: 15px;
+            padding: 10px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -26,255 +27,266 @@
             overflow: hidden;
         }
 
-        .hud {
+        .hud-top {
             display: flex;
             justify-content: space-between;
-            width: 800px;
+            width: 1100px;
             align-items: center;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
 
-        h2 { margin: 0; font-size: 22px; color: var(--accent); font-weight: 800; }
+        h2 { margin: 0; font-size: 24px; color: var(--accent); font-weight: 800; letter-spacing: 1px; }
 
-        .palette {
-            display: flex;
-            gap: 8px;
+        .timer-card {
             background: var(--surface);
-            padding: 10px;
-            border-radius: 12px;
+            padding: 8px 16px;
+            border-radius: 8px;
             border: 1px solid var(--border);
+            font-weight: bold;
+            font-size: 16px;
         }
-
-        .swatch {
-            width: 36px;
-            height: 36px;
-            border-radius: 6px;
-            cursor: pointer;
-            border: 2px solid transparent;
-            transition: transform 0.1s;
-        }
-        .swatch:hover { transform: scale(1.1); }
-        .swatch.active { border-color: white; transform: scale(1.1); }
 
         #game-canvas {
-            background-color: #7dd3fc; /* Sky blue background */
+            background-color: #5cbeee; /* Sky color */
             border: 3px solid var(--border);
-            border-radius: 16px;
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
-            cursor: crosshair;
+            border-radius: 14px;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.6);
         }
 
-        .instructions {
-            width: 800px;
+        .hud-bottom {
+            width: 1100px;
             margin-top: 10px;
+            background: var(--surface);
+            padding: 12px 20px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
             font-size: 13px;
-            color: #64748b;
             text-align: center;
-            line-height: 1.5;
+            box-sizing: border-box;
+            color: #94a3b8;
         }
+        .hud-bottom strong { color: var(--accent); }
     </style>
 </head>
 <body>
 
-    <div class="hud">
-        <h2>PEACEFUL BUILDER</h2>
-        <div class="palette" id="block-palette">
-            <!-- Swatches will be generated dynamically by JS -->
-        </div>
+    <div class="hud-top">
+        <h2>BLOCK HUNT // AI VS HUMAN</h2>
+        <div class="timer-card" id="match-timer-label">Hiding Phase: 15s</div>
     </div>
 
-    <canvas id="game-canvas" width="800" height="480"></canvas>
+    <!-- Full-Size Single Player Viewport Canvas -->
+    <canvas id="game-canvas" width="1100" height="520"></canvas>
     
-    <div class="instructions">
-        <strong>Controls:</strong> [A / D] or [Left / Right Arrows] Move Character | [Spacebar] Jump <br>
-        <strong>Building:</strong> [Left Click] Place Selected Block | [Right Click / Shift + Click] Remove Block
+    <div class="hud-bottom">
+        <strong>CONTROLS:</strong> [W, A, S, D] or [Arrows] to Move & Jump | 
+        <strong>MORPH DISGUISES:</strong> Press [1] Grass | [2] Stone | [3] Wood | [4] Brick | [5] Leaves | [0] Human Shape
     </div>
 
 <script>
     const canvas = document.getElementById('game-canvas');
     const ctx = canvas.getContext('2d');
 
-    const BLOCK_SIZE = 32;
-    const GRID_COLS = canvas.width / BLOCK_SIZE;
-    const GRID_ROWS = canvas.height / BLOCK_SIZE;
+    const BLOCK_SIZE = 40; 
+    const LEVEL_COLS = 50; 
+    const LEVEL_ROWS = canvas.height / BLOCK_SIZE;
 
-    // Peaceful Block Material Definitions
-    const MATERIALS = {
-        1: { name: 'Grass', color: '#22c55e' },
-        2: { name: 'Dirt', color: '#78350f' },
-        3: { name: 'Stone', color: '#64748b' },
-        4: { name: 'Wood', color: '#b45309' },
-        5: { name: 'Leaves', color: '#15803d' },
-        6: { name: 'Brick', color: '#b91c1c' },
-        7: { name: 'Glass', color: '#e2e8f0' }
+    // Standard Minecraft Textures Palette
+    const BLOCK_TYPES = {
+        0: { name: 'Air', color: 'transparent' },
+        1: { name: 'Grass', color: '#34d399' },
+        2: { name: 'Stone', color: '#64748b' },
+        3: { name: 'Wood', color: '#b45309' },
+        4: { name: 'Brick', color: '#ef4444' },
+        5: { name: 'Leaves', color: '#16a34a' }
     };
 
-    let selectedMaterial = 1;
-    let grid = {};
+    // Static World Environment Matrix Setup
+    let worldMap = {};
+    for (let c = 0; c < LEVEL_COLS; c++) {
+        let groundLevel = LEVEL_ROWS - 3;
+        // Hills and architectural structures
+        if (c > 12 && c < 18) groundLevel = LEVEL_ROWS - 5;
+        if (c > 30 && c < 36) groundLevel = LEVEL_ROWS - 6;
 
-    // Character State Properties
-    let player = {
-        x: 100,
-        y: 200,
-        width: 20,
-        height: 38,
-        vx: 0,
-        vy: 0,
-        speed: 4,
-        jumpForce: 10,
-        gravity: 0.5,
-        grounded: false
-    };
-
-    let keys = {};
-
-    // Generate Palette HTML Elements
-    const paletteContainer = document.getElementById('block-palette');
-    Object.keys(MATERIALS).forEach(id => {
-        const swatch = document.createElement('div');
-        swatch.className = `swatch ${id == selectedMaterial ? 'active' : ''}`;
-        swatch.style.backgroundColor = MATERIALS[id].color;
-        swatch.title = MATERIALS[id].name;
-        swatch.onclick = () => {
-            document.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
-            swatch.classList.add('active');
-            selectedMaterial = parseInt(id);
-        };
-        paletteContainer.appendChild(swatch);
-    });
-
-    // Build Initial Grass Ground Baseline
-    const groundRow = GRID_ROWS - 3;
-    for (let col = 0; col < GRID_COLS; col++) {
-        grid[`${col},${groundRow}`] = 1; // Grass
-        for (let row = groundRow + 1; row < GRID_ROWS; row++) {
-            grid[`${col},${row}`] = 2; // Dirt underneath
-        }
-    }
-
-    // Input collection hooks
-    window.addEventListener('keydown', (e) => { keys[e.key.toLowerCase()] = true; });
-    window.addEventListener('keyup', (e) => { keys[e.key.toLowerCase()] = false; });
-
-    // Handle Build and Demolish click mechanics
-    canvas.addEventListener('mousedown', (e) => {
-        const rect = canvas.getBoundingClientRect();
-        const mouseX = e.clientX - rect.left;
-        const mouseY = e.clientY - rect.top;
-
-        const col = Math.floor(mouseX / BLOCK_SIZE);
-        const row = Math.floor(mouseY / BLOCK_SIZE);
-        const key = `${col},${row}`;
-
-        // Right-click or Shift+Left-click breaks blocks
-        if (e.button === 2 || e.shiftKey) {
-            delete grid[key];
-        } else if (e.button === 0) {
-            // Left click places selected block if the space is empty
-            if (!grid[key]) {
-                grid[key] = selectedMaterial;
+        for (let r = 0; r < LEVEL_ROWS; r++) {
+            if (r === groundLevel) {
+                worldMap[`${c},${r}`] = 1; 
+            } else if (r > groundLevel) {
+                worldMap[`${c},${r}`] = 2; 
             }
         }
+    }
+
+    // Spawn environment blocks to blend with
+    worldMap["6," + (LEVEL_ROWS-4)] = 3; worldMap["6," + (LEVEL_ROWS-5)] = 5; 
+    worldMap["22," + (LEVEL_ROWS-4)] = 4; worldMap["23," + (LEVEL_ROWS-4)] = 4; 
+    worldMap["42," + (LEVEL_ROWS-4)] = 3; worldMap["42," + (LEVEL_ROWS-5)] = 5; 
+
+    // Character Entities
+    let hider = { x: 120, y: 200, w: 24, h: 38, vx: 0, vy: 0, currentMorph: 0, color: '#38bdf8' };
+    let aiSeeker = { x: 1800, y: 200, w: 24, h: 38, vx: 0, vy: 0, color: '#f43f5e', state: 'idle', targetX: 1800, actionCooldown: 0 };
+    
+    let speed = 4.5;
+    let gravity = 0.5;
+    let keys = {};
+    
+    // Match Timer Logic
+    let timeRemaining = 15; 
+    let hiderPhase = true;
+    let matchOver = false;
+    let matchResultText = "";
+
+    let countdownInterval = setInterval(() => {
+        if (matchOver) return;
+        timeRemaining--;
+        
+        const label = document.getElementById('match-timer-label');
+        if (hiderPhase) {
+            label.textContent = `Hiding Phase: ${timeRemaining}s`;
+            if (timeRemaining <= 0) {
+                hiderPhase = false;
+                timeRemaining = 45; 
+                label.style.color = 'var(--danger)';
+                aiSeeker.state = 'patrol';
+            }
+        } else {
+            label.textContent = `AI Hunting Time: ${timeRemaining}s`;
+            if (timeRemaining <= 0) {
+                matchOver = true;
+                matchResultText = "YOU WIN! YOU FOOLED THE AI 🏆";
+                label.textContent = "MATCH CONCLUDED";
+            }
+        }
+    }, 1000);
+
+    window.addEventListener('keydown', (e) => { 
+        keys[e.key.toLowerCase()] = true; 
+        keys[e.code] = true;
+
+        if (matchOver) return;
+
+        // Player 1 Morph Triggers (Keys 1-5)
+        if (e.key === '1') hider.currentMorph = 1;
+        if (e.key === '2') hider.currentMorph = 2;
+        if (e.key === '3') hider.currentMorph = 3;
+        if (e.key === '4') hider.currentMorph = 4;
+        if (e.key === '5') hider.currentMorph = 5;
+        if (e.key === '0') hider.currentMorph = 0; 
     });
 
-    // Prevent default right-click menu popups on the canvas
-    canvas.addEventListener('contextmenu', e => e.preventDefault());
+    window.addEventListener('keyup', (e) => { 
+        keys[e.key.toLowerCase()] = false; 
+        keys[e.code] = false;
+    });
 
-    function checkBlockCollision(x, y) {
-        const col = Math.floor(x / BLOCK_SIZE);
-        const row = Math.floor(y / BLOCK_SIZE);
-        return grid[`${col},${row}`] ? true : false;
+    function checkLevelCollision(x, y) {
+        let col = Math.floor(x / BLOCK_SIZE);
+        let row = Math.floor(y / BLOCK_SIZE);
+        return worldMap[`${col},${row}`] ? true : false;
     }
 
-    function updatePhysics() {
-        // Horizontal Pilot Controls
-        player.vx = 0;
-        if (keys['a'] || keys['arrowleft']) player.vx = -player.speed;
-        if (keys['d'] || keys['arrowright']) player.vx = player.speed;
+    function movePlayer() {
+        hider.vx = 0;
+        if (keys['a'] || keys['arrowleft']) hider.vx = -speed;
+        if (keys['d'] || keys['arrowright']) hider.vx = speed;
 
-        // Apply Gravity forces
-        player.vy += player.gravity;
+        hider.vy += gravity;
+        hider.x += hider.vx;
 
-        // Predict X Movements and clamp boundaries
-        player.x += player.vx;
-        if (player.x < 0) player.x = 0;
-        if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
+        if (hider.x < 0) hider.x = 0;
+        if (hider.x + hider.w > LEVEL_COLS * BLOCK_SIZE) hider.x = (LEVEL_COLS * BLOCK_SIZE) - hider.w;
 
-        // Predict Y Movements and scan for block landings
-        player.y += player.vy;
-        player.grounded = false;
+        hider.y += hider.vy;
+        let grounded = false;
+        let footY = hider.y + hider.h;
 
-        // Check feet collision against structural grid elements
-        const footY = player.y + player.height;
-        const leftFootX = player.x;
-        const rightFootX = player.x + player.width;
-
-        if (checkBlockCollision(leftFootX, footY) || checkBlockCollision(rightFootX, footY)) {
-            const snappedRow = Math.floor(footY / BLOCK_SIZE);
-            player.y = (snappedRow * BLOCK_SIZE) - player.height;
-            player.vy = 0;
-            player.grounded = true;
+        if (checkLevelCollision(hider.x, footY) || checkLevelCollision(hider.x + hider.w, footY)) {
+            let snappedRow = Math.floor(footY / BLOCK_SIZE);
+            hider.y = (snappedRow * BLOCK_SIZE) - hider.h;
+            hider.vy = 0;
+            grounded = true;
         }
 
-        // Jump Execution if Grounded
-        if ((keys[' '] || keys['w'] || keys['arrowup']) && player.grounded) {
-            player.vy = -player.jumpForce;
-            player.grounded = false;
-        }
-
-        // Sky-falling fallback reset parameter
-        if (player.y > canvas.height) {
-            player.x = 100;
-            player.y = 100;
-            player.vy = 0;
+        if ((keys[' '] || keys['w'] || keys['arrowup']) && grounded) {
+            hider.vy = -10;
         }
     }
 
-    function drawScreen() {
-        updatePhysics();
+    // --- AI HUNTER NAVIGATION PATHFINDING BRAIN ---
+    function processAIIntelligence() {
+        if (hiderPhase || matchOver) return;
 
-        // Clear Canvas view space with custom bright cloud sun assets
+        aiSeeker.vy += gravity;
+        let distanceToHider = Math.abs(aiSeeker.x - hider.x);
+        
+        // AI Radar Vision parameters
+        let visionRange = hider.currentMorph === 0 ? 550 : 90; // Seeing block forms requires proximity
+
+        if (distanceToHider < visionRange) {
+            aiSeeker.state = 'chase';
+            aiSeeker.targetX = hider.x;
+        } else if (aiSeeker.state === 'chase' || aiSeeker.state === 'idle') {
+            aiSeeker.state = 'patrol';
+            aiSeeker.targetX = Math.random() * (LEVEL_COLS * BLOCK_SIZE - 200) + 100;
+        }
+
+        // Handle Horizontal Walk Tracking
+        let aiMovementSpeed = aiSeeker.state === 'chase' ? 3.8 : 2.2;
+        if (aiSeeker.x < aiSeeker.targetX - 5) {
+            aiSeeker.vx = aiMovementSpeed;
+        } else if (aiSeeker.x > aiSeeker.targetX + 5) {
+            aiSeeker.vx = -aiMovementSpeed;
+        } else {
+            aiSeeker.vx = 0;
+            if (aiSeeker.state === 'patrol') {
+                aiSeeker.targetX = Math.random() * (LEVEL_COLS * BLOCK_SIZE - 200) + 100;
+            }
+        }
+
+        aiSeeker.x += aiSeeker.vx;
+
+        // Auto Obstacle Jump Climbing code segment
+        let checkX = aiSeeker.vx > 0 ? aiSeeker.x + aiSeeker.w + 5 : aiSeeker.x - 5;
+        let isBlockedAhead = checkLevelCollision(checkX, aiSeeker.y + aiSeeker.h - 10);
+
+        let grounded = false;
+        let footY = aiSeeker.y + aiSeeker.h;
+        aiSeeker.y += aiSeeker.vy;
+
+        if (checkLevelCollision(aiSeeker.x, footY) || checkLevelCollision(aiSeeker.x + aiSeeker.w, footY)) {
+            let snappedRow = Math.floor(footY / BLOCK_SIZE);
+            aiSeeker.y = (snappedRow * BLOCK_SIZE) - aiSeeker.h;
+            aiSeeker.vy = 0;
+            grounded = true;
+        }
+
+        if (isBlockedAhead && grounded) {
+            aiSeeker.vy = -10.5; // Climb block automatically
+        }
+
+        // --- Catch Check ---
+        let actualDist = Math.hypot((aiSeeker.x + aiSeeker.w/2) - (hider.x + hider.w/2), (aiSeeker.y + aiSeeker.h/2) - (hider.y + hider.h/2));
+        if (actualDist < 35) {
+            matchOver = true;
+            matchResultText = "AI CAUGHT YOU! GAME OVER 🎯";
+            clearInterval(countdownInterval);
+        }
+    }
+
+    function mainEngineLoop() {
+        if (!matchOver) {
+            movePlayer();
+            processAIIntelligence();
+        }
+
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // Draw Ambient Sun Element background accent
-        ctx.fillStyle = '#fef08a';
-        ctx.beginPath();
-        ctx.arc(700, 60, 30, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.closePath();
+        ctx.save();
+        // Camera tracks the player across the screen map canvas smoothly
+        let camX = hider.x - canvas.width / 2;
+        camX = Math.max(0, Math.min((LEVEL_COLS * BLOCK_SIZE) - canvas.width, camX));
+        ctx.translate(-camX, 0);
 
-        // 1. Draw Map Block Structures Matrix
-        Object.keys(grid).forEach(key => {
-            const [col, row] = key.split(',').map(Number);
-            const matId = grid[key];
-            
-            ctx.fillStyle = MATERIALS[matId].color;
-            ctx.fillRect(col * BLOCK_SIZE, row * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
-            
-            // Draw subtle micro outline details to show grid divisions cleanly
-            ctx.strokeStyle = 'rgba(0,0,0,0.08)';
-            ctx.lineWidth = 1;
-            ctx.strokeRect(col * BLOCK_SIZE, row * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
-        });
-
-        // 2. Draw Friendly Character Model Avatar
-        ctx.fillStyle = '#ec4899'; // Bright friendly pink character tone
-        ctx.fillRect(player.x, player.y, player.width, player.height);
-
-        // Draw character backpack detail item
-        ctx.fillStyle = '#db2777';
-        ctx.fillRect(player.x - 4, player.y + 10, 4, 18);
-
-        // Draw little friendly eyes checking horizontal travel direction vectors
-        ctx.fillStyle = '#0f172a';
-        let eyeOffset = player.vx >= 0 ? 12 : 2;
-        ctx.fillRect(player.x + eyeOffset, player.y + 6, 4, 4);
-
-        requestAnimationFrame(drawScreen);
-    }
-
-    // Launch core frame loop execution parameters
-    drawScreen();
-</script>
-</body>
-</html>
+        // 1. Draw World Matrix blocks
+        for (let col = 0; col < LEVEL_COLS; col++) {
