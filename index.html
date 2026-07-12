@@ -3,15 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RadioNet: Cross-Device P2P Transmitter</title>
+    <title>CommsStation: P2P Voice Walkie-Talkie</title>
     <style>
         :root {
-            --bg-base: #060814;
-            --panel-card: #0f1326;
-            --accent-blue: #00bfff;
-            --accent-green: #39ff14;
-            --txt-bright: #ffffff;
-            --txt-muted: #5e6987;
+            --bg-base: #11140f;
+            --panel-card: #1c2217;
+            --army-green: #4d5d3e;
+            --neon-glow: #7fff00;
+            --alert-red: #ff3333;
+            --txt-bright: #f0f5eb;
+            --txt-muted: #708264;
         }
 
         body {
@@ -19,7 +20,7 @@
             padding: 20px;
             background-color: var(--bg-base);
             color: var(--txt-bright);
-            font-family: 'Segoe UI', system-ui, sans-serif;
+            font-family: 'Courier New', Courier, monospace;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -29,194 +30,216 @@
 
         .station-container {
             width: 100%;
-            max-width: 950px;
+            max-width: 600px;
             background: var(--panel-card);
-            border-radius: 12px;
+            border-radius: 8px;
             padding: 25px;
-            border: 1px solid #1f274a;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            border: 3px solid var(--army-green);
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8), 0 15px 35px rgba(0,0,0,0.9);
         }
 
         header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #1f274a;
+            text-align: center;
+            border-bottom: 2px dashed var(--army-green);
             padding-bottom: 15px;
             margin-bottom: 20px;
         }
 
-        h1 { margin: 0; font-size: 1.3rem; letter-spacing: 1px; color: var(--accent-blue); text-transform: uppercase; }
-        
-        .status-badge {
-            background: rgba(255, 68, 68, 0.1);
-            color: #ff4444;
-            padding: 4px 10px;
+        h1 { margin: 0; font-size: 1.5rem; color: var(--neon-glow); text-transform: uppercase; letter-spacing: 1px; }
+
+        .status-panel {
+            background: #090c07;
+            padding: 12px;
             border-radius: 4px;
-            font-size: 0.75rem;
-            font-weight: bold;
-            border: 1px solid #ff4444;
-        }
-        .status-badge.connected {
-            background: rgba(57, 255, 20, 0.1);
-            color: var(--accent-green);
-            border: 1px solid var(--accent-green);
+            border: 1px solid var(--army-green);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
         }
 
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-        }
+        .indicator { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: bold; }
+        .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--alert-red); box-shadow: 0 0 8px var(--alert-red); }
+        .dot.active { background: var(--neon-glow); box-shadow: 0 0 8px var(--neon-glow); }
 
         .deck {
-            background: rgba(0,0,0,0.4);
-            border: 1px solid #141b36;
-            padding: 20px;
-            border-radius: 8px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--army-green);
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
         }
 
-        h2 { margin: 0 0 12px 0; font-size: 0.95rem; text-transform: uppercase; color: var(--txt-muted); letter-spacing: 0.5px; }
+        h2 { margin: 0 0 10px 0; font-size: 0.9rem; color: var(--neon-glow); text-transform: uppercase; }
 
         textarea {
-            width: 100%; height: 75px; background: #03050d; color: #fff;
-            border: 1px solid #1f274a; border-radius: 6px; padding: 10px;
-            font-family: monospace; font-size: 0.8rem; box-sizing: border-box; resize: none;
+            width: 100%; height: 70px; background: #050704; color: var(--neon-glow);
+            border: 1px solid var(--army-green); border-radius: 4px; padding: 10px;
+            font-family: inherit; font-size: 0.8rem; box-sizing: border-box; resize: none;
         }
-        textarea:focus { outline: 1px solid var(--accent-blue); }
 
         .btn {
-            width: 100%; background: var(--accent-blue); color: #000; font-weight: bold;
-            border: none; padding: 10px; border-radius: 6px; cursor: pointer; margin-top: 10px;
+            background: var(--army-green); color: var(--txt-bright); font-weight: bold;
+            border: 1px solid #637751; padding: 10px; cursor: pointer; text-transform: uppercase;
+            font-family: inherit; border-radius: 4px;
         }
-        .btn:hover { opacity: 0.9; }
-        .btn-alt { background: #1f274a; color: #fff; border: 1px solid #343f75; }
-        .btn-alt:hover { background: #283361; }
+        .btn:hover { background: #5c704a; }
 
-        /* Control Input Layout Fields */
-        .transmit-row { display: flex; gap: 8px; margin-bottom: 12px; }
-        .transmit-row input {
-            flex: 1; background: #03050d; border: 1px solid #1f274a;
-            border-radius: 6px; padding: 10px; color: #fff;
+        /* Classic Heavy Push-To-Talk Button */
+        .ptt-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px 0;
         }
-        .transmit-row input:focus { outline: 1px solid var(--accent-blue); }
-        .transmit-row .btn { width: auto; margin: 0; padding: 0 15px; }
 
-        .audio-macros { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-        .macro-btn { background: #131933; border: 1px solid #232c5c; color: white; padding: 8px; border-radius: 4px; cursor: pointer; font-size: 0.75rem; }
-        .macro-btn:hover { border-color: var(--accent-blue); }
+        .ptt-button {
+            width: 140px; height: 140px; border-radius: 50%;
+            background: linear-gradient(135deg, #a62b2b, #591313);
+            border: 5px solid #3d0d0d; color: white;
+            font-family: inherit; font-size: 1.1rem; font-weight: bold; text-transform: uppercase;
+            cursor: pointer; box-shadow: 0 8px 0 #2b0909, 0 15px 20px rgba(0,0,0,0.5);
+            transition: all 0.05s ease; user-select: none; -webkit-user-select: none;
+        }
+
+        .ptt-button:active, .ptt-button.transmitting {
+            transform: translateY(6px);
+            box-shadow: 0 2px 0 #2b0909, 0 5px 10px rgba(0,0,0,0.5);
+            background: linear-gradient(135deg, #ff3b3b, #991c1c);
+            color: #fff;
+        }
 
         .terminal {
-            background: #020308; border: 1px solid #121730; height: 160px;
-            border-radius: 6px; padding: 10px; overflow-y: auto; font-family: monospace; font-size: 0.8rem;
+            background: #050704; border: 1px solid var(--army-green); height: 110px;
+            border-radius: 4px; padding: 10px; overflow-y: auto; font-size: 0.75rem; color: #a4bfa3;
         }
-        .log-line { margin-bottom: 6px; border-bottom: 1px solid #090c1a; padding-bottom: 4px; }
+        .log { margin-bottom: 5px; }
     </style>
 </head>
 <body>
 
     <div class="station-container">
         <header>
-            <h1>📡 Hardware P2P Transceiver</h1>
-            <div class="status-badge" id="netStatus">OFFLINE / AIR-GAPPED</div>
+            <h1>🗲 COMMS-STATION P2P</h1>
         </header>
 
-        <div class="grid">
-            <!-- DECK 1: WebRTC Device Pairing Signaling Terminal -->
-            <div class="deck">
-                <h2>1. Device Link Link Handshake</h2>
-                <div style="font-size: 0.75rem; color: var(--txt-muted); margin-bottom: 8px;">
-                    <strong>Device A:</strong> Click "Generate Offer Token", copy it, and paste it onto Device B.<br>
-                    <strong>Device B:</strong> Paste the token into the input box below and click "Accept Offer & Reply". Copy Device B's Answer token back into Device A's box and click "Finalize Link".
-                </div>
-                <textarea id="handshakeBox" placeholder="Paste incoming device link token packets here..."></textarea>
-                
-                <div style="display: flex; gap: 8px; margin-top: 8px;">
-                    <button class="btn btn-alt" style="margin:0; flex:1; font-size:0.75rem;" onclick="initializeP2POffer()">Create Offer</button>
-                    <button class="btn btn-alt" style="margin:0; flex:1; font-size:0.75rem;" onclick="acceptIncomingOffer()">Accept & Reply</button>
-                    <button class="btn" style="margin:0; flex:1; font-size:0.75rem;" onclick="finalizeP2PLink()">Finalize Link</button>
-                </div>
-            </div>
+        <div class="status-panel">
+            <div class="indicator">LINK: <div class="dot" id="linkDot"></div> <span id="linkTxt">DISCONNECTED</span></div>
+            <div class="indicator">MIC: <div class="dot" id="micDot"></div> <span id="micTxt">MUTED</span></div>
+        </div>
 
-            <!-- DECK 2: Device Hardware Broadcast Modulation controls -->
-            <div class="deck">
-                <h2>2. Outbound Broadcast Controls</h2>
-                <div class="transmit-row">
-                    <input type="text" id="msgPayload" placeholder="Type data stream to beam...">
-                    <button class="btn" onclick="sendDataPacket()">Beam</button>
-                </div>
-                <h2>Audio Frequency Macro Triggers</h2>
-                <div class="audio-macros">
-                    <button class="macro-btn" onclick="sendAudioMacro('Ping', 900, 0.15)">🔔 Ping</button>
-                    <button class="macro-btn" onclick="sendAudioMacro('Pulse', 500, 0.3)">⚡ Pulse</button>
-                    <button class="macro-btn" onclick="sendAudioMacro('Siren', 1400, 0.5)">🚨 Siren</button>
-                </div>
+        <!-- LINK COUPLING CONTROLS -->
+        <div class="deck">
+            <h2>1. Direct Secure Signal Connection Matrix</h2>
+            <textarea id="tokenBox" placeholder="Paste data signal token packages here..."></textarea>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px;">
+                <button class="btn" onclick="initiateVoiceOffer()">1. Make Offer</button>
+                <button class="btn" onclick="replyToVoiceOffer()">2. Reply</button>
+                <button class="btn" onclick="lockVoiceLink()">3. Lock Link</button>
             </div>
+        </div>
 
-            <!-- DECK 3: Receiver Feed Logger Terminal Console -->
-            <div class="deck" style="grid-column: 1 / -1;">
-                <h2>3. Transceiver Stream System Output Feed</h2>
-                <div class="terminal" id="termFeed">
-                    <div class="log-line" style="color: var(--txt-muted);">[System Awake. Initialize a connection sequence to beam data across physical hardware spaces.]</div>
-                </div>
+        <!-- PUSH TO TALK COMMS INTERFACE -->
+        <div class="deck ptt-container">
+            <button class="ptt-button" id="pttBtn" disabled>HOLD TO<br>TALK</button>
+            <div style="margin-top: 12px; font-size: 0.7rem; color: var(--txt-muted); text-align: center;">
+                Channel remains air-locked until connection locks. Once locked, hold mouse or tap spacebar to transmit voice.
             </div>
+        </div>
+
+        <!-- ACTIVITY MONITOR LOGGER -->
+        <div class="terminal" id="activityBox">
+            <div class="log">[NET] Terminal offline. Awaiting pipeline synchronization.</div>
         </div>
     </div>
 
+    <!-- Incoming Remote Audio Element Stream Destination -->
+    <audio id="incomingAudioNode" autoplay></audio>
+
     <script>
-        // Global WebRTC Configuration Settings Mapping
-        const ICE_SERVERS = { iceServers: [{ urls: 'stun:://google.com' }] }; // Free STUN server to find local IPs
+        const ICE_CONFIG = { iceServers: [{ urls: 'stun:://google.com' }] };
+
+        let rtcConnection = null;
+        let internalMicStream = null;
+        let micAudioTrack = null;
+
+        const pttButtonNode = document.getElementById('pttBtn');
+        const tokenInputField = document.getElementById('tokenBox');
+        const logTerminalNode = document.getElementById('activityBox');
         
-        let localPeerConnection = null;
-        let localDataChannel = null;
-        let audioHardwareCtx = null;
+        const linkDot = document.getElementById('linkDot');
+        const linkTxt = document.getElementById('linkTxt');
+        const micDot = document.getElementById('micDot');
+        const micTxt = document.getElementById('micTxt');
 
-        const uiLogTerminal = document.getElementById('termFeed');
-        const tokenInputArea = document.getElementById('handshakeBox');
-        const connectionBadgeElement = document.getElementById('netStatus');
-
-        function appendLog(tag, text, color = '#ffffff') {
+        function printLog(system, info) {
             const line = document.createElement('div');
-            line.classList.add('log-line');
-            line.style.color = color;
-            line.innerHTML = `<span style="color: var(--txt-muted)">[${new Date().toLocaleTimeString()}]</span> <strong>${tag}:</strong> ${text}`;
-            uiLogTerminal.appendChild(line);
-            uiLogTerminal.scrollTop = uiLogTerminal.scrollHeight;
+            line.classList.add('log');
+            line.innerHTML = `[${system}] ${info}`;
+            logTerminalNode.appendChild(line);
+            logTerminalNode.scrollTop = logTerminalNode.scrollHeight;
         }
 
-        function playBeep(freq, duration) {
-            if (!audioHardwareCtx) audioHardwareCtx = new (window.AudioContext || window.webkitAudioContext)();
-            const osc = audioHardwareCtx.createOscillator();
-            const gain = audioHardwareCtx.createGain();
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(freq, audioHardwareCtx.currentTime);
-            gain.gain.setValueAtTime(0.1, audioHardwareCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, audioHardwareCtx.currentTime + duration);
-            osc.connect(gain);
-            gain.connect(audioHardwareCtx.destination);
-            osc.start();
-            osc.stop(audioHardwareCtx.currentTime + duration);
+        // Request local audio input context permissions hardware access hooks
+        async function captureMicrophoneHardware() {
+            try {
+                internalMicStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                micAudioTrack = internalMicStream.getAudioTracks()[0];
+                micAudioTrack.enabled = false; // Muted initially (Classic Walkie-Talkie profile)
+                printLog('HARDWARE', 'Microphone subsystem online and armed.');
+                return true;
+            } catch (err) {
+                printLog('ERROR', 'Microphone initialization denied: ' + err.message);
+                alert("Walkie-Talkie requires microphone permissions to function!");
+                return false;
+            }
         }
 
-        // Setup common data channel triggers 
-        function bindDataChannelEvents() {
-            localDataChannel.onopen = () => {
-                connectionBadgeElement.textContent = "CONNECTED DIRECTLY TO DEVICE";
-                connectionBadgeElement.classList.add('connected');
-                appendLog('SYSTEM', 'Data transmission channel established successfully!', 'var(--accent-green)');
+        function createPeerInstance() {
+            rtcConnection = new RTCPeerConnection(ICE_CONFIG);
+
+            // Bind outgoing sound tracks to connection stream matrix channels
+            if (internalMicStream) {
+                internalMicStream.getTracks().forEach(track => rtcConnection.addTrack(track, internalMicStream));
+            }
+
+            // Route inbound receiver streams to output node
+            rtcConnection.ontrack = (event) => {
+                printLog('COMMS', 'Inbound live audio track stream pipeline attached.');
+                document.getElementById('incomingAudioNode').srcObject = event.streams[0];
             };
 
-            localDataChannel.onmessage = (event) => {
-                const packet = JSON.parse(event.data);
-                if (packet.type === 'TEXT') {
-                    appendLog('BEAM_IN', packet.payload, 'var(--accent-blue)');
-                } else if (packet.type === 'AUDIO') {
-                    appendLog('SIGNAL_IN', `Remote device played sound: ${packet.name}`, 'var(--accent-green)');
-                    playBeep(packet.freq, packet.dur);
+            rtcConnection.onconnectionstatechange = () => {
+                if (rtcConnection.connectionState === 'connected') {
+                    linkDot.classList.add('active');
+                    linkTxt.textContent = "SECURELY UNLOCKED";
+                    pttButtonNode.disabled = false;
+                    printLog('NET', 'P2P secure connection bridge active.', 'var(--neon-glow)');
                 }
             };
         }
 
-        // --- STEP A: DEVICE 1 INITIATES OFFER ---
-        function initializeP2POffer() {
-            localPeerConnection = new RTCPeerConnection(ICE_SERVERS);
+        // STEP 1: DEVICE A GENERATES ENCRYPTED OFFER
+        async function initiateVoiceOffer() {
+            const armed = await captureMicrophoneHardware();
+            if (!armed) return;
+
+            createPeerInstance();
+
+            rtcConnection.onicecandidate = (e) => {
+                if (!e.candidate) {
+                    tokenInputField.value = btoa(JSON.stringify(rtcConnection.localDescription));
+                    printLog('MATRIX', 'Signal Offer Token generated. Copy it over to Device B.');
+                }
+            };
+
+            const offer = await rtcConnection.createOffer();
+            await rtcConnection.setLocalDescription(offer);
+        }
+
+        // STEP 2: DEVICE B RECEIVES OFFER AND RESPONDS WITH ANSWER
+        async function replyToVoiceOffer() {
+            const rawToken = tokenInputField.value.trim();
+            if (!rawToken) return alert("Paste Device A's signal packet inside the matrix box!");
+
