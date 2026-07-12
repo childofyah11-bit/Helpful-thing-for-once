@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CommsStation: P2P Voice Walkie-Talkie</title>
+    <title>CommsStation: Automatic P2P Walkie-Talkie</title>
+    <!-- Imports the PeerJS network engine library automatically -->
+    <script src="https://unpkg.com"></script>
     <style>
         :root {
             --bg-base: #11140f;
@@ -30,7 +32,7 @@
 
         .station-container {
             width: 100%;
-            max-width: 600px;
+            max-width: 500px;
             background: var(--panel-card);
             border-radius: 8px;
             padding: 25px;
@@ -45,7 +47,7 @@
             margin-bottom: 20px;
         }
 
-        h1 { margin: 0; font-size: 1.5rem; color: var(--neon-glow); text-transform: uppercase; letter-spacing: 1px; }
+        h1 { margin: 0; font-size: 1.4rem; color: var(--neon-glow); text-transform: uppercase; letter-spacing: 1px; }
 
         .status-panel {
             background: #090c07;
@@ -58,7 +60,7 @@
             margin-bottom: 20px;
         }
 
-        .indicator { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: bold; }
+        .indicator { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; font-weight: bold; }
         .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--alert-red); box-shadow: 0 0 8px var(--alert-red); }
         .dot.active { background: var(--neon-glow); box-shadow: 0 0 8px var(--neon-glow); }
 
@@ -70,35 +72,45 @@
             margin-bottom: 20px;
         }
 
-        h2 { margin: 0 0 10px 0; font-size: 0.9rem; color: var(--neon-glow); text-transform: uppercase; }
+        h2 { margin: 0 0 10px 0; font-size: 0.85rem; color: var(--neon-glow); text-transform: uppercase; }
 
-        textarea {
-            width: 100%; height: 70px; background: #050704; color: var(--neon-glow);
-            border: 1px solid var(--army-green); border-radius: 4px; padding: 10px;
-            font-family: inherit; font-size: 0.8rem; box-sizing: border-box; resize: none;
+        .input-row {
+            display: flex;
+            gap: 8px;
         }
+
+        input {
+            flex: 1;
+            background: #050704;
+            color: var(--neon-glow);
+            border: 1px solid var(--army-green);
+            border-radius: 4px;
+            padding: 10px;
+            font-family: inherit;
+            font-size: 0.9rem;
+        }
+        input:focus { outline: none; border-color: var(--neon-glow); }
 
         .btn {
             background: var(--army-green); color: var(--txt-bright); font-weight: bold;
-            border: 1px solid #637751; padding: 10px; cursor: pointer; text-transform: uppercase;
+            border: 1px solid #637751; padding: 10px 16px; cursor: pointer; text-transform: uppercase;
             font-family: inherit; border-radius: 4px;
         }
         .btn:hover { background: #5c704a; }
 
-        /* Classic Heavy Push-To-Talk Button */
         .ptt-container {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 20px 0;
+            padding: 10px 0;
         }
 
         .ptt-button {
-            width: 140px; height: 140px; border-radius: 50%;
+            width: 130px; height: 130px; border-radius: 50%;
             background: linear-gradient(135deg, #a62b2b, #591313);
             border: 5px solid #3d0d0d; color: white;
-            font-family: inherit; font-size: 1.1rem; font-weight: bold; text-transform: uppercase;
+            font-family: inherit; font-size: 1rem; font-weight: bold; text-transform: uppercase;
             cursor: pointer; box-shadow: 0 8px 0 #2b0909, 0 15px 20px rgba(0,0,0,0.5);
             transition: all 0.05s ease; user-select: none; -webkit-user-select: none;
         }
@@ -107,11 +119,14 @@
             transform: translateY(6px);
             box-shadow: 0 2px 0 #2b0909, 0 5px 10px rgba(0,0,0,0.5);
             background: linear-gradient(135deg, #ff3b3b, #991c1c);
-            color: #fff;
+        }
+
+        .ptt-button:disabled {
+            background: #2c2f29; border-color: #1a1c18; color: #555; cursor: not-allowed; box-shadow: none; transform: none;
         }
 
         .terminal {
-            background: #050704; border: 1px solid var(--army-green); height: 110px;
+            background: #050704; border: 1px solid var(--army-green); height: 100px;
             border-radius: 4px; padding: 10px; overflow-y: auto; font-size: 0.75rem; color: #a4bfa3;
         }
         .log { margin-bottom: 5px; }
@@ -121,125 +136,112 @@
 
     <div class="station-container">
         <header>
-            <h1>🗲 COMMS-STATION P2P</h1>
+            <h1>📡 AUTOMATIC WALKIE-TALKIE</h1>
         </header>
 
         <div class="status-panel">
-            <div class="indicator">LINK: <div class="dot" id="linkDot"></div> <span id="linkTxt">DISCONNECTED</span></div>
+            <div class="indicator">NET: <div class="dot" id="linkDot"></div> <span id="linkTxt">OFFLINE</span></div>
             <div class="indicator">MIC: <div class="dot" id="micDot"></div> <span id="micTxt">MUTED</span></div>
         </div>
 
-        <!-- LINK COUPLING CONTROLS -->
+        <!-- AUTOMATIC JOIN CONFIGURATION PANEL -->
         <div class="deck">
-            <h2>1. Direct Secure Signal Connection Matrix</h2>
-            <textarea id="tokenBox" placeholder="Paste data signal token packages here..."></textarea>
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px;">
-                <button class="btn" onclick="initiateVoiceOffer()">1. Make Offer</button>
-                <button class="btn" onclick="replyToVoiceOffer()">2. Reply</button>
-                <button class="btn" onclick="lockVoiceLink()">3. Lock Link</button>
+            <h2>Enter Shared Secret Frequency Room Code</h2>
+            <div class="input-row">
+                <input type="text" id="roomInput" placeholder="e.g., alpha-bravo-99" value="hq-frequency">
+                <button class="btn" onclick="connectToFrequencyChannel()">Connect</button>
             </div>
         </div>
 
         <!-- PUSH TO TALK COMMS INTERFACE -->
         <div class="deck ptt-container">
             <button class="ptt-button" id="pttBtn" disabled>HOLD TO<br>TALK</button>
-            <div style="margin-top: 12px; font-size: 0.7rem; color: var(--txt-muted); text-align: center;">
-                Channel remains air-locked until connection locks. Once locked, hold mouse or tap spacebar to transmit voice.
+            <div style="margin-top: 15px; font-size: 0.7rem; color: var(--txt-muted); text-align: center; line-height: 1.3;">
+                Type the same code on both devices and click Connect. Once linked, hold the button or Spacebar to transmit.
             </div>
         </div>
 
-        <!-- ACTIVITY MONITOR LOGGER -->
+        <!-- RUNTIME LOGGER -->
         <div class="terminal" id="activityBox">
-            <div class="log">[NET] Terminal offline. Awaiting pipeline synchronization.</div>
+            <div class="log">[SYS] Standing by. Enter a frequency code to initialize hardware channels.</div>
         </div>
     </div>
 
-    <!-- Incoming Remote Audio Element Stream Destination -->
-    <audio id="incomingAudioNode" autoplay></audio>
+    <!-- Receiver Voice Audio Destination Node -->
+    <audio id="remoteAudioPlayer" autoplay></audio>
 
     <script>
-        const ICE_CONFIG = { iceServers: [{ urls: 'stun:://google.com' }] };
+        let peerInstance = null;
+        let localMicStream = null;
+        let microphoneAudioTrack = null;
+        let incomingAudioCallRef = null;
 
-        let rtcConnection = null;
-        let internalMicStream = null;
-        let micAudioTrack = null;
-
-        const pttButtonNode = document.getElementById('pttBtn');
-        const tokenInputField = document.getElementById('tokenBox');
-        const logTerminalNode = document.getElementById('activityBox');
+        const pttButton = document.getElementById('pttBtn');
+        const roomInputField = document.getElementById('roomInput');
+        const logTerminal = document.getElementById('activityBox');
         
         const linkDot = document.getElementById('linkDot');
         const linkTxt = document.getElementById('linkTxt');
         const micDot = document.getElementById('micDot');
         const micTxt = document.getElementById('micTxt');
 
-        function printLog(system, info) {
+        function writeLog(tag, info) {
             const line = document.createElement('div');
             line.classList.add('log');
-            line.innerHTML = `[${system}] ${info}`;
-            logTerminalNode.appendChild(line);
-            logTerminalNode.scrollTop = logTerminalNode.scrollHeight;
+            line.innerHTML = `[${tag}] ${info}`;
+            logTerminal.appendChild(line);
+            logTerminal.scrollTop = logTerminal.scrollHeight;
         }
 
-        // Request local audio input context permissions hardware access hooks
-        async function captureMicrophoneHardware() {
+        // Initialize local microphone stream permissions
+        async function getMicrophoneAccess() {
             try {
-                internalMicStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-                micAudioTrack = internalMicStream.getAudioTracks()[0];
-                micAudioTrack.enabled = false; // Muted initially (Classic Walkie-Talkie profile)
-                printLog('HARDWARE', 'Microphone subsystem online and armed.');
+                localMicStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                microphoneAudioTrack = localMicStream.getAudioTracks()[0];
+                microphoneAudioTrack.enabled = false; // Keep muted until push-to-talk triggers
+                writeLog('HARDWARE', 'Microphone connection confirmed and armed.');
                 return true;
             } catch (err) {
-                printLog('ERROR', 'Microphone initialization denied: ' + err.message);
-                alert("Walkie-Talkie requires microphone permissions to function!");
+                writeLog('ERROR', 'Mic Access Denied: ' + err.message);
+                alert("Microphone permission is strictly required for walkie-talkie mode!");
                 return false;
             }
         }
 
-        function createPeerInstance() {
-            rtcConnection = new RTCPeerConnection(ICE_CONFIG);
+        async function connectToFrequencyChannel() {
+            const secretRoomId = roomInputField.value.trim().toLowerCase();
+            if (!secretRoomId) return alert("Please enter a room code channel phrase!");
 
-            // Bind outgoing sound tracks to connection stream matrix channels
-            if (internalMicStream) {
-                internalMicStream.getTracks().forEach(track => rtcConnection.addTrack(track, internalMicStream));
-            }
+            const micArmed = await getMicrophoneAccess();
+            if (!micArmed) return;
 
-            // Route inbound receiver streams to output node
-            rtcConnection.ontrack = (event) => {
-                printLog('COMMS', 'Inbound live audio track stream pipeline attached.');
-                document.getElementById('incomingAudioNode').srcObject = event.streams[0];
-            };
+            writeLog('NET', `Contacting signaling node room: [${secretRoomId}]...`);
+            
+            // Connect automatically using PeerJS public infrastructure cloud brokers
+            peerInstance = new Peer(secretRoomId, {
+                config: { iceServers: [{ urls: 'stun:://google.com' }] }
+            });
 
-            rtcConnection.onconnectionstatechange = () => {
-                if (rtcConnection.connectionState === 'connected') {
-                    linkDot.classList.add('active');
-                    linkTxt.textContent = "SECURELY UNLOCKED";
-                    pttButtonNode.disabled = false;
-                    printLog('NET', 'P2P secure connection bridge active.', 'var(--neon-glow)');
-                }
-            };
-        }
+            peerInstance.on('open', (id) => {
+                writeLog('SYS', `Channel active. Listening as Master Station Node: ${id}`);
+                linkDot.classList.add('active');
+                linkTxt.textContent = "LISTENING ON CHANNEL";
+                
+                // Proactively attempt connection to see if another device is already in the room
+                attemptCallToRemotePeer(secretRoomId + "-client");
+            });
 
-        // STEP 1: DEVICE A GENERATES ENCRYPTED OFFER
-        async function initiateVoiceOffer() {
-            const armed = await captureMicrophoneHardware();
-            if (!armed) return;
-
-            createPeerInstance();
-
-            rtcConnection.onicecandidate = (e) => {
-                if (!e.candidate) {
-                    tokenInputField.value = btoa(JSON.stringify(rtcConnection.localDescription));
-                    printLog('MATRIX', 'Signal Offer Token generated. Copy it over to Device B.');
-                }
-            };
-
-            const offer = await rtcConnection.createOffer();
-            await rtcConnection.setLocalDescription(offer);
-        }
-
-        // STEP 2: DEVICE B RECEIVES OFFER AND RESPONDS WITH ANSWER
-        async function replyToVoiceOffer() {
-            const rawToken = tokenInputField.value.trim();
-            if (!rawToken) return alert("Paste Device A's signal packet inside the matrix box!");
-
+            // If the room name is already taken, switch to a client role automatically to hook up with the host
+            peerInstance.on('error', (err) => {
+                if (err.type === 'unavailable-id') {
+                    writeLog('SYS', 'Primary slot taken. Linking to channel room as secondary client...');
+                    peerInstance = new Peer(secretRoomId + "-client", {
+                        config: { iceServers: [{ urls: 'stun:://google.com' }] }
+                    });
+                    
+                    peerInstance.on('open', () => {
+                        writeLog('SYS', 'Secondary channel online. Pairing directly with host node...');
+                        attemptCallToRemotePeer(secretRoomId);
+                    });
+                } else {
+                    writeLog('ERROR', 'Network collision encountered: ' + err.type);
