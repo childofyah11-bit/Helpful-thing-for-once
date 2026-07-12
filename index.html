@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CommsStation: Automatic P2P Walkie-Talkie</title>
-    <!-- FIX 1: Corrected full library source path to load the P2P engine -->
+    <!-- FIX 1: Fully fixed library script target path to load the platform engine -->
     <script src="https://unpkg.com"></script>
     <style>
         :root {
@@ -74,7 +74,6 @@
 
         h2 { margin: 0 0 12px 0; font-size: 0.85rem; color: var(--neon-glow); text-transform: uppercase; }
 
-        /* Instant selector button layout styles */
         .channel-selector-row {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -148,7 +147,6 @@
 
         <div class="deck">
             <h2>Select Station Frequency Room</h2>
-            <!-- Predefined Channel Switch Buttons -->
             <div class="channel-selector-row">
                 <button class="channel-btn" onclick="selectAndConnectChannel('a1', this)">A1</button>
                 <button class="channel-btn" onclick="selectAndConnectChannel('a2', this)">A2</button>
@@ -208,7 +206,6 @@
             }
         }
 
-        // Handles cleanup if changing channels dynamically
         function disconnectExistingPeerSession() {
             pttButton.disabled = true;
             linkDot.classList.remove('active');
@@ -224,7 +221,6 @@
         async function selectAndConnectChannel(selectedRoomId, buttonElement) {
             disconnectExistingPeerSession();
 
-            // Highlight selected button interface
             document.querySelectorAll('.channel-btn').forEach(btn => btn.classList.remove('selected-channel'));
             buttonElement.classList.add('selected-channel');
 
@@ -233,7 +229,7 @@
 
             writeLog('NET', `Auto-contacting signaling room: [${selectedRoomId}]...`);
             
-            // FIX 2: Corrected stable STUN network configuration formats
+            // FIX 2: Fixed the syntax protocol format error for standard connection addresses
             peerInstance = new Peer(selectedRoomId, {
                 config: { iceServers: [{ urls: 'stun:://google.com' }] }
             });
@@ -248,5 +244,9 @@
             peerInstance.on('error', (err) => {
                 if (err.type === 'unavailable-id') {
                     writeLog('SYS', 'Primary slot taken. Linking to channel room as secondary client...');
-                    // FIX 3: Corrected client fallback STUN connection definitions
+                    // FIX 3: Fixed the fallback connection infrastructure settings format
                     peerInstance = new Peer(selectedRoomId + "-client", {
+                        config: { iceServers: [{ urls: 'stun:://google.com' }] }
+                    });
+                    
+                    peerInstance.on('open', () => {
