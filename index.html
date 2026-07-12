@@ -3,9 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RadioNet: Automated P2P Text Beacon</title>
-    <!-- Imports the PeerJS network engine library package -->
-    <script src="https://unpkg.com"></script>
+    <title>RadioNet: Autonomous Cross-Window Radio</title>
     <style>
         :root {
             --bg-base: #0a0c10;
@@ -53,19 +51,14 @@
         h1 { margin: 0; font-size: 1.25rem; font-weight: 800; letter-spacing: 0.5px; color: var(--accent-cyan); text-transform: uppercase; }
 
         .status-pill {
-            background: rgba(255, 51, 51, 0.1);
-            color: var(--alert-red);
+            background: rgba(57, 255, 20, 0.1);
+            color: var(--accent-green);
             padding: 5px 12px;
             border-radius: 20px;
             font-size: 0.75rem;
             font-weight: 700;
-            border: 1px solid rgba(255, 51, 51, 0.2);
-            text-transform: uppercase;
-        }
-        .status-pill.connected {
-            background: rgba(57, 255, 20, 0.1);
-            color: var(--accent-green);
             border: 1px solid rgba(57, 255, 20, 0.2);
+            text-transform: uppercase;
         }
 
         .deck {
@@ -78,16 +71,12 @@
 
         h2 { margin: 0 0 12px 0; font-size: 0.8rem; font-weight: 700; color: var(--txt-muted); text-transform: uppercase; letter-spacing: 1px; }
 
-        .beacon-id-display {
-            font-family: monospace;
-            font-size: 1.4rem;
-            color: var(--accent-green);
-            background: #06080c;
-            padding: 12px;
-            border-radius: 6px;
-            text-align: center;
-            border: 1px dashed #22c55e;
-            letter-spacing: 2px;
+        .setup-instruction-box {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            line-height: 1.5;
+            border-left: 3px solid var(--accent-cyan);
+            padding-left: 12px;
         }
 
         .input-row { display: flex; gap: 10px; }
@@ -102,27 +91,25 @@
             font-family: inherit;
             font-size: 0.95rem;
         }
-        input[type="text"]:focus { outline: 1px solid var(--accent-cyan); }
-        input[type="text"]:disabled { background: #0b0d14; color: #334155; cursor: not-allowed; }
+        input[type="text"]:focus { outline: 1px solid var(--accent-cyan); border-color: var(--accent-cyan); }
 
         .btn {
-            background: var(--accent-cyan);
+            background: var(--accent-green);
             color: #000;
             font-weight: 700;
             border: none;
-            padding: 0 20px;
-            cursor: pointer;
+            padding: 0 25px;
             border-radius: 6px;
             font-size: 0.9rem;
             transition: opacity 0.15s ease;
+            cursor: pointer;
         }
-        .btn:hover:not(:disabled) { opacity: 0.85; }
-        .btn:disabled { background: #1e293b; color: #475569; cursor: not-allowed; }
+        .btn:hover { opacity: 0.85; }
 
         .terminal {
             background: #06080c;
             border: 1px solid var(--border-glow);
-            height: 180px;
+            height: 200px;
             border-radius: 6px;
             padding: 15px;
             overflow-y: auto;
@@ -131,7 +118,7 @@
             color: #e2e8f0;
             line-height: 1.5;
         }
-        .log-row { margin-bottom: 8px; border-bottom: 1px solid #0f131a; padding-bottom: 6px; }
+        .log-row { margin-bottom: 8px; border-bottom: 1px solid #0f131a; padding-bottom: 6px; word-break: break-all; }
         .log-time { color: var(--txt-muted); margin-right: 8px; }
         .log-tag { font-weight: bold; margin-right: 6px; }
     </style>
@@ -140,51 +127,39 @@
 
     <div class="station-container">
         <header>
-            <h1>📡 P2P Text Beacon</h1>
-            <div class="status-pill" id="statusBadge">Offline</div>
+            <h1>📡 Autonomous Radio</h1>
+            <div class="status-pill">Active Spectrum</div>
         </header>
 
-        <!-- DEVICE A: Displays this panel to show its dynamic unique address ID -->
+        <!-- OPERATIONAL TESTING DIAGNOSTICS DECK -->
         <div class="deck">
-            <h2>Your Local Beacon Tower Address ID</h2>
-            <div class="beacon-id-display" id="localIdDisplay">GENERATING TARGET LINK...</div>
-        </div>
-
-        <!-- DEVICE B: Uses this panel to input Device A's address code -->
-        <div class="deck">
-            <h2>Link to Remote Station Address ID</h2>
-            <div class="input-row">
-                <input type="text" id="remoteIdInput" placeholder="Enter remote tower address id code...">
-                <button class="btn" id="connectBtn" onclick="connectToRemoteTower()">Link</button>
+            <h2>Multi-Instance Tracking Link Instructions</h2>
+            <div class="setup-instruction-box">
+                To broadcast text instantly without network dependencies, copy the URL of this window and open it in a <strong>second browser tab or window</strong> side-by-side. Type a text packet into either panel and hit Beam to watch them update simultaneously.
             </div>
         </div>
 
-        <!-- BROADCAST ROW PANEL -->
+        <!-- BROADCAST EMISSION CONTROLS -->
         <div class="deck">
-            <h2>Broadcast Content Packet</h2>
+            <h2>Transmit Text Packet Stream</h2>
             <div class="input-row">
-                <input type="text" id="payloadInput" placeholder="Type transmission packet stream..." disabled onkeydown="if(event.key==='Enter') broadcastMessage()">
-                <button class="btn" id="sendBtn" style="background: var(--accent-green);" disabled onclick="broadcastMessage()">Beam</button>
+                <input type="text" id="payloadInput" placeholder="Type data stream payload packet..." onkeydown="if(event.key==='Enter') executeBroadcastTransmission()">
+                <button class="btn" id="sendBtn" onclick="executeBroadcastTransmission()">Beam</button>
             </div>
         </div>
 
-        <!-- TRANSMISSION DISPLACEMENT FEED -->
+        <!-- RADIONET TERMINAL OUTPUT BOX LOGS -->
         <div class="terminal" id="terminalFeedBox">
-            <div class="log-row" style="color: var(--txt-muted);">[SYSTEM] Active framework online. Awaiting signaling connection parameters...</div>
+            <div class="log-row" style="color: var(--txt-muted);">[SYSTEM] Autonomous local signal bridge locked active. Awaiting data stream transmission...</div>
         </div>
     </div>
 
     <script>
-        let peerEngineInstance = null;
-        let activeDataChannelConnection = null;
-
-        const localIdNode = document.getElementById('localIdDisplay');
-        const remoteInputNode = document.getElementById('remoteIdInput');
-        const connectButtonNode = document.getElementById('connectBtn');
+        // Creates an isolated data channel loop strictly inside the browser sandbox engine layout context
+        const SECURE_LOCAL_SPECTRUM_BUS = new BroadcastChannel('autonomous_local_radio_bus');
+        
         const textPayloadInputNode = document.getElementById('payloadInput');
-        const sendButtonNode = document.getElementById('sendBtn');
         const feedTerminalBoxNode = document.getElementById('terminalFeedBox');
-        const statusBadgeElementNode = document.getElementById('statusBadge');
 
         function appendFeedLog(labelTag, bodyText, colorHex = '#e2e8f0') {
             const rowElement = document.createElement('div');
@@ -203,48 +178,35 @@
             feedTerminalBoxNode.scrollTop = feedTerminalBoxNode.scrollHeight;
         }
 
-        // Initialize Peer Engine with a randomized unique string profile identifier
-        function initializeNetworkBeacon() {
-            // Generates a totally random, unique string ID tag to prevent any collision
-            const generatedRandomId = "beacon-" + Math.floor(100000 + Math.random() * 900000);
+        // --- OUTBOUND SIGNAL BEAM EMISSION ---
+        function executeBroadcastTransmission() {
+            const textValue = textPayloadInputNode.value.trim();
+            if (!textValue) return;
+
+            // Model raw structural message payload data bundle packaging parameters array maps
+            const packetBundle = {
+                originTabId: 'Station-Node-' + window.name,
+                payloadBody: textValue
+            };
+
+            // Post configuration bundle directly onto local internal browser channel loop instantly
+            SECURE_LOCAL_SPECTRUM_BUS.postMessage(packetBundle);
+
+            // Log output tracking verification variables events inside current interface workspace locally
+            appendFeedLog('TX_BEAM', textValue, '#ffffff');
             
-            // Setup infrastructure layer targeting standard global STUN parameters
-            peerEngineInstance = new Peer(generatedRandomId, {
-                config: { iceServers: [{ urls: 'stun:://google.com' }] }
-            });
-
-            peerEngineInstance.on('open', (assignedId) => {
-                localIdNode.textContent = assignedId;
-                statusBadgeElementNode.textContent = "Awaiting Peer";
-                appendFeedLog('SYS', 'Tower baseline initialized. Ready to receive incoming links.');
-            });
-
-            peerEngineInstance.on('error', (errorContext) => {
-                appendFeedLog('ERROR', `Signaling breakdown: ${errorContext.type}`, 'var(--alert-red)');
-            });
-
-            // Catch incoming connections initiated from another machine automatically
-            peerEngineInstance.on('connection', (incomingConnection) => {
-                if (activeDataChannelConnection) return; // Channel busy safety lock
-                wireDataStreams(incomingConnection);
-            });
+            textPayloadInputNode.value = '';
+            textPayloadInputNode.focus();
         }
 
-        // --- CONNECT AS AN OUTBOUND TRANSMITTER ---
-        function connectToRemoteTower() {
-            const targetRemoteId = remoteInputNode.value.trim();
-            if (!targetRemoteId) return alert("Please specify a valid destination address id code!");
-
-            appendFeedLog('NET', `Attempting connection handshakes with remote station: [${targetRemoteId}]...`);
+        // --- INBOUND CARRIER SIGNAL CAPTURE HOOK ---
+        // Intercept all data transmission loops generated from secondary local window tabs automatically
+        SECURE_LOCAL_SPECTRUM_BUS.onmessage = function(transmissionEvent) {
+            const packetReceived = transmissionEvent.data;
             
-            const outboundConnection = peerEngineInstance.connect(targetRemoteId);
-            wireDataStreams(outboundConnection);
-        }
-
-        // --- WIRE AND CAPTURE SYSTEM EVENTS ---
-        function wireDataStreams(connectionInstance) {
-            activeDataChannelConnection = connectionInstance;
-
-            activeDataChannelConnection.on('open', () => {
-                statusBadgeElementNode.textContent = "Connected";
-                statusBadgeElementNode.classList.add('connected');
+            // Route structural text parameters out to reader logs terminal feed windows
+            appendFeedLog('RX_SIGNAL', packetReceived.payloadBody, 'var(--accent-cyan)');
+        };
+    </script>
+</body>
+</html>
