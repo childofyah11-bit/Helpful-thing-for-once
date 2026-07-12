@@ -80,7 +80,7 @@
     
     <div class="hud-bottom">
         <strong>CONTROLS:</strong> [W, A, S, D] or [Arrows] to Move & Jump | 
-        <strong>MORPH DISGUISES:</strong> Press [1] Grass | [2] Stone | [3] Wood | [4] Brick | [5] Leaves | [0] Human Shape
+        <strong>MORPH DISGUISES:</strong> Press Keys [1 = Grass] [2 = Stone] [3 = Wood] [4 = Brick] [5 = Leaves] [0 = Human Shape]
     </div>
 
 <script>
@@ -156,6 +156,7 @@
                 matchOver = true;
                 matchResultText = "YOU WIN! YOU FOOLED THE AI 🏆";
                 label.textContent = "MATCH CONCLUDED";
+                clearInterval(countdownInterval);
             }
         }
     }, 1000);
@@ -213,15 +214,14 @@
         }
     }
 
-    // --- AI HUNTER NAVIGATION PATHFINDING BRAIN ---
     function processAIIntelligence() {
         if (hiderPhase || matchOver) return;
 
         aiSeeker.vy += gravity;
         let distanceToHider = Math.abs(aiSeeker.x - hider.x);
         
-        // AI Radar Vision parameters
-        let visionRange = hider.currentMorph === 0 ? 550 : 90; // Seeing block forms requires proximity
+        // AI Radar Vision parameters (Disguises vastly lower detection range)
+        let visionRange = hider.currentMorph === 0 ? 550 : 90; 
 
         if (distanceToHider < visionRange) {
             aiSeeker.state = 'chase';
@@ -231,7 +231,6 @@
             aiSeeker.targetX = Math.random() * (LEVEL_COLS * BLOCK_SIZE - 200) + 100;
         }
 
-        // Handle Horizontal Walk Tracking
         let aiMovementSpeed = aiSeeker.state === 'chase' ? 3.8 : 2.2;
         if (aiSeeker.x < aiSeeker.targetX - 5) {
             aiSeeker.vx = aiMovementSpeed;
@@ -246,7 +245,7 @@
 
         aiSeeker.x += aiSeeker.vx;
 
-        // Auto Obstacle Jump Climbing code segment
+        // Auto Obstacle Jump Climbing
         let checkX = aiSeeker.vx > 0 ? aiSeeker.x + aiSeeker.w + 5 : aiSeeker.x - 5;
         let isBlockedAhead = checkLevelCollision(checkX, aiSeeker.y + aiSeeker.h - 10);
 
@@ -262,10 +261,10 @@
         }
 
         if (isBlockedAhead && grounded) {
-            aiSeeker.vy = -10.5; // Climb block automatically
+            aiSeeker.vy = -10.5; 
         }
 
-        // --- Catch Check ---
+        // Catch Verification
         let actualDist = Math.hypot((aiSeeker.x + aiSeeker.w/2) - (hider.x + hider.w/2), (aiSeeker.y + aiSeeker.h/2) - (hider.y + hider.h/2));
         if (actualDist < 35) {
             matchOver = true;
@@ -283,10 +282,12 @@
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         ctx.save();
-        // Camera tracks the player across the screen map canvas smoothly
         let camX = hider.x - canvas.width / 2;
         camX = Math.max(0, Math.min((LEVEL_COLS * BLOCK_SIZE) - canvas.width, camX));
         ctx.translate(-camX, 0);
 
         // 1. Draw World Matrix blocks
         for (let col = 0; col < LEVEL_COLS; col++) {
+            for (let row = 0; row < LEVEL_ROWS; row++) {
+                let blockId = worldMap[`${col},${row}`];
+                if (blockId) {
