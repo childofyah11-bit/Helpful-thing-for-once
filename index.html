@@ -3,23 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>School Math Core</title>
+    <title>//*Blank tab*</title>
     <style>
-        /* Unblockable Native CSS Styles - Modern Cyberpunk / Dark Theme */
+        /* Unblockable Native CSS Styles - Ultra-Premium Cyberpunk Mode */
         :root {
-            --bg-main: #0b0f19;
-            --bg-card: #131a26;
-            --bg-input: #1e293b;
-            --border-glow: #3b82f6;
-            --text-glow: #60a5fa;
-            --accent-green: #10b981;
-            --accent-error: #ef4444;
+            --bg-main: #080c14;
+            --bg-card: #111827;
+            --bg-input: #1f2937;
+            --border-glow: #6366f1;
+            --text-glow: #818cf8;
+            --accent-green: #34d399;
+            --accent-error: #f87171;
         }
 
         body {
             background-color: var(--bg-main);
-            color: #f1f5f9;
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: #f3f4f6;
+            font-family: system-ui, -apple-system, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -32,57 +32,51 @@
         .solver-card {
             background-color: var(--bg-card);
             width: 100%;
-            max-width: 500px;
+            max-width: 550px;
             padding: 32px;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), 0 0 20px rgba(59, 130, 246, 0.15);
-            border: 1px solid #1e293b;
-            transition: border-color 0.3s;
-        }
-
-        .solver-card:focus-within {
-            border-color: var(--border-glow);
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 30px rgba(99, 102, 241, 0.15);
+            border: 1px solid #374151;
         }
 
         .header-group {
             text-align: center;
-            margin-bottom: 28px;
+            margin-bottom: 24px;
         }
 
         h1 {
             color: var(--text-glow);
-            font-size: 28px;
-            font-weight: 800;
+            font-size: 30px;
+            font-weight: 900;
             margin: 0 0 6px 0;
             letter-spacing: -0.5px;
         }
 
         .subtitle {
-            color: #64748b;
+            color: #9ca3af;
             font-size: 13px;
             margin: 0;
         }
 
         .input-wrapper {
             margin-bottom: 20px;
-            position: relative;
         }
 
         label {
             display: block;
             font-size: 11px;
             font-weight: 700;
-            color: #94a3b8;
+            color: #9ca3af;
             text-transform: uppercase;
             letter-spacing: 1.5px;
             margin-bottom: 8px;
         }
 
-        input {
+        textarea {
             width: 100%;
             background-color: var(--bg-input);
-            border: 2px solid #334155;
-            border-radius: 12px;
+            border: 2px solid #4b5563;
+            border-radius: 14px;
             padding: 16px;
             color: #ffffff;
             font-size: 16px;
@@ -90,72 +84,63 @@
             box-sizing: border-box;
             outline: none;
             transition: all 0.2s ease;
+            resize: vertical;
+            min-height: 80px;
         }
 
-        input:focus {
+        textarea:focus {
             border-color: var(--border-glow);
-            background-color: #1e293b;
-            box-shadow: 0 0 12px rgba(59, 130, 246, 0.25);
+            box-shadow: 0 0 14px rgba(99, 102, 241, 0.3);
         }
 
-        .tips-panel {
-            background-color: #0f172a;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border-left: 3px solid var(--border-glow);
-        }
-
-        .tips-title {
-            font-size: 11px;
-            font-weight: 800;
-            color: var(--text-glow);
-            margin-bottom: 4px;
-            text-transform: uppercase;
-        }
-
-        .tips-text {
-            font-size: 12px;
-            color: #94a3b8;
-            margin: 0;
-            line-height: 1.4;
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
         }
 
         button {
-            width: 100%;
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            flex: 1;
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
             color: white;
             border: none;
             border-radius: 12px;
             padding: 16px;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 700;
             cursor: pointer;
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
             transition: all 0.2s ease;
         }
 
         button:hover {
             transform: translateY(-1px);
-            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+            box-shadow: 0 6px 20px rgba(79, 70, 229, 0.4);
         }
 
-        button:active {
-            transform: translateY(1px);
+        .clear-btn {
+            background: #374151;
+            color: #d1d5db;
+            box-shadow: none;
+            max-width: 100px;
+        }
+
+        .clear-btn:hover {
+            background: #4b5563;
+            box-shadow: none;
         }
 
         .output-panel {
             display: none;
-            margin-top: 24px;
-            background-color: #020617;
-            padding: 20px;
-            border-radius: 12px;
-            border: 1px solid #1e293b;
-            animation: fadeIn 0.3s ease-out;
+            background-color: #030712;
+            padding: 24px;
+            border-radius: 14px;
+            border: 1px solid #1f2937;
+            animation: fadeIn 0.2s ease-out;
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(5px); }
+            from { opacity: 0; transform: translateY(4px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
@@ -170,8 +155,8 @@
 
         #finalResult {
             font-family: 'Courier New', Courier, monospace;
-            font-size: 24px;
-            font-weight: 700;
+            font-size: 28px;
+            font-weight: 800;
             color: var(--accent-green);
             word-break: break-all;
         }
@@ -181,29 +166,33 @@
 
     <div class="solver-card">
         <div class="header-group">
-            <h1>⚡ Quantum Math Core</h1>
-            <p class="subtitle">Chromebook Local Engine • Firewall Safe</p>
+            <h1>⚡ Smart AI Math Core</h1>
+            <p class="subtitle">Type simple maths or paste giant assignment equations</p>
         </div>
 
         <div class="input-wrapper">
-            <label for="mathInput">Drop Your Problem Below</label>
-            <input type="text" id="mathInput" placeholder="e.g., 2x + 4 when x=5 or 5^3">
+            <label for="mathInput">Type or Paste Math Problem</label>
+            <!-- Upgraded to a multi-line box for easier copy-pasting -->
+            <textarea id="mathInput" placeholder="Type '3 x 9' or paste complex text like 'Find the solution for 4x^2 - 2 when x = 5'"></textarea>
         </div>
 
-        <div class="tips-panel">
-            <div class="tips-title">💡 Smart Syntax Supported:</div>
-            <p class="tips-text">You can type naturally! <b>2x</b> automatically turns into 2*x, and expressions like <b>5^3</b> or <b>sqrt(16)</b> parse instantly.</p>
+        <div class="button-group">
+            <button onclick="computeProblem()">Compute Problem</button>
+            <button class="clear-btn" onclick="clearInput()">Clear</button>
         </div>
-
-        <button onclick="computeProblem()">Execute Calculation</button>
 
         <div id="outputWindow" class="output-panel">
-            <div class="output-label">Evaluated Output:</div>
+            <div class="output-label">Calculated Answer:</div>
             <div id="finalResult"></div>
         </div>
     </div>
 
     <script>
+        function clearInput() {
+            document.getElementById('mathInput').value = '';
+            document.getElementById('outputWindow').style.display = 'none';
+        }
+
         function computeProblem() {
             const mathInput = document.getElementById('mathInput');
             const outputWindow = document.getElementById('outputWindow');
@@ -211,7 +200,7 @@
             
             let rawInput = mathInput.value.trim();
             if (!rawInput) {
-                alert("Please input a problem first!");
+                alert("Please input or paste a math problem first!");
                 return;
             }
 
@@ -220,29 +209,36 @@
             try {
                 let expression = rawInput;
 
-                // 1. Simplify "when x = value" formats
-                // Example: "2x + 5 when x=3" -> sets x to 3 inside the block
-                if (/when\s+([a-zA-Z])\s*=\s*(-?[0-9.]+)/i.test(expression)) {
-                    const match = expression.match(/when\s+([a-zA-Z])\s*=\s*(-?[0-9.]+)/i);
-                    const variableName = match[1];
-                    const variableValue = match[2];
-                    // Strip the text helper out of evaluation string
-                    expression = expression.replace(/when\s+[a-zA-Z]\s*=\s*-?[0-9.]+/i, '');
-                    // Substitute variable directly
+                // 1. TEXT CLEANUP ENGINE (Strips common words from pasted assignments)
+                expression = expression.replace(/evaluate|calculate|solve|find the value of|find the solution for|what is|equals|result/gi, '');
+                
+                // 2. EASY INPUT ENGINE (Converts normal "x" or "X" multiplication signs to computer asterisks)
+                // Looks for 'x' or 'X' specifically between numbers (like 3 x 9)
+                expression = expression.replace(/([0-9.]+)\s*[xX]\s*([0-9.]+)/g, "$1 * $2");
+
+                // 3. VARIABLE SUBSTITUTION ENGINE
+                // Automatically reads formats like "when x=5", "if x is 5", "where x = 5"
+                const varMatch = expression.match(/(?:when|if|where|,|\s)\s*([a-zA-Z])\s*(?:=|\bis\b)\s*(-?[0-9.]+)/i);
+                if (varMatch) {
+                    const variableName = varMatch[1];
+                    const variableValue = varMatch[2];
+                    // Remove the variable condition text from mathematical loop
+                    expression = expression.replace(/(?:when|if|where|,|\s)\s*[a-zA-Z]\s*(?:=|\bis\b)\s*-?[0-9.]+/i, '');
+                    // Substitute variable safely
                     const varRegex = new RegExp('\\b' + variableName + '\\b', 'g');
                     expression = expression.replace(varRegex, `(${variableValue})`);
                 }
 
-                // 2. Smart translation: Fix missing algebra multipliers (e.g., 2x -> 2*x or 4(2) -> 4*(2))
+                // 4. ALGEBRA AUTO-MULTIPLY ENGINE (Fixes 2x -> 2*x, or 4(3) -> 4*(3))
                 expression = expression.replace(/([0-9.]+)\s*([a-zA-Z\(])/g, "$1 * $2");
                 expression = expression.replace(/([\)a-zA-Z])\s*([0-9.]+)/g, "$1 * $2");
 
-                // 3. Translate classic power symbols (e.g., 5^2 -> Math.pow(5,2))
+                // 5. EXPO POWERS ENGINE (Converts 5^3 into operational code)
                 while (expression.includes('^')) {
                     expression = expression.replace(/([0-9.xX]+)\s*\^\s*([0-9.xX]+)/g, "Math.pow($1, $2)");
                 }
 
-                // 4. Standarize common math library declarations 
+                // 6. STANDARD MATH LIBRARY STANDARD CONVERSIONS
                 expression = expression.replace(/sqrt/gi, "Math.sqrt");
                 expression = expression.replace(/sin/gi, "Math.sin");
                 expression = expression.replace(/cos/gi, "Math.cos");
@@ -250,19 +246,19 @@
                 expression = expression.replace(/pi/gi, "Math.PI");
                 expression = expression.replace(/abs/gi, "Math.abs");
 
-                // Security filter verification check
+                // Chromebook Network Firewall Safety check filter
                 if (/[^0-9\+\-\*\/\(\)\.\s,Math\.powsqrtcistanabsPIe]/gi.test(expression)) {
-                    throw new Error("Equation contains unsupported symbols. Stick to numbers and standard algebra notation.");
+                    throw new Error("Contains unreadable symbols. Ensure you are copying plain numeric math equations.");
                 }
 
-                // Native calculation processing loop
+                // Compute output instantly using native JavaScript functions
                 let solution = Function('"use strict"; return (' + expression + ')')();
                 
                 if (solution === undefined || isNaN(solution)) {
                     throw new Error("Check your expression formatting.");
                 }
 
-                // Format long decimals cleanly to avoid long trailing strings
+                // Smooth out huge decimal outputs for neat clean reading
                 if (Number(solution) && !Number.isInteger(solution)) {
                     solution = parseFloat(solution.toFixed(6));
                 }
@@ -272,7 +268,7 @@
 
             } catch (err) {
                 finalResult.style.color = "var(--accent-error)";
-                finalResult.innerText = "Error: " + err.message;
+                finalResult.innerText = "Formatting Error: " + err.message;
             }
         }
     </script>
