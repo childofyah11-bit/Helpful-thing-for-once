@@ -3,87 +3,276 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>tab</title>
-    <!-- Lightweight Tailwind CSS styling engine -->
-    <script src="https://jsdelivr.net"></script>
-    <!-- Lightweight, powerful math execution script -->
-    <script src="https://cloudflare.com"></script>
+    <title>School Math Core</title>
+    <style>
+        /* Unblockable Native CSS Styles - Modern Cyberpunk / Dark Theme */
+        :root {
+            --bg-main: #0b0f19;
+            --bg-card: #131a26;
+            --bg-input: #1e293b;
+            --border-glow: #3b82f6;
+            --text-glow: #60a5fa;
+            --accent-green: #10b981;
+            --accent-error: #ef4444;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: #f1f5f9;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 16px;
+            box-sizing: border-box;
+        }
+
+        .solver-card {
+            background-color: var(--bg-card);
+            width: 100%;
+            max-width: 500px;
+            padding: 32px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), 0 0 20px rgba(59, 130, 246, 0.15);
+            border: 1px solid #1e293b;
+            transition: border-color 0.3s;
+        }
+
+        .solver-card:focus-within {
+            border-color: var(--border-glow);
+        }
+
+        .header-group {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        h1 {
+            color: var(--text-glow);
+            font-size: 28px;
+            font-weight: 800;
+            margin: 0 0 6px 0;
+            letter-spacing: -0.5px;
+        }
+
+        .subtitle {
+            color: #64748b;
+            font-size: 13px;
+            margin: 0;
+        }
+
+        .input-wrapper {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        label {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 8px;
+        }
+
+        input {
+            width: 100%;
+            background-color: var(--bg-input);
+            border: 2px solid #334155;
+            border-radius: 12px;
+            padding: 16px;
+            color: #ffffff;
+            font-size: 16px;
+            font-family: 'Courier New', Courier, monospace;
+            box-sizing: border-box;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        input:focus {
+            border-color: var(--border-glow);
+            background-color: #1e293b;
+            box-shadow: 0 0 12px rgba(59, 130, 246, 0.25);
+        }
+
+        .tips-panel {
+            background-color: #0f172a;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 3px solid var(--border-glow);
+        }
+
+        .tips-title {
+            font-size: 11px;
+            font-weight: 800;
+            color: var(--text-glow);
+            margin-bottom: 4px;
+            text-transform: uppercase;
+        }
+
+        .tips-text {
+            font-size: 12px;
+            color: #94a3b8;
+            margin: 0;
+            line-height: 1.4;
+        }
+
+        button {
+            width: 100%;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 16px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+            transition: all 0.2s ease;
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        .output-panel {
+            display: none;
+            margin-top: 24px;
+            background-color: #020617;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #1e293b;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .output-label {
+            font-size: 11px;
+            color: var(--text-glow);
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        #finalResult {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--accent-green);
+            word-break: break-all;
+        }
+    </style>
 </head>
-<body class="bg-gray-900 text-gray-100 min-h-screen flex flex-col items-center p-6">
+<body>
 
-    <div class="max-w-xl w-full bg-gray-800 p-6 rounded-2xl shadow-xl border border-gray-700 mt-10">
-        <h1 class="text-2xl font-bold text-indigo-400 text-center mb-1">📐 School Math Engine</h1>
-        <p class="text-xs text-gray-400 text-center mb-6">Instantly solves algebra, expressions, functions, and fractions.</p>
-
-        <div class="space-y-4">
-            <div>
-                <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Select Operation Mode</label>
-                <select id="mode" class="w-full bg-gray-700 border border-gray-600 rounded-lg p-2.5 text-sm text-white outline-none focus:border-indigo-500">
-                    <option value="evaluate">Evaluate Basic / Advanced Math</option>
-                    <option value="simplify">Simplify Algebraic Equation</option>
-                    <option value="derivative">Find Derivative (d/dx)</option>
-                    <option value="rationalize">Rationalize Denominator / Fractions</option>
-                </select>
-            </div>
-
-            <div>
-                <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Input Problem</label>
-                <input type="text" id="mathInput" placeholder="e.g., 2x + 5x - 3" class="w-full bg-gray-700 border border-gray-600 rounded-lg p-3 text-sm text-white font-mono outline-none focus:border-indigo-500">
-            </div>
-
-            <button onclick="calculateResult()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg transition text-sm cursor-pointer shadow-md">
-                Solve Equation
-            </button>
+    <div class="solver-card">
+        <div class="header-group">
+            <h1>⚡ Quantum Math Core</h1>
+            <p class="subtitle">Chromebook Local Engine • Firewall Safe</p>
         </div>
 
-        <!-- Real-time responsive output display window -->
-        <div id="outputContainer" class="hidden mt-6 bg-gray-950 p-4 rounded-lg border border-gray-800 font-mono">
-            <div class="text-xs text-indigo-400 font-bold mb-1">Output Result:</div>
-            <div id="finalOutput" class="text-emerald-400 text-lg break-words"></div>
+        <div class="input-wrapper">
+            <label for="mathInput">Drop Your Problem Below</label>
+            <input type="text" id="mathInput" placeholder="e.g., 2x + 4 when x=5 or 5^3">
+        </div>
+
+        <div class="tips-panel">
+            <div class="tips-title">💡 Smart Syntax Supported:</div>
+            <p class="tips-text">You can type naturally! <b>2x</b> automatically turns into 2*x, and expressions like <b>5^3</b> or <b>sqrt(16)</b> parse instantly.</p>
+        </div>
+
+        <button onclick="computeProblem()">Execute Calculation</button>
+
+        <div id="outputWindow" class="output-panel">
+            <div class="output-label">Evaluated Output:</div>
+            <div id="finalResult"></div>
         </div>
     </div>
 
     <script>
-        function calculateResult() {
-            const mode = document.getElementById('mode').value;
-            const userInput = document.getElementById('mathInput').value.trim();
-            const outputBox = document.getElementById('outputContainer');
-            const resultText = document.getElementById('finalOutput');
-
-            if (!userInput) {
-                alert("Please type a mathematical problem first.");
+        function computeProblem() {
+            const mathInput = document.getElementById('mathInput');
+            const outputWindow = document.getElementById('outputWindow');
+            const finalResult = document.getElementById('finalResult');
+            
+            let rawInput = mathInput.value.trim();
+            if (!rawInput) {
+                alert("Please input a problem first!");
                 return;
             }
 
-            // Unhide output container panel
-            outputBox.classList.remove('hidden');
+            outputWindow.style.display = "block";
 
             try {
-                let solution = "";
+                let expression = rawInput;
 
-                if (mode === "evaluate") {
-                    // Instantly evaluates expressions, roots, trigonometry, matrices
-                    solution = math.evaluate(userInput);
-                } else if (mode === "simplify") {
-                    // Simplifies fractions, polynomials, terms (e.g., 2x + 3x -> 5x)
-                    solution = math.simplify(userInput).toString();
-                } else if (mode === "derivative") {
-                    // Automatically finds algebraic derivative with respect to variable x
-                    solution = math.derivative(userInput, 'x').toString();
-                } else if (mode === "rationalize") {
-                    // Transforms rational rules out of expression fractions
-                    solution = math.rationalize(userInput).toString();
+                // 1. Simplify "when x = value" formats
+                // Example: "2x + 5 when x=3" -> sets x to 3 inside the block
+                if (/when\s+([a-zA-Z])\s*=\s*(-?[0-9.]+)/i.test(expression)) {
+                    const match = expression.match(/when\s+([a-zA-Z])\s*=\s*(-?[0-9.]+)/i);
+                    const variableName = match[1];
+                    const variableValue = match[2];
+                    // Strip the text helper out of evaluation string
+                    expression = expression.replace(/when\s+[a-zA-Z]\s*=\s*-?[0-9.]+/i, '');
+                    // Substitute variable directly
+                    const varRegex = new RegExp('\\b' + variableName + '\\b', 'g');
+                    expression = expression.replace(varRegex, `(${variableValue})`);
                 }
 
-                // Render clean string conversion into display element 
-                resultText.className = "text-emerald-400 text-lg break-words";
-                resultText.innerText = solution;
+                // 2. Smart translation: Fix missing algebra multipliers (e.g., 2x -> 2*x or 4(2) -> 4*(2))
+                expression = expression.replace(/([0-9.]+)\s*([a-zA-Z\(])/g, "$1 * $2");
+                expression = expression.replace(/([\)a-zA-Z])\s*([0-9.]+)/g, "$1 * $2");
 
-            } catch (error) {
-                // Friendly debug indicator for math syntax failures
-                resultText.className = "text-rose-400 text-xs break-words";
-                resultText.innerText = "Formatting Error: " + error.message + 
-                    "\n\nTip: For algebra, make sure to include implicit operators (e.g., use '2 * x' instead of '2x').";
+                // 3. Translate classic power symbols (e.g., 5^2 -> Math.pow(5,2))
+                while (expression.includes('^')) {
+                    expression = expression.replace(/([0-9.xX]+)\s*\^\s*([0-9.xX]+)/g, "Math.pow($1, $2)");
+                }
+
+                // 4. Standarize common math library declarations 
+                expression = expression.replace(/sqrt/gi, "Math.sqrt");
+                expression = expression.replace(/sin/gi, "Math.sin");
+                expression = expression.replace(/cos/gi, "Math.cos");
+                expression = expression.replace(/tan/gi, "Math.tan");
+                expression = expression.replace(/pi/gi, "Math.PI");
+                expression = expression.replace(/abs/gi, "Math.abs");
+
+                // Security filter verification check
+                if (/[^0-9\+\-\*\/\(\)\.\s,Math\.powsqrtcistanabsPIe]/gi.test(expression)) {
+                    throw new Error("Equation contains unsupported symbols. Stick to numbers and standard algebra notation.");
+                }
+
+                // Native calculation processing loop
+                let solution = Function('"use strict"; return (' + expression + ')')();
+                
+                if (solution === undefined || isNaN(solution)) {
+                    throw new Error("Check your expression formatting.");
+                }
+
+                // Format long decimals cleanly to avoid long trailing strings
+                if (Number(solution) && !Number.isInteger(solution)) {
+                    solution = parseFloat(solution.toFixed(6));
+                }
+
+                finalResult.style.color = "var(--accent-green)";
+                finalResult.innerText = solution;
+
+            } catch (err) {
+                finalResult.style.color = "var(--accent-error)";
+                finalResult.innerText = "Error: " + err.message;
             }
         }
     </script>
