@@ -3,193 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>tab</title>
-    <!-- Tailwind CSS for modern layout styling -->
+    <title>Universal School Math Solver</title>
+    <!-- Lightweight Tailwind CSS styling engine -->
     <script src="https://jsdelivr.net"></script>
-    <!-- Pyodide to run Python directly inside the browser -->
-    <script src="https://jsdelivr.net"></script>
-    <!-- Chart.js for automatic graphing capabilities -->
-    <script src="https://jsdelivr.net"></script>
+    <!-- Lightweight, powerful math execution script -->
+    <script src="https://cloudflare.com"></script>
 </head>
 <body class="bg-gray-900 text-gray-100 min-h-screen flex flex-col items-center p-6">
 
-    <div class="max-w-3xl w-full bg-gray-800 p-8 rounded-2xl shadow-xl border border-gray-700">
-        <h1 class="text-3xl font-extrabold text-indigo-400 mb-2 text-center">📐 Universal Math Engine</h1>
-        <p class="text-gray-400 text-center mb-6 text-sm">Solves algebra, limits, derivatives, integrals, and matrices locally.</p>
-
-        <!-- Status indicator for the Python framework engine -->
-        <div id="status" class="bg-amber-900/40 text-amber-300 text-xs px-3 py-2 rounded-lg mb-6 border border-amber-700 text-center font-mono">
-            ⏳ Initializing internal math core engines... Please wait.
-        </div>
+    <div class="max-w-xl w-full bg-gray-800 p-6 rounded-2xl shadow-xl border border-gray-700 mt-10">
+        <h1 class="text-2xl font-bold text-indigo-400 text-center mb-1">📐 School Math Engine</h1>
+        <p class="text-xs text-gray-400 text-center mb-6">Instantly solves algebra, expressions, functions, and fractions.</p>
 
         <div class="space-y-4">
             <div>
-                <label class="block text-sm font-semibold text-gray-300 mb-1">Select Math Problem Category:</label>
-                <select id="mode" class="w-full bg-gray-700 border border-gray-600 rounded-lg p-2.5 text-white focus:ring-2 focus:ring-indigo-500 outline-none" onchange="updatePlaceholder()">
-                    <option value="simplify">Simplify Expression (e.g., (x**2 - 1)/(x - 1))</option>
-                    <option value="solve">Solve Equation for X (e.g., x**2 - 5*x + 6)</option>
-                    <option value="derivative">Find Derivative (d/dx) (e.g., sin(x) * x**2)</option>
-                    <option value="integral">Find Integral (∫) (e.g., 2*x + 5)</option>
-                    <option value="limit">Find Limit (x → 0) (e.g., sin(x)/x)</option>
+                <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Select Operation Mode</label>
+                <select id="mode" class="w-full bg-gray-700 border border-gray-600 rounded-lg p-2.5 text-sm text-white outline-none focus:border-indigo-500">
+                    <option value="evaluate">Evaluate Basic / Advanced Math</option>
+                    <option value="simplify">Simplify Algebraic Equation</option>
+                    <option value="derivative">Find Derivative (d/dx)</option>
+                    <option value="rationalize">Rationalize Denominator / Fractions</option>
                 </select>
             </div>
 
             <div>
-                <label class="block text-sm font-semibold text-gray-300 mb-1">Enter Mathematical Expression:</label>
-                <input type="text" id="mathInput" placeholder="Enter math formula here..." class="w-full bg-gray-700 border border-gray-600 rounded-lg p-3 text-white font-mono focus:ring-2 focus:ring-indigo-500 outline-none">
-                <span class="text-xs text-gray-500 mt-1 block">Note: Use * for multiplication (2*x) and ** for exponents (x**2).</span>
+                <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Input Problem</label>
+                <input type="text" id="mathInput" placeholder="e.g., 2x + 5x - 3" class="w-full bg-gray-700 border border-gray-600 rounded-lg p-3 text-sm text-white font-mono outline-none focus:border-indigo-500">
             </div>
 
-            <button onclick="processMath()" id="solveBtn" disabled class="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-600 text-white font-bold py-3 px-4 rounded-lg transition dynamic-btn shadow-md cursor-not-allowed">
-                Compute Solution
+            <button onclick="calculateResult()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg transition text-sm cursor-pointer shadow-md">
+                Solve Equation
             </button>
         </div>
 
-        <!-- Output section containing results and plots -->
-        <div id="outputContainer" class="hidden mt-8 space-y-4 border-t border-gray-700 pt-6">
-            <h3 class="text-lg font-bold text-gray-200">Result Trace:</h3>
-            <div id="result" class="bg-gray-950 p-4 rounded-lg border border-gray-800 font-mono text-emerald-400 overflow-x-auto whitespace-pre-wrap"></div>
-            
-            <div id="graphContainer" class="hidden bg-gray-950 p-4 rounded-lg border border-gray-800">
-                <h4 class="text-sm font-semibold text-gray-400 mb-2">Visual Function Plot:</h4>
-                <canvas id="mathChart"></canvas>
-            </div>
+        <!-- Real-time responsive output display window -->
+        <div id="outputContainer" class="hidden mt-6 bg-gray-950 p-4 rounded-lg border border-gray-800 font-mono">
+            <div class="text-xs text-indigo-400 font-bold mb-1">Output Result:</div>
+            <div id="finalOutput" class="text-emerald-400 text-lg break-words"></div>
         </div>
     </div>
 
     <script>
-        let pyodide;
-        let chartInstance = null;
-
-        // Dynamic placeholder helper text update
-        function updatePlaceholder() {
+        function calculateResult() {
             const mode = document.getElementById('mode').value;
-            const input = document.getElementById('mathInput');
-            if(mode === 'simplify') input.placeholder = "(x**2 - 1)/(x - 1)";
-            if(mode === 'solve') input.placeholder = "x**2 - 5*x + 6";
-            if(mode === 'derivative') input.placeholder = "sin(x) * x**2";
-            if(mode === 'integral') input.placeholder = "2*x + 5";
-            if(mode === 'limit') input.placeholder = "sin(x)/x";
-        }
+            const userInput = document.getElementById('mathInput').value.trim();
+            const outputBox = document.getElementById('outputContainer');
+            const resultText = document.getElementById('finalOutput');
 
-        // Initialize Python core script inside the browser context
-        async function initPyodide() {
-            try {
-                pyodide = await loadPyodide();
-                await pyodide.loadPackage("sympy");
-                
-                // Initialize standard symbolic variables inside workspace 
-                await pyodide.runPythonAsync(`
-                    import sympy as sp
-                    x, y, z = sp.symbols('x y z')
-                `);
-
-                document.getElementById('status').className = "bg-emerald-950/40 text-emerald-400 text-xs px-3 py-2 rounded-lg mb-6 border border-emerald-800 text-center font-mono";
-                document.getElementById('status').innerText = "✅ Core Engine Active. Ready to solve calculations.";
-                const btn = document.getElementById('solveBtn');
-                btn.disabled = false;
-                btn.classList.remove('cursor-not-allowed', 'disabled:bg-gray-600');
-            } catch (err) {
-                document.getElementById('status').innerText = "❌ Engine initialization failed: " + err.message;
+            if (!userInput) {
+                alert("Please type a mathematical problem first.");
+                return;
             }
-        }
 
-        async function processMath() {
-            const mode = document.getElementById('mode').value;
-            const rawExpression = document.getElementById('mathInput').value.trim();
-            const resultBox = document.getElementById('result');
-            const outputContainer = document.getElementById('outputContainer');
-            const graphContainer = document.getElementById('graphContainer');
-
-            if (!rawExpression) return alert("Please type an algebraic expression first.");
-
-            outputContainer.classList.remove('hidden');
-            resultBox.innerText = "Computing math processing loops...";
-            graphContainer.classList.add('hidden');
+            // Unhide output container panel
+            outputBox.classList.remove('hidden');
 
             try {
-                // Pass target values to Python variables safely
-                pyodide.globals.set("user_expr", rawExpression);
-                
-                let pythonScript = "";
-                if (mode === "simplify") pythonScript = "str(sp.simplify(user_expr))";
-                if (mode === "solve") pythonScript = "str(sp.solve(sp.Eq(sp.sympify(user_expr), 0), x))";
-                if (mode === "derivative") pythonScript = "str(sp.diff(user_expr, x))";
-                if (mode === "integral") pythonScript = "str(sp.integrate(user_expr, x))";
-                if (mode === "limit") pythonScript = "str(sp.limit(user_expr, x, 0))";
+                let solution = "";
 
-                let outcome = await pyodide.runPythonAsync(pythonScript);
-                resultBox.innerText = `Final Mathematical Solution:\n\n${outcome}`;
-
-                // Dynamically plot numeric ranges if 'x' is included in expression sequence
-                if (rawExpression.includes('x') && mode !== 'solve') {
-                    generatePlot(rawExpression);
-                }
-            } catch(e) {
-                resultBox.innerText = `Parsing Error Detected:\n\n${e.message}\n\nTip: Ensure variables match Python markup rules (e.g. use 3*x instead of 3x).`;
-            }
-        }
-
-        async function generatePlot(expression) {
-            try {
-                // Compute array matrices values mapping x values to numeric ranges [-10, 10]
-                const xValues = [];
-                const yValues = [];
-                for (let i = -10; i <= 10; i += 0.5) {
-                    xValues.push(i);
+                if (mode === "evaluate") {
+                    // Instantly evaluates expressions, roots, trigonometry, matrices
+                    solution = math.evaluate(userInput);
+                } else if (mode === "simplify") {
+                    // Simplifies fractions, polynomials, terms (e.g., 2x + 3x -> 5x)
+                    solution = math.simplify(userInput).toString();
+                } else if (mode === "derivative") {
+                    // Automatically finds algebraic derivative with respect to variable x
+                    solution = math.derivative(userInput, 'x').toString();
+                } else if (mode === "rationalize") {
+                    // Transforms rational rules out of expression fractions
+                    solution = math.rationalize(userInput).toString();
                 }
 
-                pyodide.globals.set("x_arr", xValues);
-                const pyPlotScript = `
-                    expr_parsed = sp.sympify(user_expr)
-                    y_out = []
-                    for val in x_arr:
-                        try:
-                            res = float(expr_parsed.subs(x, val).evalf())
-                            y_out.append(res)
-                        except:
-                            y_out.append(None)
-                    y_out
-                `;
-                
-                let yOutputs = await pyodide.runPythonAsync(pyPlotScript);
-                const cleanY = yOutputs.toJs();
+                // Render clean string conversion into display element 
+                resultText.className = "text-emerald-400 text-lg break-words";
+                resultText.innerText = solution;
 
-                document.getElementById('graphContainer').classList.remove('hidden');
-                const ctx = document.getElementById('mathChart').getContext('2d');
-                
-                if (chartInstance) chartInstance.destroy();
-
-                chartInstance = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: xValues,
-                        datasets: [{
-                            label: `f(x) = ${expression}`,
-                            data: cleanY,
-                            borderColor: 'rgb(99, 102, 241)',
-                            backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                            borderWidth: 2,
-                            tension: 0.2,
-                            spanGaps: false
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        scales: {
-                            x: { grid: { color: '#374151' }, ticks: { color: '#9ca3af' } },
-                            y: { grid: { color: '#374151' }, ticks: { color: '#9ca3af' } }
-                        }
-                    }
-                });
-            } catch (err) {
-                console.log("Plot pipeline skipped: ", err);
+            } catch (error) {
+                // Friendly debug indicator for math syntax failures
+                resultText.className = "text-rose-400 text-xs break-words";
+                resultText.innerText = "Formatting Error: " + error.message + 
+                    "\n\nTip: For algebra, make sure to include implicit operators (e.g., use '2 * x' instead of '2x').";
             }
         }
-
-        // Fire initialization sequence on DOM payload ready state
-        initPyodide();
     </script>
 </body>
 </html>
-
