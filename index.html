@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>//*Blank tab*</title>
+    <title>Universal Math Core</title>
     <style>
         /* Unblockable Native CSS Styles - Ultra-Premium Cyberpunk Mode */
         :root {
@@ -167,13 +167,12 @@
     <div class="solver-card">
         <div class="header-group">
             <h1>⚡ Smart AI Math Core</h1>
-            <p class="subtitle">Type simple maths or paste giant assignment equations</p>
+            <p class="subtitle">Handles word prompts, percentages, and assignments</p>
         </div>
 
         <div class="input-wrapper">
             <label for="mathInput">Type or Paste Math Problem</label>
-            <!-- Upgraded to a multi-line box for easier copy-pasting -->
-            <textarea id="mathInput" placeholder="Type '3 x 9' or paste complex text like 'Find the solution for 4x^2 - 2 when x = 5'"></textarea>
+            <textarea id="mathInput" placeholder="Pasted text like: 'Calculate 75% of 55' works instantly!"></textarea>
         </div>
 
         <div class="button-group">
@@ -209,36 +208,36 @@
             try {
                 let expression = rawInput;
 
-                // 1. TEXT CLEANUP ENGINE (Strips common words from pasted assignments)
+                // 1. TEXT CLEANUP ENGINE (Strips common operational assignment phrases)
                 expression = expression.replace(/evaluate|calculate|solve|find the value of|find the solution for|what is|equals|result/gi, '');
-                
-                // 2. EASY INPUT ENGINE (Converts normal "x" or "X" multiplication signs to computer asterisks)
-                // Looks for 'x' or 'X' specifically between numbers (like 3 x 9)
+
+                // 2. NEW PERCENTAGE ENGINE
+                // Converts "75% of 55" into ((75 / 100) * 55)
+                expression = expression.replace(/([0-9.]+)\s*%\s*of\s*([0-9.]+)/gi, "(($1 / 100) * $2)");
+
+                // 3. EASY INPUT ENGINE (Converts "3 x 9" layout notation into proper asterisks)
                 expression = expression.replace(/([0-9.]+)\s*[xX]\s*([0-9.]+)/g, "$1 * $2");
 
-                // 3. VARIABLE SUBSTITUTION ENGINE
-                // Automatically reads formats like "when x=5", "if x is 5", "where x = 5"
+                // 4. VARIABLE SUBSTITUTION ENGINE ("when x = 5")
                 const varMatch = expression.match(/(?:when|if|where|,|\s)\s*([a-zA-Z])\s*(?:=|\bis\b)\s*(-?[0-9.]+)/i);
                 if (varMatch) {
                     const variableName = varMatch[1];
                     const variableValue = varMatch[2];
-                    // Remove the variable condition text from mathematical loop
                     expression = expression.replace(/(?:when|if|where|,|\s)\s*[a-zA-Z]\s*(?:=|\bis\b)\s*-?[0-9.]+/i, '');
-                    // Substitute variable safely
                     const varRegex = new RegExp('\\b' + variableName + '\\b', 'g');
                     expression = expression.replace(varRegex, `(${variableValue})`);
                 }
 
-                // 4. ALGEBRA AUTO-MULTIPLY ENGINE (Fixes 2x -> 2*x, or 4(3) -> 4*(3))
+                // 5. ALGEBRA AUTO-MULTIPLY ENGINE (2x -> 2*x)
                 expression = expression.replace(/([0-9.]+)\s*([a-zA-Z\(])/g, "$1 * $2");
                 expression = expression.replace(/([\)a-zA-Z])\s*([0-9.]+)/g, "$1 * $2");
 
-                // 5. EXPO POWERS ENGINE (Converts 5^3 into operational code)
+                // 6. EXPO POWERS ENGINE (5^3)
                 while (expression.includes('^')) {
                     expression = expression.replace(/([0-9.xX]+)\s*\^\s*([0-9.xX]+)/g, "Math.pow($1, $2)");
                 }
 
-                // 6. STANDARD MATH LIBRARY STANDARD CONVERSIONS
+                // 7. STANDARD MATH CORE LIBS
                 expression = expression.replace(/sqrt/gi, "Math.sqrt");
                 expression = expression.replace(/sin/gi, "Math.sin");
                 expression = expression.replace(/cos/gi, "Math.cos");
@@ -246,19 +245,18 @@
                 expression = expression.replace(/pi/gi, "Math.PI");
                 expression = expression.replace(/abs/gi, "Math.abs");
 
-                // Chromebook Network Firewall Safety check filter
+                // Chromebook Firewall Protection Safety Filter
                 if (/[^0-9\+\-\*\/\(\)\.\s,Math\.powsqrtcistanabsPIe]/gi.test(expression)) {
                     throw new Error("Contains unreadable symbols. Ensure you are copying plain numeric math equations.");
                 }
 
-                // Compute output instantly using native JavaScript functions
+                // Execution logic block
                 let solution = Function('"use strict"; return (' + expression + ')')();
                 
                 if (solution === undefined || isNaN(solution)) {
                     throw new Error("Check your expression formatting.");
                 }
 
-                // Smooth out huge decimal outputs for neat clean reading
                 if (Number(solution) && !Number.isInteger(solution)) {
                     solution = parseFloat(solution.toFixed(6));
                 }
