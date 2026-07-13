@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>tab</title>
+    <title>Universal Math Core</title>
     <style>
         /* Unblockable Native CSS Styles - Ultra-Premium Cyberpunk Mode */
         :root {
@@ -167,12 +167,12 @@
     <div class="solver-card">
         <div class="header-group">
             <h1>⚡ Unbreakable Math Core</h1>
-            <p class="subtitle">Extracts calculations from text, sentences, or word problems</p>
+            <p class="subtitle">Extracts equations, basic percentages, and sale prices from text</p>
         </div>
 
         <div class="input-wrapper">
             <label for="mathInput">Type or Paste Any Question</label>
-            <textarea id="mathInput" placeholder="Paste full assignments here..."></textarea>
+            <textarea id="mathInput" placeholder="Paste full discount questions or percentages here..."></textarea>
         </div>
 
         <div class="button-group">
@@ -207,70 +207,75 @@
 
             try {
                 let solution = "";
+                let isCurrency = false;
 
-                // 1. SMART PERCENTAGE EXTRACTION MATCH
-                // Directly looks for a pattern like "75% of 55" anywhere in the string, ignoring everything else
-                const percentRegex = /([0-9.]+)\s*%\s*of\s*([0-9.]+)/i;
-                const percentMatch = rawInput.match(percentRegex);
+                // 1. SMART DISCOUNT / SALE PRICE ENGINE
+                // Scans for patterns like "$54" and "25% off" or "discount of 25%"
+                const priceMatch = rawInput.match(/(?:\$|price\s*(?:of|is)?\s*\$?)\s*([0-9.]+)/i);
+                const discountMatch = rawInput.match(/([0-9.]+)\s*%\s*(?:off|discount)/i) || rawInput.match(/(?:discount\s*(?:of|is)?\s*)([0-9.]+)\s*%/i);
 
-                if (percentMatch) {
-                    const percentVal = parseFloat(percentMatch[1]);
-                    const numberVal = parseFloat(percentMatch[2]);
-                    solution = (percentVal / 100) * numberVal;
-                } else {
-                    // 2. STANDARD EQUATION CLEANUP FALLBACK
-                    let expression = rawInput;
+                if (priceMatch && discountMatch) {
+                    const originalPrice = parseFloat(priceMatch[1]);
+                    const discountPercent = parseFloat(discountMatch[1]);
+                    
+                    // Sale Price = Original Price - (Discount% of Original Price)
+                    solution = originalPrice - ((discountPercent / 100) * originalPrice);
+                    isCurrency = true;
+                } 
+                // 2. SMART PERCENTAGE EXTRACTION FALLBACK ("75% of 55")
+                else {
+                    const percentRegex = /([0-9.]+)\s*%\s*of\s*([0-9.]+)/i;
+                    const percentMatch = rawInput.match(percentRegex);
 
-                    // Swap normal letter "x" or "X" multiplication syntax into true computer asterisks
-                    expression = expression.replace(/([0-9.]+)\s*[xX]\s*([0-9.]+)/g, "$1 * $2");
+                    if (percentMatch) {
+                        const percentVal = parseFloat(percentMatch[1]);
+                        const numberVal = parseFloat(percentMatch[2]);
+                        solution = (percentVal / 100) * numberVal;
+                    } else {
+                        // 3. STANDARD EQUATION CLEANUP FALLBACK
+                        let expression = rawInput;
 
-                    // Handle algebra variable injections (e.g. "when x = 5")
-                    const varMatch = expression.match(/(?:when|if|where|,|\s)\s*([a-zA-Z])\s*(?:=|\bis\b)\s*(-?[0-9.]+)/i);
-                    if (varMatch) {
-                        const variableName = varMatch[1];
-                        const variableValue = varMatch[2];
-                        expression = expression.replace(/(?:when|if|where|,|\s)\s*[a-zA-Z]\s*(?:=|\bis\b)\s*-?[0-9.]+/i, '');
-                        const varRegex = new RegExp('\\b' + variableName + '\\b', 'g');
-                        expression = expression.replace(varRegex, `(${variableValue})`);
+                        // Swap standard letter "x" for true computer multiplication asterisks
+                        expression = expression.replace(/([0-9.]+)\s*[xX]\s*([0-9.]+)/g, "$1 * $2");
+
+                        // Handle algebraic variables (e.g. "when x = 5")
+                        const varMatch = expression.match(/(?:when|if|where|,|\s)\s*([a-zA-Z])\s*(?:=|\bis\b)\s*(-?[0-9.]+)/i);
+                        if (varMatch) {
+                            const variableName = varMatch[1];
+                            const variableValue = varMatch[2];
+                            expression = expression.replace(/(?:when|if|where|,|\s)\s*[a-zA-Z]\s*(?:=|\bis\b)\s*-?[0-9.]+/i, '');
+                            const varRegex = new RegExp('\\b' + variableName + '\\b', 'g');
+                            expression = expression.replace(varRegex, `(${variableValue})`);
+                        }
+
+                        // Add missing operators (e.g., 2x -> 2*x)
+                        expression = expression.replace(/([0-9.]+)\s*([a-zA-Z\(])/g, "$1 * $2");
+                        expression = expression.replace(/([\)a-zA-Z])\s*([0-9.]+)/g, "$1 * $2");
+
+                        // Translate exponents (e.g., 5^3)
+                        while (expression.includes('^')) {
+                            expression = expression.replace(/([0-9.xX]+)\s*\^\s*([0-9.xX]+)/g, "Math.pow($1, $2)");
+                        }
+
+                        // Standardize core functions
+                        expression = expression.replace(/sqrt/gi, "Math.sqrt");
+                        expression = expression.replace(/abs/gi, "Math.abs");
+
+                        // Clean non-math words to prevent crash loops
+                        expression = expression.replace(/[^0-9\+\-\*\/\(\)\.\s,Math\.powsqrtabs]/gi, '');
+
+                        solution = Function('"use strict"; return (' + expression + ')')();
                     }
-
-                    // Add multiplication if missing (e.g., 2x -> 2*x)
-                    expression = expression.replace(/([0-9.]+)\s*([a-zA-Z\(])/g, "$1 * $2");
-                    expression = expression.replace(/([\)a-zA-Z])\s*([0-9.]+)/g, "$1 * $2");
-
-                    // Translate exponents (e.g., 5^3)
-                    while (expression.includes('^')) {
-                        expression = expression.replace(/([0-9.xX]+)\s*\^\s*([0-9.xX]+)/g, "Math.pow($1, $2)");
-                    }
-
-                    // Standardize functions
-                    expression = expression.replace(/sqrt/gi, "Math.sqrt");
-                    expression = expression.replace(/abs/gi, "Math.abs");
-
-                    // Strip away all non-mathematical text characters completely to prevent punctuation syntax crashes
-                    expression = expression.replace(/[^0-9\+\-\*\/\(\)\.\s,Math\.powsqrtabs]/gi, '');
-
-                    // Run the native execution calculation loop
-                    solution = Function('"use strict"; return (' + expression + ')')();
                 }
                 
                 if (solution === undefined || isNaN(solution)) {
-                    throw new Error("Could not find a valid math operation in your text.");
+                    throw new Error("Could not extract a valid mathematical problem from your text.");
                 }
 
-                // Format long decimals to be short and tidy
-                if (typeof solution === 'number' && !Number.isInteger(solution)) {
+                // Format outputs cleanly
+                if (isCurrency) {
+                    solution = "$" + solution.toFixed(2);
+                } else if (typeof solution === 'number' && !Number.isInteger(solution)) {
                     solution = parseFloat(solution.toFixed(6));
                 }
 
-                finalResult.style.color = "var(--accent-green)";
-                finalResult.innerText = solution;
-
-            } catch (err) {
-                finalResult.style.color = "var(--accent-error)";
-                finalResult.innerText = "Error: " + err.message;
-            }
-        }
-    </script>
-</body>
-</html>
