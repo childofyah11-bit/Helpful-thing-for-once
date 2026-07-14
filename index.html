@@ -3,39 +3,221 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Helpful Thing For Once</title>
+    <title>Helpful Daily Hub</title>
     <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f9;
-            color: #333;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            color: #f8fafc;
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            margin: 0;
+            padding: 20px;
         }
-        .container {
+        .dashboard {
+            width: 100%;
+            max-width: 500px;
+            background: #1e293b;
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            border: 1px solid #334155;
+        }
+        .header {
             text-align: center;
-            padding: 30px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 25px;
         }
-        h1 {
-            color: #238636;
+        #clock {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #38bdf8;
+            letter-spacing: 1px;
         }
-        p {
-            font-size: 1.1rem;
+        #greeting {
+            font-size: 1.2rem;
+            color: #94a3b8;
+            margin-top: 5px;
+        }
+        .card {
+            background: #0f172a;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid #334155;
+        }
+        .quote-box p {
+            font-style: italic;
+            color: #cbd5e1;
+            line-height: 1.4;
+            margin-bottom: 8px;
+        }
+        .quote-box span {
+            font-size: 0.85rem;
+            color: #38bdf8;
+            display: block;
+            text-align: right;
+        }
+        .todo-section h3 {
+            font-size: 1rem;
+            margin-bottom: 12px;
+            color: #f1f5f9;
+        }
+        .todo-input-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        input[type="text"] {
+            flex: 1;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #475569;
+            background: #1e293b;
+            color: white;
+            outline: none;
+        }
+        input[type="text"]:focus {
+            border-color: #38bdf8;
+        }
+        button {
+            padding: 10px 15px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background: #1d4ed8;
+        }
+        ul {
+            list-style: none;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #1e293b;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        li.completed span {
+            text-decoration: line-through;
+            color: #64748b;
+        }
+        .delete-btn {
+            background: #ef4444;
+            padding: 4px 8px;
+            font-size: 0.8rem;
+        }
+        .delete-btn:hover {
+            background: #dc2626;
         }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h1>Super Useful App</h1>
-        <p>This is a super duper useful, helpful, and reliable project.</p>
+    <div class="dashboard">
+        <div class="header">
+            <div id="clock">00:00:00</div>
+            <div id="greeting">Hello!</div>
+        </div>
+
+        <div class="card quote-box">
+            <p id="quote">"The best way to predict the future is to create it."</p>
+            <span id="author">- Peter Drucker</span>
+        </div>
+
+        <div class="todo-section">
+            <h3>Daily Focus Tasks</h3>
+            <div class="todo-input-group">
+                <input type="text" id="todo-input" placeholder="What needs to get done today?">
+                <button onclick="addTask()">Add Task</button>
+            </div>
+            <ul id="todo-list">
+                <!-- Tasks get inserted here -->
+            </ul>
+        </div>
     </div>
 
+    <script>
+        // Real-time Clock & Greeting Utility
+        function updateTime() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('clock').textContent = `${hours}:${minutes}:${seconds}`;
+
+            let greet = "Good evening!";
+            if (now.getHours() < 12) greet = "Good morning!";
+            else if (now.getHours() < 18) greet = "Good afternoon!";
+            document.getElementById('greeting').textContent = greet + " Time to make today useful.";
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        // Dynamic Random Quotes Array
+        const quotes = [
+            { text: "Small daily improvements over time lead to stunning results.", author: "Robin Sharma" },
+            { text: "Focus on being productive instead of busy.", author: "Tim Ferriss" },
+            { text: "Your focus determines your reality.", author: "Qui-Gon Jinn" },
+            { text: "Done is better than perfect.", author: "Sheryl Sandberg" }
+        ];
+        const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+        document.getElementById('quote').textContent = `"${randomQuote.text}"`;
+        document.getElementById('author').textContent = `- ${randomQuote.author}`;
+
+        // Dynamic Interactive To-Do List Application Logic
+        function addTask() {
+            const input = document.getElementById('todo-input');
+            const taskText = input.value.trim();
+            if (taskText === "") return;
+
+            const li = document.createElement('li');
+            
+            const span = document.createElement('span');
+            span.textContent = taskText;
+            li.appendChild(span);
+
+            // Toggle item cross-out on click
+            li.addEventListener('click', function(e) {
+                if(e.target.tagName !== 'BUTTON') {
+                    li.classList.toggle('completed');
+                }
+            });
+
+            // Delete specific entry task button
+            const delBtn = document.createElement('button');
+            delBtn.textContent = '✕';
+            delBtn.className = 'delete-btn';
+            delBtn.onclick = function() {
+                li.remove();
+            };
+
+            li.appendChild(delBtn);
+            document.getElementById('todo-list').appendChild(li);
+            input.value = "";
+        }
+
+        // Allow entering items using 'Enter' key pressure
+        document.getElementById('todo-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') addTask();
+        });
+    </script>
 </body>
 </html>
