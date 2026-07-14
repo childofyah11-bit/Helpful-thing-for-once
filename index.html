@@ -3,221 +3,203 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Helpful Daily Hub</title>
+    <title>Ultimate Utility Hub</title>
     <style>
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1e293b, #0f172a);
+            background: linear-gradient(135deg, #0f172a, #1e1b4b);
             color: #f8fafc;
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 20px;
+            gap: 30px;
+            flex-wrap: wrap;
         }
-        .dashboard {
-            width: 100%;
-            max-width: 500px;
+        .panel {
             background: #1e293b;
+            border: 1px solid #334155;
             border-radius: 16px;
             padding: 25px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-            border: 1px solid #334155;
+            width: 320px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
         }
-        .header {
-            text-align: center;
-            margin-bottom: 25px;
-        }
-        #clock {
-            font-size: 2.5rem;
-            font-weight: bold;
+        h2 {
+            font-size: 1.2rem;
             color: #38bdf8;
+            margin-bottom: 20px;
+            text-align: center;
+            text-transform: uppercase;
             letter-spacing: 1px;
         }
-        #greeting {
-            font-size: 1.2rem;
-            color: #94a3b8;
-            margin-top: 5px;
+        /* Timer Styles */
+        .timer-display {
+            font-size: 3.5rem;
+            font-weight: bold;
+            text-align: center;
+            margin: 20px 0;
+            color: #f43f5e;
+            font-family: monospace;
         }
-        .card {
-            background: #0f172a;
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 20px;
-            border: 1px solid #334155;
-        }
-        .quote-box p {
-            font-style: italic;
-            color: #cbd5e1;
-            line-height: 1.4;
-            margin-bottom: 8px;
-        }
-        .quote-box span {
-            font-size: 0.85rem;
-            color: #38bdf8;
-            display: block;
-            text-align: right;
-        }
-        .todo-section h3 {
-            font-size: 1rem;
-            margin-bottom: 12px;
-            color: #f1f5f9;
-        }
-        .todo-input-group {
+        .btn-group {
             display: flex;
-            gap: 8px;
-            margin-bottom: 15px;
-        }
-        input[type="text"] {
-            flex: 1;
-            padding: 10px;
-            border-radius: 6px;
-            border: 1px solid #475569;
-            background: #1e293b;
-            color: white;
-            outline: none;
-        }
-        input[type="text"]:focus {
-            border-color: #38bdf8;
+            gap: 10px;
         }
         button {
-            padding: 10px 15px;
-            background: #2563eb;
-            color: white;
+            flex: 1;
+            padding: 12px;
             border: none;
-            border-radius: 6px;
-            cursor: pointer;
+            border-radius: 8px;
             font-weight: bold;
-            transition: background 0.2s;
-        }
-        button:hover {
-            background: #1d4ed8;
-        }
-        ul {
-            list-style: none;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-        li {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: #1e293b;
-            padding: 10px;
-            border-radius: 6px;
-            margin-bottom: 8px;
-            font-size: 0.95rem;
             cursor: pointer;
-            transition: opacity 0.2s;
+            transition: all 0.2s;
         }
-        li.completed span {
-            text-decoration: line-through;
-            color: #64748b;
+        .btn-start { background: #10b981; color: white; }
+        .btn-start:hover { background: #059669; }
+        .btn-reset { background: #64748b; color: white; }
+        .btn-reset:hover { background: #475569; }
+        
+        /* Calculator Styles */
+        .calc-screen {
+            width: 100%;
+            height: 50px;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            color: #fff;
+            text-align: right;
+            padding: 10px;
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            outline: none;
         }
-        .delete-btn {
-            background: #ef4444;
-            padding: 4px 8px;
-            font-size: 0.8rem;
+        .calc-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
         }
-        .delete-btn:hover {
-            background: #dc2626;
+        .btn-calc {
+            background: #334155;
+            color: white;
+            font-size: 1.1rem;
         }
+        .btn-calc:hover { background: #475569; }
+        .btn-op { background: #f59e0b; }
+        .btn-op:hover { background: #d97706; }
+        .btn-clear { background: #ef4444; }
+        .btn-clear:hover { background: #dc2626; }
     </style>
 </head>
 <body>
 
-    <div class="dashboard">
-        <div class="header">
-            <div id="clock">00:00:00</div>
-            <div id="greeting">Hello!</div>
+    <!-- Panel 1: Focus Timer -->
+    <div class="panel">
+        <h2>Focus Timer</h2>
+        <div class="timer-display" id="timer">25:00</div>
+        <div class="btn-group">
+            <button class="btn-start" id="start-btn" onclick="toggleTimer()">Start</button>
+            <button class="btn-reset" onclick="resetTimer()">Reset</button>
         </div>
+    </div>
 
-        <div class="card quote-box">
-            <p id="quote">"The best way to predict the future is to create it."</p>
-            <span id="author">- Peter Drucker</span>
-        </div>
-
-        <div class="todo-section">
-            <h3>Daily Focus Tasks</h3>
-            <div class="todo-input-group">
-                <input type="text" id="todo-input" placeholder="What needs to get done today?">
-                <button onclick="addTask()">Add Task</button>
-            </div>
-            <ul id="todo-list">
-                <!-- Tasks get inserted here -->
-            </ul>
+    <!-- Panel 2: Quick Calculator -->
+    <div class="panel">
+        <h2>Calculator</h2>
+        <input type="text" class="calc-screen" id="screen" readonly>
+        <div class="calc-grid">
+            <button class="btn-calc btn-clear" onclick="clearScreen()">C</button>
+            <button class="btn-calc btn-op" onclick="press('/')">/</button>
+            <button class="btn-calc btn-op" onclick="press('*')">*</button>
+            <button class="btn-calc btn-op" onclick="press('-')">-</button>
+            
+            <button class="btn-calc" onclick="press('7')">7</button>
+            <button class="btn-calc" onclick="press('8')">8</button>
+            <button class="btn-calc" onclick="press('9')">9</button>
+            <button class="btn-calc btn-op" onclick="press('+')">+</button>
+            
+            <button class="btn-calc" onclick="press('4')">4</button>
+            <button class="btn-calc" onclick="press('5')">5</button>
+            <button class="btn-calc" onclick="press('6')">6</button>
+            <button class="btn-calc btn-op" onclick="calculate()">=</button>
+            
+            <button class="btn-calc" onclick="press('1')">1</button>
+            <button class="btn-calc" onclick="press('2')">2</button>
+            <button class="btn-calc" onclick="press('3')">3</button>
+            <button class="btn-calc" onclick="press('0')">0</button>
         </div>
     </div>
 
     <script>
-        // Real-time Clock & Greeting Utility
-        function updateTime() {
-            const now = new Date();
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            const seconds = String(now.getSeconds()).padStart(2, '0');
-            document.getElementById('clock').textContent = `${hours}:${minutes}:${seconds}`;
+        // Timer Logic
+        let timeLeft = 1500; 
+        let timerId = null;
 
-            let greet = "Good evening!";
-            if (now.getHours() < 12) greet = "Good morning!";
-            else if (now.getHours() < 18) greet = "Good afternoon!";
-            document.getElementById('greeting').textContent = greet + " Time to make today useful.";
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            document.getElementById('timer').textContent = 
+                `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
         }
-        setInterval(updateTime, 1000);
-        updateTime();
 
-        // Dynamic Random Quotes Array
-        const quotes = [
-            { text: "Small daily improvements over time lead to stunning results.", author: "Robin Sharma" },
-            { text: "Focus on being productive instead of busy.", author: "Tim Ferriss" },
-            { text: "Your focus determines your reality.", author: "Qui-Gon Jinn" },
-            { text: "Done is better than perfect.", author: "Sheryl Sandberg" }
-        ];
-        const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
-        document.getElementById('quote').textContent = `"${randomQuote.text}"`;
-        document.getElementById('author').textContent = `- ${randomQuote.author}`;
+        function toggleTimer() {
+            const btn = document.getElementById('start-btn');
+            if (timerId === null) {
+                btn.textContent = "Pause";
+                btn.style.background = "#f59e0b";
+                timerId = setInterval(() => {
+                    if (timeLeft > 0) {
+                        timeLeft--;
+                        updateTimerDisplay();
+                    } else {
+                        clearInterval(timerId);
+                        alert("Time is up! Take a useful break.");
+                        resetTimer();
+                    }
+                }, 1000);
+            } else {
+                clearInterval(timerId);
+                timerId = null;
+                btn.textContent = "Start";
+                btn.style.background = "#10b981";
+            }
+        }
 
-        // Dynamic Interactive To-Do List Application Logic
-        function addTask() {
-            const input = document.getElementById('todo-input');
-            const taskText = input.value.trim();
-            if (taskText === "") return;
+        function resetTimer() {
+            clearInterval(timerId);
+            timerId = null;
+            timeLeft = 1500;
+            updateTimerDisplay();
+            const btn = document.getElementById('start-btn');
+            btn.textContent = "Start";
+            btn.style.background = "#10b981";
+        }
 
-            const li = document.createElement('li');
-            
-            const span = document.createElement('span');
-            span.textContent = taskText;
-            li.appendChild(span);
+        // Calculator Logic
+        const screen = document.getElementById('screen');
 
-            // Toggle item cross-out on click
-            li.addEventListener('click', function(e) {
-                if(e.target.tagName !== 'BUTTON') {
-                    li.classList.toggle('completed');
+        function press(val) {
+            screen.value += val;
+        }
+
+        function clearScreen() {
+            screen.value = '';
+        }
+
+        function calculate() {
+            try {
+                if (screen.value) {
+                    screen.value = eval(screen.value);
                 }
-            });
-
-            // Delete specific entry task button
-            const delBtn = document.createElement('button');
-            delBtn.textContent = '✕';
-            delBtn.className = 'delete-btn';
-            delBtn.onclick = function() {
-                li.remove();
-            };
-
-            li.appendChild(delBtn);
-            document.getElementById('todo-list').appendChild(li);
-            input.value = "";
+            } catch (error) {
+                screen.value = 'Error';
+            }
         }
-
-        // Allow entering items using 'Enter' key pressure
-        document.getElementById('todo-input').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') addTask();
-        });
     </script>
 </body>
 </html>
