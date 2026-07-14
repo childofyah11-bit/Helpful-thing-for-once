@@ -28,7 +28,10 @@
             border-radius: 16px;
             padding: 25px;
             width: 320px;
+            min-height: 380px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+            display: flex;
+            flex-direction: column;
         }
         h2 {
             font-size: 1.2rem;
@@ -38,21 +41,20 @@
             text-transform: uppercase;
             letter-spacing: 1px;
         }
-        /* Timer Styles */
-        .timer-display {
-            font-size: 3.5rem;
-            font-weight: bold;
-            text-align: center;
-            margin: 20px 0;
-            color: #f43f5e;
-            font-family: monospace;
+        
+        /* Utility styles shared across fields */
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #475569;
+            background: #0f172a;
+            color: white;
+            outline: none;
+            margin-bottom: 12px;
         }
-        .btn-group {
-            display: flex;
-            gap: 10px;
-        }
+
         button {
-            flex: 1;
             padding: 12px;
             border: none;
             border-radius: 8px;
@@ -60,40 +62,100 @@
             cursor: pointer;
             transition: all 0.2s;
         }
-        .btn-start { background: #10b981; color: white; }
+
+        /* Timer Styles */
+        .timer-display {
+            font-size: 3.5rem;
+            font-weight: bold;
+            text-align: center;
+            margin: auto 0;
+            color: #f43f5e;
+            font-family: monospace;
+        }
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: auto;
+        }
+        .btn-start { background: #10b981; color: white; width: 100%; }
         .btn-start:hover { background: #059669; }
-        .btn-reset { background: #64748b; color: white; }
+        .btn-reset { background: #64748b; color: white; width: 100%; }
         .btn-reset:hover { background: #475569; }
         
         /* Calculator Styles */
         .calc-screen {
-            width: 100%;
             height: 50px;
-            background: #0f172a;
-            border: 1px solid #334155;
-            border-radius: 8px;
-            color: #fff;
             text-align: right;
-            padding: 10px;
             font-size: 1.5rem;
-            margin-bottom: 15px;
-            outline: none;
         }
         .calc-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 10px;
+            margin-top: auto;
         }
-        .btn-calc {
-            background: #334155;
-            color: white;
-            font-size: 1.1rem;
-        }
+        .btn-calc { background: #334155; color: white; font-size: 1.1rem; }
         .btn-calc:hover { background: #475569; }
         .btn-op { background: #f59e0b; }
         .btn-op:hover { background: #d97706; }
         .btn-clear { background: #ef4444; }
         .btn-clear:hover { background: #dc2626; }
+
+        /* Converter Styles */
+        .conv-result {
+            background: #0f172a;
+            padding: 12px;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #10b981;
+            margin-top: auto;
+            border: 1px dashed #334155;
+        }
+
+        /* Flashcard Styles */
+        .flashcard-wrapper {
+            perspective: 1000px;
+            margin: auto 0;
+            cursor: pointer;
+        }
+        .flashcard {
+            width: 100%;
+            height: 140px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+            background: #0f172a;
+            border-radius: 8px;
+            border: 1px solid #475569;
+        }
+        .flashcard.flipped { transform: rotateY(180deg); }
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+            text-align: center;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+        .card-back {
+            background: #1e3a8a;
+            color: #38bdf8;
+            transform: rotateY(180deg);
+        }
+        .flash-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: auto;
+        }
+        .btn-flash { background: #3b82f6; color: white; }
+        .btn-flash:hover { background: #2563eb; }
     </style>
 </head>
 <body>
@@ -132,6 +194,36 @@
             <button class="btn-calc" onclick="press('2')">2</button>
             <button class="btn-calc" onclick="press('3')">3</button>
             <button class="btn-calc" onclick="press('0')">0</button>
+        </div>
+    </div>
+
+    <!-- Panel 3: Smart Unit Converter -->
+    <div class="panel">
+        <h2>Converter</h2>
+        <input type="number" id="conv-input" placeholder="Enter value..." oninput="runConversion()">
+        <select id="conv-type" onchange="runConversion()">
+            <option value="miles-km">Miles to Kilometers</option>
+            <option value="km-miles">Kilometers to Miles</option>
+            <option value="lbs-kg">Pounds (lbs) to Kilograms</option>
+            <option value="kg-lbs">Kilograms to Pounds (lbs)</option>
+            <option value="f-c">Fahrenheit to Celsius</option>
+            <option value="c-f">Celsius to Fahrenheit</option>
+        </select>
+        <div class="conv-result" id="conv-result">Result will show here</div>
+    </div>
+
+    <!-- Panel 4: Quick Flashcards -->
+    <div class="panel">
+        <h2>Flashcards</h2>
+        <div class="flashcard-wrapper" onclick="flipCard()">
+            <div class="flashcard" id="flashcard">
+                <div class="card-face card-front" id="card-front">Front loading...</div>
+                <div class="card-face card-back" id="card-back">Back loading...</div>
+            </div>
+        </div>
+        <div class="flash-controls">
+            <button class="btn-flash" onclick="prevCard()">← Prev</button>
+            <button class="btn-flash" onclick="nextCard()">Next →</button>
         </div>
     </div>
 
@@ -182,24 +274,14 @@
 
         // Calculator Logic
         const screen = document.getElementById('screen');
-
-        function press(val) {
-            screen.value += val;
-        }
-
-        function clearScreen() {
-            screen.value = '';
-        }
-
+        function press(val) { screen.value += val; }
+        function clearScreen() { screen.value = ''; }
         function calculate() {
             try {
-                if (screen.value) {
-                    screen.value = eval(screen.value);
-                }
-            } catch (error) {
-                screen.value = 'Error';
-            }
+                if (screen.value) { screen.value = eval(screen.value); }
+            } catch (error) { screen.value = 'Error'; }
         }
-    </script>
-</body>
-</html>
+
+        // Unit Converter Logic
+        function runConversion() {
+            const val = parseFloat(document.getElementById('conv-input').value);
